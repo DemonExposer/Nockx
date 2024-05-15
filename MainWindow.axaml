@@ -11,7 +11,7 @@
         Height="600"
         WindowState="Maximized">
     <DockPanel>
-        <TextBox DockPanel.Dock="Bottom"></TextBox>
+        <TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
         <ScrollViewer>
             <StackPanel Name="MessagePanel">
                 
