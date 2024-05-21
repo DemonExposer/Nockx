@@ -8,7 +8,7 @@ public partial class MainWindow : Window {
 	private readonly MainWindowController _controller;
 	
 	public MainWindow() {
-		_controller = new MainWindowController("", ""); // TODO: add keys here
+		_controller = new MainWindowController();
 		
 		InitializeComponent();
 	}

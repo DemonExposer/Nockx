@@ -6,41 +6,39 @@ using Org.BouncyCastle.Security;
 using System;
 using System.IO;
 using Org.BouncyCastle.OpenSsl;
+using SecureChat.util;
 
 namespace SecureChat;
 
 class Program {
-	private const string PrivateKeyFile = "private_key.pem";
-	private const string PublicKeyFile = "public_key.pem";
-
 	// Initialization code. Don't use any Avalonia, third-party APIs or any
 	// SynchronizationContext-reliant code before AppMain is called: things aren't initialized
 	// yet and stuff might break.
 	[STAThread]
 	public static void Main(string[] args) {
-		if (!File.Exists(PrivateKeyFile) && !File.Exists(PublicKeyFile)) {
-			ECKeyPairGenerator keyGenerator = new ();
-			SecureRandom secureRandom = new ();
-			KeyGenerationParameters keyGenParams = new (secureRandom, 256);
+		if (!File.Exists(Constants.PrivateKeyFile) && !File.Exists(Constants.PublicKeyFile)) {
+			// Generate RSA key
+			RsaKeyPairGenerator rsaGenerator = new ();
+			rsaGenerator.Init(new KeyGenerationParameters(new SecureRandom(), Constants.KEY_SIZE_BITS));
+			
+			AsymmetricCipherKeyPair keyPair = rsaGenerator.GenerateKeyPair();
 
-			keyGenerator.Init(keyGenParams);
-			AsymmetricCipherKeyPair keyPair = keyGenerator.GenerateKeyPair();
-
-			ECPrivateKeyParameters privateKey = (ECPrivateKeyParameters) keyPair.Private;
-			ECPublicKeyParameters publicKey = (ECPublicKeyParameters) keyPair.Public;
-
-			using (TextWriter textWriter = new StreamWriter(PrivateKeyFile)) {
+			RsaKeyParameters privateKey = (RsaKeyParameters) keyPair.Private;
+			RsaKeyParameters publicKey = (RsaKeyParameters) keyPair.Public;
+			
+			// Write private and public keys to files
+			using (TextWriter textWriter = new StreamWriter(Constants.PrivateKeyFile)) {
 				PemWriter pemWriter = new (textWriter);
 				pemWriter.WriteObject(privateKey);
 				pemWriter.Writer.Flush();
 			}
 
-			using (TextWriter textWriter = new StreamWriter(PublicKeyFile)) {
+			using (TextWriter textWriter = new StreamWriter(Constants.PublicKeyFile)) {
 				PemWriter pemWriter = new (textWriter);
 				pemWriter.WriteObject(publicKey);
 				pemWriter.Writer.Flush();
 			}
-		} else if (!File.Exists(PrivateKeyFile) || !File.Exists(PublicKeyFile)) {
+		} else if (!File.Exists(Constants.PrivateKeyFile) || !File.Exists(Constants.PublicKeyFile)) {
 			throw new Exception("one key file found, zero or two expected"); // TODO: change this into a pop-up
 		}
 
