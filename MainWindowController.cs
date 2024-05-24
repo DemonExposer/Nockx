@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
@@ -85,6 +87,13 @@ public class MainWindowController {
 	}
 	
 	public void Send(string message) {
-		Console.WriteLine(Decrypt(Encrypt(message)));
+		JsonObject body = new () {
+			["user"] = new JsonObject {
+				["modulus"] = _senderPublicKey.Modulus.ToString(16),
+				["exponent"] = _senderPublicKey.Exponent.ToString(16)
+			},
+			["text"] = Encrypt(message)
+		};
+		Https.Post("http://localhost:5109/messages", JsonSerializer.Serialize(body));
 	}
 }
