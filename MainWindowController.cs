@@ -4,11 +4,13 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using SecureChat.util;
@@ -31,6 +33,29 @@ public class MainWindowController {
 		}
 		
 		_receiverPublicKey = null!;
+	}
+
+	private string Sign(string text) {
+		byte[] bytes = Encoding.UTF8.GetBytes(text);
+		ISigner signer = new RsaDigestSigner(new Sha256Digest());
+		signer.Init(true, _privateKey);
+		
+		signer.BlockUpdate(bytes, 0, bytes.Length);
+		byte[] signature = signer.GenerateSignature();
+
+		return Convert.ToBase64String(signature);
+	}
+
+	private bool Verify(string text, string signature, bool isOwnMessage) {
+		byte[] textBytes = Encoding.UTF8.GetBytes(text);
+		byte[] signatureBytes = Convert.FromBase64String(signature);
+
+		ISigner verifier = new RsaDigestSigner(new Sha256Digest());
+		verifier.Init(false, isOwnMessage ? _senderPublicKey : _receiverPublicKey);
+		
+		verifier.BlockUpdate(textBytes, 0, textBytes.Length);
+
+		return verifier.VerifySignature(signatureBytes);
 	}
 
 	private string Encrypt(string inputText) {
