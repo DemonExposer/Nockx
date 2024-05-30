@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -21,7 +22,7 @@ public class MainWindowController {
 	private readonly RsaKeyParameters _personalPublicKey, _foreignPublicKey;
 	private readonly RsaKeyParameters _privateKey;
 	
-	public MainWindowController() {
+	public MainWindowController(RsaKeyParameters foreignPublicKey) {
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
 			_personalPublicKey = (RsaKeyParameters) pemReader.ReadObject();
@@ -32,7 +33,7 @@ public class MainWindowController {
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
 		}
 		
-		_foreignPublicKey = null!;
+		_foreignPublicKey = foreignPublicKey;
 	}
 
 	private string Sign(string text) {
@@ -85,7 +86,9 @@ public class MainWindowController {
 			Body = Convert.ToBase64String(cipherBytes),
 			SenderEncryptedKey = Convert.ToBase64String(personalEncryptedKey),
 			ReceiverEncryptedKey = Convert.ToBase64String(foreignEncryptedKey),
-			Signature = Sign(inputText)
+			Signature = Sign(inputText),
+			Receiver = _foreignPublicKey,
+			Sender = _personalPublicKey
 		};
 	}
 
@@ -109,6 +112,24 @@ public class MainWindowController {
 
 		return Encoding.UTF8.GetString(plainBytes, 0, length);
 	}
+
+	public string[] GetPastMessages() {
+		List<string> res = new ();
+		
+		string getVariables = $"requestingUserModulus={_personalPublicKey.Modulus.ToString(16)}&requestingUserExponent={_personalPublicKey.Exponent.ToString(16)}&requestedUserModulus={_foreignPublicKey.Modulus.ToString(16)}&requestedUserExponent={_foreignPublicKey.Exponent.ToString(16)}";
+		JsonArray messages = JsonNode.Parse(Https.Get("http://localhost:5109/messages?" + getVariables).Body)!.AsArray();
+		foreach (JsonNode? messageNode in messages) {
+			Message message = Message.Parse(messageNode!.AsObject());
+			bool isOwnMessage = Equals(message.Sender, _personalPublicKey);
+			string messageBody = Decrypt(message, isOwnMessage);
+			if (!Verify(messageBody, message.Signature, isOwnMessage))
+				Console.WriteLine("Data has been messed with!"); // TODO: handle this properly
+			
+			res.Add(messageBody);
+		}
+
+		return res.ToArray();
+	}
 	
 	public void Send(string message) {
 		Message encryptedMessage = Encrypt(message);
@@ -123,9 +144,9 @@ public class MainWindowController {
 			},
 			["text"] = encryptedMessage.Body,
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
-			["receiverEncyptedKey"] = encryptedMessage.ReceiverEncryptedKey,
+			["receiverEncryptedKey"] = encryptedMessage.ReceiverEncryptedKey,
 			["signature"] = encryptedMessage.Signature
 		};
-		Https.Post("http://localhost:5109/messages", JsonSerializer.Serialize(body));
+		Console.WriteLine(Https.Post("http://localhost:5109/messages", JsonSerializer.Serialize(body)).Body);
 	}
 }
