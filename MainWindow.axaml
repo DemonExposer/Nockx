@@ -12,7 +12,7 @@
         WindowState="Maximized">
     <DockPanel>
         <TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
-        <ScrollViewer>
+        <ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
             <StackPanel Name="MessagePanel">
                 
             </StackPanel>
