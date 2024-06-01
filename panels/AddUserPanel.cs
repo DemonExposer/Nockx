@@ -13,7 +13,7 @@ public class AddUserPanel : StackPanel {
 	public delegate void DataCallback(RsaKeyParameters publicKey);
 
 	public void SetOnEnter(DataCallback callback) {
-		IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
+		using IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
 
 		TextBox? modulusTextBox = null, exponentTextBox = null;
 		while (enumerator.MoveNext()) {

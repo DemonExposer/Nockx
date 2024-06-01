@@ -13,10 +13,10 @@ public class ChatPanel : DockPanel {
 		_controller = new ChatPanelController();
 	}
 
-	public async void Show(string username, RsaKeyParameters publicKey) {
+	public void Show(string username, RsaKeyParameters publicKey) {
 		_controller.ForeignPublicKey = publicKey;
 
-		IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
+		using IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
 		while (enumerator.MoveNext()) {
 			if (enumerator.Current.GetType() == typeof(TextBox)) {
 				TextBox textBox = (TextBox) enumerator.Current;
