@@ -16,15 +16,15 @@ public class ChatPanel : DockPanel {
 	public void Show() {
 		StackPanel messagePanel = this.FindControl<StackPanel>("MessagePanel")!;
 
-		List<Message> messages = new() {
-				new Message { Body = "Hello there, how are you doing?", DateTime = DateTime.Now.AddMinutes(-10), UserName = "User1" },
-				new Message { Body = "What's up? Any plans for the weekend?", DateTime = DateTime.Now.AddMinutes(-5), UserName = "User1" },
-				new Message { Body = "Hey answer me!", DateTime = DateTime.Now, UserName = "User1" }
-			};
+		List<Message> messages = new () {
+			new Message { Body = "Hello there, how are you doing?", DateTime = DateTime.Now.AddMinutes(-10), UserName = "User1" },
+			new Message { Body = "What's up? Any plans for the weekend?", DateTime = DateTime.Now.AddMinutes(-5), UserName = "User1" },
+			new Message { Body = "Hey answer me!", DateTime = DateTime.Now, UserName = "User1" }
+		};
 
 		foreach (Message message in messages) {
 			string fullMessage = $"{message.DateTime.ToString("yyyy-MM-dd HH:mm:ss")} | {message.UserName} | {message.Body}";
-			TextBlock messageTextBlock = new() {
+			TextBlock messageTextBlock = new () {
 				Text = fullMessage,
 				Margin = new Thickness(5)
 			};
