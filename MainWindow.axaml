@@ -11,8 +11,12 @@
         Width="1000"
         Height="600"
         WindowState="Maximized">
-    <DockPanel>
-		<panels:ChatPanel Name="ChatPanel">
+	<Window.Resources>
+		<panels:AddUserPanel x:Key="AddUserPanel">
+			<TextBox Name="ModulusTextBox"></TextBox>
+			<TextBox Name="ExponentTextBox"></TextBox>
+		</panels:AddUserPanel>
+		<panels:ChatPanel x:Key="ChatPanel">
 			<TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
 			<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
 				<StackPanel Name="MessagePanel">
@@ -20,5 +24,9 @@
 				</StackPanel>
 			</ScrollViewer>
 		</panels:ChatPanel>
+	</Window.Resources>
+	
+    <DockPanel Name="MainPanel">
+		
     </DockPanel>
 </Window>
