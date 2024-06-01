@@ -29,8 +29,6 @@ public class ChatPanel : DockPanel {
 							_controller.Send(textBox.Text);
 						}
 					};
-
-					break;
 				}
 			} else if (enumerator.Current.GetType() == typeof(StackPanel)) {
 				StackPanel stackPanel = (StackPanel) enumerator.Current;
