@@ -18,11 +18,11 @@ using SecureChat.util;
 
 namespace SecureChat;
 
-public class MainWindowController {
+public class ChatPanelController {
 	private readonly RsaKeyParameters _personalPublicKey, _foreignPublicKey;
 	private readonly RsaKeyParameters _privateKey;
 	
-	public MainWindowController(RsaKeyParameters foreignPublicKey) {
+	public ChatPanelController(RsaKeyParameters foreignPublicKey) {
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
 			_personalPublicKey = (RsaKeyParameters) pemReader.ReadObject();

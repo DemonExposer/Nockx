@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:panels="clr-namespace:SecureChat.panels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="SecureChat.MainWindow"
         Title="SecureChat"
@@ -11,11 +12,13 @@
         Height="600"
         WindowState="Maximized">
     <DockPanel>
-        <TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
-        <ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
-            <StackPanel Name="MessagePanel">
-                
-            </StackPanel>
-        </ScrollViewer>
+		<panels:ChatPanel Name="ChatPanel">
+			<TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
+			<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
+				<StackPanel Name="MessagePanel">
+
+				</StackPanel>
+			</ScrollViewer>
+		</panels:ChatPanel>
     </DockPanel>
 </Window>
