@@ -1,59 +1,36 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using SecureChat.model;
-using System;
-using System.Collections.Generic;
+using SecureChat.panels;
 
-namespace SecureChat {
-	public partial class MainWindow : Window {
-		private readonly MainWindowController _controller;
-	
-		public MainWindow() {
-			_controller = new MainWindowController(null); // TODO: pass the foreign public key to the controller
-		
-			InitializeComponent();
-		}
+namespace SecureChat;
 
-		private void InitializeComponent() {
-			AvaloniaXamlLoader.Load(this);
+public partial class MainWindow : Window {
+	private DockPanel mainPanel;
 
-			StackPanel messagePanel = this.FindControl<StackPanel>("MessagePanel")!;
+	public MainWindow() => InitializeComponent();
 
-			List<Message> messages = new() {
-				new Message { Body = "Hello there, how are you doing?", DateTime = DateTime.Now.AddMinutes(-10), UserName = "User1" },
-				new Message { Body = "What's up? Any plans for the weekend?", DateTime = DateTime.Now.AddMinutes(-5), UserName = "User1" },
-				new Message { Body = "Hey answer me!", DateTime = DateTime.Now, UserName = "User1" }
-			}; 
+	private void InitializeComponent() {
+		AvaloniaXamlLoader.Load(this);
 
-			foreach (Message message in messages) {
-				string fullMessage = $"{message.DateTime.ToString("yyyy-MM-dd HH:mm:ss")} | {message.UserName} | {message.Body}";
-				TextBlock messageTextBlock = new() {
-					Text = fullMessage,
-					Margin = new Thickness(5)
-				};
-				messagePanel.Children.Add(messageTextBlock);
-			}
+		AddUserPanel addUserPanel = (AddUserPanel) Resources["AddUserPanel"]!;
+		ChatPanel chatPanel = (ChatPanel) Resources["ChatPanel"]!;
 
-			TextBox messageBox = this.FindControl<TextBox>("MessageBox")!;
-			messageBox.KeyDown += (_, args) => {
-				if (args.Key == Key.Enter) {
-					if (messageBox.Text == null)
-						return;
+		mainPanel = this.FindControl<DockPanel>("MainPanel")!;
 
-					_controller.Send(messageBox.Text);
-				}
-			};
+		addUserPanel.SetOnEnter(publicKey => {
+			mainPanel.Children.Remove(addUserPanel);
+			mainPanel.Children.Add(chatPanel);
 
-			this.FindControl<Button>("AddChatButton").Click += OnAddChatButtonClick;
-		}
+			chatPanel.Show("someone", publicKey);
+		});
 
-		private void OnAddChatButtonClick(object sender, RoutedEventArgs e) {
-		
-		}
+		mainPanel.Children.Add(addUserPanel);
+		this.FindControl<Button>("AddChatButton").Click += OnAddChatButtonClick;
+	}
 
-		
+	private void OnAddChatButtonClick(object sender, RoutedEventArgs e) {
+
 	}
 }

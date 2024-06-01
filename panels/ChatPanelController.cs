@@ -18,11 +18,13 @@ using SecureChat.util;
 
 namespace SecureChat;
 
-public class MainWindowController {
-	private readonly RsaKeyParameters _personalPublicKey, _foreignPublicKey;
+public class ChatPanelController {
+	public RsaKeyParameters ForeignPublicKey;
+
+	private readonly RsaKeyParameters _personalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
 	
-	public MainWindowController(RsaKeyParameters foreignPublicKey) {
+	public ChatPanelController() {
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
 			_personalPublicKey = (RsaKeyParameters) pemReader.ReadObject();
@@ -32,8 +34,6 @@ public class MainWindowController {
 			PemReader pemReader = new (reader);
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
 		}
-		
-		_foreignPublicKey = foreignPublicKey;
 	}
 
 	private string Sign(string text) {
@@ -52,7 +52,7 @@ public class MainWindowController {
 		byte[] signatureBytes = Convert.FromBase64String(signature);
 
 		ISigner verifier = new RsaDigestSigner(new Sha256Digest());
-		verifier.Init(false, isOwnMessage ? _personalPublicKey : _foreignPublicKey);
+		verifier.Init(false, isOwnMessage ? _personalPublicKey : ForeignPublicKey);
 		
 		verifier.BlockUpdate(textBytes, 0, textBytes.Length);
 
@@ -79,7 +79,7 @@ public class MainWindowController {
 		rsaEngine.Init(true, _personalPublicKey);
 		byte[] personalEncryptedKey = rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
 		
-		rsaEngine.Init(true, _foreignPublicKey);
+		rsaEngine.Init(true, ForeignPublicKey);
 		byte[] foreignEncryptedKey = rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
 
 		return new Message {
@@ -87,7 +87,7 @@ public class MainWindowController {
 			SenderEncryptedKey = Convert.ToBase64String(personalEncryptedKey),
 			ReceiverEncryptedKey = Convert.ToBase64String(foreignEncryptedKey),
 			Signature = Sign(inputText),
-			Receiver = _foreignPublicKey,
+			Receiver = ForeignPublicKey,
 			Sender = _personalPublicKey
 		};
 	}
@@ -116,7 +116,7 @@ public class MainWindowController {
 	public string[] GetPastMessages() {
 		List<string> res = new ();
 		
-		string getVariables = $"requestingUserModulus={_personalPublicKey.Modulus.ToString(16)}&requestingUserExponent={_personalPublicKey.Exponent.ToString(16)}&requestedUserModulus={_foreignPublicKey.Modulus.ToString(16)}&requestedUserExponent={_foreignPublicKey.Exponent.ToString(16)}";
+		string getVariables = $"requestingUserModulus={_personalPublicKey.Modulus.ToString(16)}&requestingUserExponent={_personalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
 		JsonArray messages = JsonNode.Parse(Https.Get("http://localhost:5109/messages?" + getVariables).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
@@ -139,8 +139,8 @@ public class MainWindowController {
 				["exponent"] = _personalPublicKey.Exponent.ToString(16)
 			},
 			["receiver"] = new JsonObject {
-				["modulus"] = _foreignPublicKey.Modulus.ToString(16),
-				["exponent"] = _foreignPublicKey.Exponent.ToString(16)
+				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
+				["exponent"] = ForeignPublicKey.Exponent.ToString(16)
 			},
 			["text"] = encryptedMessage.Body,
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,

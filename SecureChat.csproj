@@ -19,10 +19,9 @@
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.1" />
   </ItemGroup>
 
-
-  <ItemGroup>
-    <Compile Update="MainWindowController.cs">
-      <DependentUpon>MainWindow.axaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Update="panels/ChatPanelController.cs">
+			<DependentUpon>panels/ChatPanel.cs</DependentUpon>
+		</Compile>
+	</ItemGroup>
 </Project>
