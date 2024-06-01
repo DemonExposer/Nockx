@@ -9,10 +9,10 @@ using System.Collections.Generic;
 namespace SecureChat {
 	public partial class MainWindow : Window {
 		private readonly MainWindowController _controller;
-
+	
 		public MainWindow() {
-			_controller = new MainWindowController("", ""); // TODO: add keys here
-
+			_controller = new MainWindowController(null); // TODO: pass the foreign public key to the controller
+		
 			InitializeComponent();
 		}
 
@@ -46,7 +46,5 @@ namespace SecureChat {
 				}
 			};
 		}
-		
-
 	}
 }

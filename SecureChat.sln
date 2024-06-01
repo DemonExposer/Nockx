@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.7.34009.444
+VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecureChat", "SecureChat.csproj", "{FC1B2710-6337-41E3-A49B-7C292AB6D985}"
 EndProject
@@ -19,7 +19,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		        SolutionGuid = {3332EB65-0F01-4C00-9EA9-D41DBFC1D590}
-		SolutionGuid = {6E422C9C-CC48-4730-91DE-2A100F8DE33B}
+		SolutionGuid = {3332EB65-0F01-4C00-9EA9-D41DBFC1D590}
 	EndGlobalSection
 EndGlobal
