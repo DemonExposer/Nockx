@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using SecureChat.model;
 using System;
@@ -45,6 +46,14 @@ namespace SecureChat {
 					_controller.Send(messageBox.Text);
 				}
 			};
+
+			this.FindControl<Button>("AddChatButton").Click += OnAddChatButtonClick;
 		}
+
+		private void OnAddChatButtonClick(object sender, RoutedEventArgs e) {
+		
+		}
+
+		
 	}
 }

@@ -10,12 +10,16 @@
         Width="1000"
         Height="600"
         WindowState="Maximized">
-    <DockPanel>
-        <TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
-        <ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
-            <StackPanel Name="MessagePanel">
-                
-            </StackPanel>
-        </ScrollViewer>
-    </DockPanel>
+	
+	<DockPanel>
+        <StackPanel DockPanel.Dock="Left" Width="200">
+	        <Button Name="AddChatButton" Content="AddingButton"/>
+        </StackPanel>
+        <DockPanel>
+            <TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
+            <ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
+                <StackPanel Name="MessagePanel"></StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+	</DockPanel>
 </Window>
