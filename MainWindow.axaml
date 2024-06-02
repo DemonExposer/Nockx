@@ -13,11 +13,11 @@
         WindowState="Maximized">
 	<Window.Resources>
 		<panels:AddUserPanel x:Key="AddUserPanel">
-			<TextBox Name="ModulusTextBox"></TextBox>
-			<TextBox Name="ExponentTextBox"></TextBox>
+			<TextBox Name="ModulusTextBox"/>
+			<TextBox Name="ExponentTextBox"/>
 		</panels:AddUserPanel>
 		<panels:ChatPanel x:Key="ChatPanel">
-			<TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
+			<TextBox DockPanel.Dock="Bottom" Name="MessageBox"/>
 			<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
 				<StackPanel Name="MessagePanel">
 				
@@ -28,7 +28,7 @@
 	
 	<DockPanel>
         <StackPanel DockPanel.Dock="Left" Width="200">
-	        <Button Name="AddChatButton" Content="AddingButton"/>
+	        <Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
         </StackPanel>
 		<DockPanel Name="MainPanel">
 		
