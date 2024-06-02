@@ -10,7 +10,7 @@ using Avalonia.Threading;
 namespace SecureChat.panels;
 public class ChatPanel : DockPanel {
 	private readonly ChatPanelController _controller = new ();
-	private readonly List<TextBlock> _messages = new ();
+	private readonly List<SelectableTextBlock> _messages = new ();
 
 	private StackPanel? _messagePanel;
 
@@ -56,7 +56,7 @@ public class ChatPanel : DockPanel {
 
 		foreach (string message in messages) {
 			string fullMessage = $"{username} | {message}";
-			TextBlock messageTextBlock = new () {
+			SelectableTextBlock messageTextBlock = new () {
 				Text = fullMessage,
 				Margin = new Thickness(5)
 			};
