@@ -1,4 +1,3 @@
-using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -37,14 +36,19 @@ public partial class MainWindow : Window {
 		_uiPanel = panel;
 		_mainPanel.Children.Add(panel);
 	}
-	
-	public void OnAddUser(RsaKeyParameters publicKey) {
+
+	private void OnAddUser(RsaKeyParameters publicKey) {
 		SetUiPanel(_chatPanel);
-	//	_chatPanel.Show("someone", publicKey);
-		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(new Button {
+		_chatPanel.Show("someone", publicKey);
+		Button chatButton = new () {
 			Background = new SolidColorBrush(Color.Parse("Transparent")),
 			Width = 200,
 			Content = "chat"
-		});
+		};
+		chatButton.Click += (_, _) => {
+			SetUiPanel(_chatPanel);
+			_chatPanel.Show("someone", publicKey);
+		};
+		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
 	}
 }
