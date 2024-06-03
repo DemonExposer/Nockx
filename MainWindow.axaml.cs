@@ -1,5 +1,8 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.panels;
 
 namespace SecureChat;
@@ -7,6 +10,7 @@ namespace SecureChat;
 public partial class MainWindow : Window {
 	private DockPanel _mainPanel;
 	private Panel? _uiPanel;
+	private ChatPanel _chatPanel;
 
 	public MainWindow() => InitializeComponent();
 
@@ -14,15 +18,12 @@ public partial class MainWindow : Window {
 		AvaloniaXamlLoader.Load(this);
 
 		AddUserPanel addUserPanel = (AddUserPanel) Resources["AddUserPanel"]!;
-		ChatPanel chatPanel = (ChatPanel) Resources["ChatPanel"]!;
+		_chatPanel = (ChatPanel) Resources["ChatPanel"]!;
 		UserInfoPanel userInfoPanel = (UserInfoPanel) Resources["UserInfoPanel"]!;
 
 		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
 
-		addUserPanel.SetOnEnter(publicKey => {
-			SetUiPanel(chatPanel);
-			chatPanel.Show("someone", publicKey);
-		});
+		addUserPanel.SetOnEnter(OnAddUser);
 
 		SetUiPanel(addUserPanel);
 		this.FindControl<Button>("AddChatButton")!.Click += (_, _) => SetUiPanel(addUserPanel);
@@ -35,5 +36,15 @@ public partial class MainWindow : Window {
 
 		_uiPanel = panel;
 		_mainPanel.Children.Add(panel);
+	}
+	
+	public void OnAddUser(RsaKeyParameters publicKey) {
+		SetUiPanel(_chatPanel);
+	//	_chatPanel.Show("someone", publicKey);
+		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(new Button {
+			Background = new SolidColorBrush(Color.Parse("Transparent")),
+			Width = 200,
+			Content = "chat"
+		});
 	}
 }
