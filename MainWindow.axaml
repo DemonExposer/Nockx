@@ -24,12 +24,21 @@
 				</StackPanel>
 			</ScrollViewer>
 		</panels:ChatPanel>
+		<panels:UserInfoPanel x:Key="UserInfoPanel">
+			<TextBlock Margin="0,20,0,0">Modulus:</TextBlock>
+			<TextBox IsReadOnly="True" Name="ModulusBox"/>
+			<TextBlock>Exponent:</TextBlock>
+			<TextBox IsReadOnly="True" Name="ExponentBox"/>
+		</panels:UserInfoPanel>
 	</Window.Resources>
 	
 	<DockPanel>
-        <StackPanel DockPanel.Dock="Left" Width="200">
-	        <Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
-        </StackPanel>
+		<DockPanel DockPanel.Dock="Left" Width="200">
+			<Button DockPanel.Dock="Bottom" Name="UserInfoButton" Content="User info" Classes="chat_selector"/>
+			<StackPanel Width="200">
+				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
+			</StackPanel>
+		</DockPanel>
 		<DockPanel Name="MainPanel">
 		
 		</DockPanel>

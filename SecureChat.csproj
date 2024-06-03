@@ -23,5 +23,8 @@
 		<Compile Update="panels/ChatPanelController.cs">
 			<DependentUpon>panels/ChatPanel.cs</DependentUpon>
 		</Compile>
+		<Compile Update="panels/UserInfoPanelController.cs">
+			<DependentUpon>panels/UserInfoPanel.cs</DependentUpon>
+		</Compile>
 	</ItemGroup>
 </Project>

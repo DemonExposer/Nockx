@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Avalonia.Threading;
 
 namespace SecureChat.panels;
+
 public class ChatPanel : DockPanel {
 	private readonly ChatPanelController _controller = new ();
 	private readonly List<SelectableTextBlock> _messages = new ();

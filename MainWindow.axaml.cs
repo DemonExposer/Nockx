@@ -15,6 +15,7 @@ public partial class MainWindow : Window {
 
 		AddUserPanel addUserPanel = (AddUserPanel) Resources["AddUserPanel"]!;
 		ChatPanel chatPanel = (ChatPanel) Resources["ChatPanel"]!;
+		UserInfoPanel userInfoPanel = (UserInfoPanel) Resources["UserInfoPanel"]!;
 
 		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
 
@@ -25,6 +26,7 @@ public partial class MainWindow : Window {
 
 		SetUiPanel(addUserPanel);
 		this.FindControl<Button>("AddChatButton")!.Click += (_, _) => SetUiPanel(addUserPanel);
+		this.FindControl<Button>("UserInfoButton")!.Click += (_, _) => SetUiPanel(userInfoPanel);
 	}
 
 	private void SetUiPanel(Panel panel) {
