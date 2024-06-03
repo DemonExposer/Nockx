@@ -17,7 +17,7 @@
 			<TextBox Name="ExponentTextBox"/>
 		</panels:AddUserPanel>
 		<panels:ChatPanel x:Key="ChatPanel">
-			<TextBox DockPanel.Dock="Bottom" Name="MessageBox"/>
+			<TextBox DockPanel.Dock="Bottom" Name="MessageBox" Margin="0" Width="NaN" HorizontalAlignment="Stretch"/>
 			<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
 				<StackPanel Name="MessagePanel">
 				
@@ -35,7 +35,7 @@
 	<DockPanel>
 		<DockPanel DockPanel.Dock="Left" Width="200">
 			<Button DockPanel.Dock="Bottom" Name="UserInfoButton" Content="User info" Classes="chat_selector"/>
-			<StackPanel Width="200">
+			<StackPanel Name="ChatListPanel" Width="200">
 				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
 			</StackPanel>
 		</DockPanel>
