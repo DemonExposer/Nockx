@@ -29,24 +29,40 @@ public class MainWindowController {
 	}
 
 	public async Task InitializeWebsocket() {
-		Thread thread = new (async () => {
+		bool doReturn = false;
+		Thread? timeoutThread = null;
+		Thread connectThread = new (async () => {
 			try {
 				await _webSocket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None);
+				timeoutThread!.Interrupt();
 			} catch (ThreadInterruptedException) {
 				Console.WriteLine("interrupted");
+				doReturn = true;
 			} catch (Exception ex) {
 				Console.WriteLine(ex.ToString());
+				doReturn = true;
 			}
 		});
 
-		thread.Start();
+		timeoutThread = new Thread(async () => {
+			try {
+				await Task.Delay(5000);
+				if (connectThread.IsAlive) {
+					connectThread.Interrupt();
+					Console.WriteLine("websocket timeout");
+					return;
+				}
+			} catch (ThreadInterruptedException) {
+				Console.WriteLine("second interrupted");
+			}
+		});
 
-		await Task.Delay(5000);
-		if (thread.IsAlive) {
-			thread.Interrupt();
-			Console.WriteLine("websocket timeout");
+		connectThread.Start();
+		timeoutThread.Start();
+
+		timeoutThread.Join();
+		if (doReturn)
 			return;
-		}
 
 		byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
 		await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
