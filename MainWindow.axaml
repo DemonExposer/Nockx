@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:panels="clr-namespace:SecureChat.panels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="SecureChat.MainWindow"
         Title="SecureChat"
@@ -10,12 +11,36 @@
         Width="1000"
         Height="600"
         WindowState="Maximized">
-    <DockPanel>
-        <TextBox DockPanel.Dock="Bottom" Name="MessageBox"></TextBox>
-        <ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
-            <StackPanel Name="MessagePanel">
-                
-            </StackPanel>
-        </ScrollViewer>
-    </DockPanel>
+	<Window.Resources>
+		<panels:AddUserPanel x:Key="AddUserPanel">
+			<TextBox Name="ModulusTextBox"/>
+			<TextBox Name="ExponentTextBox"/>
+		</panels:AddUserPanel>
+		<panels:ChatPanel x:Key="ChatPanel">
+			<TextBox DockPanel.Dock="Bottom" Name="MessageBox" Margin="0" Width="NaN" HorizontalAlignment="Stretch"/>
+			<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
+				<StackPanel Name="MessagePanel">
+				
+				</StackPanel>
+			</ScrollViewer>
+		</panels:ChatPanel>
+		<panels:UserInfoPanel x:Key="UserInfoPanel">
+			<TextBlock Margin="0,20,0,0">Modulus:</TextBlock>
+			<TextBox IsReadOnly="True" Name="ModulusBox"/>
+			<TextBlock>Exponent:</TextBlock>
+			<TextBox IsReadOnly="True" Name="ExponentBox"/>
+		</panels:UserInfoPanel>
+	</Window.Resources>
+	
+	<DockPanel>
+		<DockPanel DockPanel.Dock="Left" Width="200">
+			<Button DockPanel.Dock="Bottom" Name="UserInfoButton" Content="User info" Classes="chat_selector"/>
+			<StackPanel Name="ChatListPanel" Width="200">
+				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
+			</StackPanel>
+		</DockPanel>
+		<DockPanel Name="MainPanel">
+		
+		</DockPanel>
+	</DockPanel>
 </Window>

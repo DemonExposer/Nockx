@@ -1,50 +1,54 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using SecureChat.model;
-using System;
-using System.Collections.Generic;
+using Avalonia.Media;
+using Org.BouncyCastle.Crypto.Parameters;
+using SecureChat.panels;
 
-namespace SecureChat {
-	public partial class MainWindow : Window {
-		private readonly MainWindowController _controller;
-	
-		public MainWindow() {
-			_controller = new MainWindowController(null); // TODO: pass the foreign public key to the controller
-		
-			InitializeComponent();
-		}
+namespace SecureChat;
 
-		private void InitializeComponent() {
-			AvaloniaXamlLoader.Load(this);
+public partial class MainWindow : Window {
+	private DockPanel _mainPanel;
+	private Panel? _uiPanel;
+	private ChatPanel _chatPanel;
 
-			StackPanel messagePanel = this.FindControl<StackPanel>("MessagePanel")!;
+	public MainWindow() => InitializeComponent();
 
-			List<Message> messages = new() {
-				new Message { Body = "Hello there, how are you doing?", DateTime = DateTime.Now.AddMinutes(-10), UserName = "User1" },
-				new Message { Body = "What's up? Any plans for the weekend?", DateTime = DateTime.Now.AddMinutes(-5), UserName = "User1" },
-				new Message { Body = "Hey answer me!", DateTime = DateTime.Now, UserName = "User1" }
-			}; 
+	private void InitializeComponent() {
+		AvaloniaXamlLoader.Load(this);
 
-			foreach (Message message in messages) {
-				string fullMessage = $"{message.DateTime.ToString("yyyy-MM-dd HH:mm:ss")} | {message.UserName} | {message.Body}";
-				TextBlock messageTextBlock = new() {
-					Text = fullMessage,
-					Margin = new Thickness(5)
-				};
-				messagePanel.Children.Add(messageTextBlock);
-			}
+		AddUserPanel addUserPanel = (AddUserPanel) Resources["AddUserPanel"]!;
+		_chatPanel = (ChatPanel) Resources["ChatPanel"]!;
+		UserInfoPanel userInfoPanel = (UserInfoPanel) Resources["UserInfoPanel"]!;
 
-			TextBox messageBox = this.FindControl<TextBox>("MessageBox")!;
-			messageBox.KeyDown += (_, args) => {
-				if (args.Key == Key.Enter) {
-					if (messageBox.Text == null)
-						return;
+		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
 
-					_controller.Send(messageBox.Text);
-				}
-			};
-		}
+		addUserPanel.SetOnEnter(OnAddUser);
+
+		SetUiPanel(addUserPanel);
+		this.FindControl<Button>("AddChatButton")!.Click += (_, _) => SetUiPanel(addUserPanel);
+		this.FindControl<Button>("UserInfoButton")!.Click += (_, _) => SetUiPanel(userInfoPanel);
+	}
+
+	private void SetUiPanel(Panel panel) {
+		if (_uiPanel != null)
+			_mainPanel.Children.Remove(_uiPanel);
+
+		_uiPanel = panel;
+		_mainPanel.Children.Add(panel);
+	}
+
+	private void OnAddUser(RsaKeyParameters publicKey) {
+		SetUiPanel(_chatPanel);
+		_chatPanel.Show("someone", publicKey);
+		Button chatButton = new () {
+			Background = new SolidColorBrush(Color.Parse("Transparent")),
+			Width = 200,
+			Content = "chat"
+		};
+		chatButton.Click += (_, _) => {
+			SetUiPanel(_chatPanel);
+			_chatPanel.Show("someone", publicKey);
+		};
+		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
 	}
 }
