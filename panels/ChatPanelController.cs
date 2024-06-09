@@ -117,7 +117,7 @@ public class ChatPanelController {
 		List<string> res = new ();
 		
 		string getVariables = $"requestingUserModulus={_personalPublicKey.Modulus.ToString(16)}&requestingUserExponent={_personalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
-		JsonArray messages = JsonNode.Parse(Https.Get("http://localhost:5100/messages?" + getVariables).Body)!.AsArray();
+		JsonArray messages = JsonNode.Parse(Https.Get("http://localhost:5000/messages?" + getVariables).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
 			bool isOwnMessage = Equals(message.Sender, _personalPublicKey);
@@ -147,6 +147,6 @@ public class ChatPanelController {
 			["receiverEncryptedKey"] = encryptedMessage.ReceiverEncryptedKey,
 			["signature"] = encryptedMessage.Signature
 		};
-		Console.WriteLine(Https.Post("http://localhost:5100/messages", JsonSerializer.Serialize(body)).Body);
+		Console.WriteLine(Https.Post("http://localhost:5000/messages", JsonSerializer.Serialize(body)).Body);
 	}
 }

@@ -3,6 +3,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.panels;
+using System.Threading;
 
 namespace SecureChat;
 
@@ -15,6 +16,7 @@ public partial class MainWindow : Window {
 
 	public MainWindow() {
 		_controller = new MainWindowController(this);
+	//	new Thread(_controller.ListenOnWebsocket).Start();
 
 		InitializeComponent();
 	}
