@@ -11,7 +11,13 @@ public partial class MainWindow : Window {
 	private Panel? _uiPanel;
 	private ChatPanel _chatPanel;
 
-	public MainWindow() => InitializeComponent();
+	private readonly MainWindowController _controller;
+
+	public MainWindow() {
+		_controller = new MainWindowController(this);
+
+		InitializeComponent();
+	}
 
 	private void InitializeComponent() {
 		AvaloniaXamlLoader.Load(this);
@@ -35,6 +41,13 @@ public partial class MainWindow : Window {
 
 		_uiPanel = panel;
 		_mainPanel.Children.Add(panel);
+	}
+
+	public RsaKeyParameters? GetCurrentChatIdentity() {
+		if (_uiPanel is not ChatPanel)
+			return null;
+
+		return _chatPanel.GetForeignPublicKey();
 	}
 
 	private void OnAddUser(RsaKeyParameters publicKey) {

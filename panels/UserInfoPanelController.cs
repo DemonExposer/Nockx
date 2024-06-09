@@ -9,9 +9,8 @@ public class UserInfoPanelController {
 	public readonly RsaKeyParameters PublicKey;
 
 	public UserInfoPanelController() {
-		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
-			PemReader pemReader = new(reader);
-			PublicKey = (RsaKeyParameters) pemReader.ReadObject();
-		}
+		using StreamReader reader = File.OpenText(Constants.PublicKeyFile);
+		PemReader pemReader = new (reader);
+		PublicKey = (RsaKeyParameters) pemReader.ReadObject();
 	}
 }

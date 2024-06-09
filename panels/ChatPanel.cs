@@ -65,4 +65,6 @@ public class ChatPanel : DockPanel {
 			_messagePanel.Children.Add(messageTextBlock);
 		}
 	}
+
+	public RsaKeyParameters GetForeignPublicKey() => _controller.ForeignPublicKey;
 }
