@@ -29,40 +29,19 @@ public class MainWindowController {
 	}
 
 	public async Task InitializeWebsocket() {
-		bool doReturn = false;
-		Thread? timeoutThread = null;
-		Thread connectThread = new (async () => {
-			try {
-				await _webSocket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None);
-				timeoutThread!.Interrupt();
-			} catch (ThreadInterruptedException) {
-				Console.WriteLine("interrupted");
-				doReturn = true;
-			} catch (Exception ex) {
-				Console.WriteLine(ex.ToString());
-				doReturn = true;
+		using (CancellationTokenSource cts = new ()) { // TODO: make ConnectAsync not block Task.Delay
+			Task connectTask = _webSocket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None);
+			Task timeoutTask = Task.Delay(5000, cts.Token);
+
+			if (await Task.WhenAny(connectTask, timeoutTask) == timeoutTask) {
+				Console.WriteLine("websocket timeout"); // TODO: handle this differently
+				return;
 			}
-		});
 
-		timeoutThread = new Thread(async () => {
-			try {
-				await Task.Delay(5000);
-				if (connectThread.IsAlive) {
-					connectThread.Interrupt();
-					Console.WriteLine("websocket timeout");
-					return;
-				}
-			} catch (ThreadInterruptedException) {
-				Console.WriteLine("second interrupted");
-			}
-		});
+			cts.Cancel();
 
-		connectThread.Start();
-		timeoutThread.Start();
-
-		timeoutThread.Join();
-		if (doReturn)
-			return;
+			await connectTask;
+		}
 
 		byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
 		await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
