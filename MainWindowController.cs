@@ -29,22 +29,19 @@ public class MainWindowController {
 	}
 
 	public async Task InitializeWebsocket() {
-		using (CancellationTokenSource cts = new ()) { // TODO: make ConnectAsync not block Task.Delay
-			Task connectTask = _webSocket.ConnectAsync(new Uri("ws://localhost:5000/ws"), CancellationToken.None);
-			Task timeoutTask = Task.Delay(5000, cts.Token);
+		using CancellationTokenSource cts = new (5000);
+		try {
+			await _webSocket.ConnectAsync(new Uri("ws://localhost:5000/ws"), cts.Token);
 
-			if (await Task.WhenAny(connectTask, timeoutTask) == timeoutTask) {
-				Console.WriteLine("websocket timeout"); // TODO: handle this differently
-				return;
-			}
-
-			cts.Cancel();
-
-			await connectTask;
+			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
+			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
+		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+			Console.WriteLine("websocket timeout"); // TODO: handle this differently
+			return;
+		} catch (Exception e) {
+			Console.WriteLine(e.ToString());
+			return;
 		}
-
-		byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
-		await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
 	}
 
 	public void ListenOnWebsocket() {
