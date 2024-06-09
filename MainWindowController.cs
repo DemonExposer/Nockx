@@ -35,7 +35,7 @@ public class MainWindowController {
 			} catch (ThreadInterruptedException) {
 				Console.WriteLine("interrupted");
 			} catch (Exception ex) {
-				Console.WriteLine(ex.Message);
+				Console.WriteLine(ex.ToString());
 			}
 		});
 
