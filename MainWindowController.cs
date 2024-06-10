@@ -40,8 +40,6 @@ public class MainWindowController {
 			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
 			isWebsocketInitialized = true;
-
-			byte[] buffer = new byte[1024];
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 			Console.WriteLine("websocket timeout"); // TODO: handle this differently
 			return;
@@ -55,7 +53,8 @@ public class MainWindowController {
 		while (!isWebsocketInitialized)
 			await Task.Delay(1000);
 
-		byte[] buffer = new byte[1024];
+		int arrSize = 1024;
+		byte[] buffer = new byte[arrSize];
 
 		while (true) {
 			List<byte> bytes = new ();
@@ -63,7 +62,7 @@ public class MainWindowController {
 			do {
 				result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
 				bytes.AddRange(buffer[..result.Count]);
-			} while (result.Count == 1024);
+			} while (result.Count == arrSize);
 
 			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
 			Message message = new () {
