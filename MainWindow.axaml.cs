@@ -10,7 +10,7 @@ namespace SecureChat;
 public partial class MainWindow : Window {
 	private DockPanel _mainPanel;
 	private Panel? _uiPanel;
-	private ChatPanel _chatPanel;
+	public ChatPanel ChatPanel { get; private set; }
 
 	private readonly MainWindowController _controller;
 
@@ -25,7 +25,7 @@ public partial class MainWindow : Window {
 		AvaloniaXamlLoader.Load(this);
 
 		AddUserPanel addUserPanel = (AddUserPanel) Resources["AddUserPanel"]!;
-		_chatPanel = (ChatPanel) Resources["ChatPanel"]!;
+		ChatPanel = (ChatPanel) Resources["ChatPanel"]!;
 		UserInfoPanel userInfoPanel = (UserInfoPanel) Resources["UserInfoPanel"]!;
 
 		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
@@ -46,23 +46,23 @@ public partial class MainWindow : Window {
 	}
 
 	public RsaKeyParameters? GetCurrentChatIdentity() {
-		if (_uiPanel is not ChatPanel)
+		if (_uiPanel is not panels.ChatPanel)
 			return null;
 
-		return _chatPanel.GetForeignPublicKey();
+		return ChatPanel.GetForeignPublicKey();
 	}
 
 	private void OnAddUser(RsaKeyParameters publicKey) {
-		SetUiPanel(_chatPanel);
-		_chatPanel.Show("someone", publicKey);
+		SetUiPanel(ChatPanel);
+		ChatPanel.Show("someone", publicKey);
 		Button chatButton = new () {
 			Background = new SolidColorBrush(Color.Parse("Transparent")),
 			Width = 200,
 			Content = "chat"
 		};
 		chatButton.Click += (_, _) => {
-			SetUiPanel(_chatPanel);
-			_chatPanel.Show("someone", publicKey);
+			SetUiPanel(ChatPanel);
+			ChatPanel.Show("someone", publicKey);
 		};
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
 	}

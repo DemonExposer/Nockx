@@ -92,7 +92,7 @@ public class ChatPanelController {
 		};
 	}
 
-	private string Decrypt(Message message, bool isOwnMessage) {
+	public string Decrypt(Message message, bool isOwnMessage) {
 		// Decrypt the AES key using RSA
 		byte[] aesKeyEncrypted = Convert.FromBase64String(isOwnMessage ? message.SenderEncryptedKey : message.ReceiverEncryptedKey);
 		OaepEncoding rsaEngine = new (new RsaEngine());

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
-using HarfBuzzSharp;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.util;
 
@@ -42,7 +42,7 @@ public class MainWindowController {
 			isWebsocketInitialized = true;
 
 			byte[] buffer = new byte[1024];
-		} catch (OperationCanceledException e) when (cts.IsCancellationRequested) {
+		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 			Console.WriteLine("websocket timeout"); // TODO: handle this differently
 			return;
 		} catch (Exception e) {
@@ -52,9 +52,8 @@ public class MainWindowController {
 	}
 
 	public async Task ListenOnWebsocket() {
-		while (!isWebsocketInitialized) {
+		while (!isWebsocketInitialized)
 			await Task.Delay(1000);
-		}
 
 		byte[] buffer = new byte[1024];
 
@@ -65,8 +64,20 @@ public class MainWindowController {
 				result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
 				bytes.AddRange(buffer[..result.Count]);
 			} while (result.Count == 1024);
-			
-			File.WriteAllText("out.txt", Encoding.UTF8.GetString(bytes.ToArray()));
+
+			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
+			Message message = new () {
+				Body = messageJson["text"]!.GetValue<string>(),
+				Sender = new RsaKeyParameters(false, new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)),
+				ReceiverEncryptedKey = messageJson["receiverEncryptedKey"]!.GetValue<string>(),
+				Signature = messageJson["signature"]!.GetValue<string>()
+			};
+
+			RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
+			if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender))
+				return;
+
+			_context.ChatPanel.DecryptAndAddMessage(message);
 		}
 	}
 }

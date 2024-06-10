@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Collections.Generic;
 using Avalonia.Threading;
+using SecureChat.util;
 
 namespace SecureChat.panels;
 
@@ -40,6 +41,22 @@ public class ChatPanel : DockPanel {
 		});
 	}
 
+	private void AddMessage(string text) {
+		if (_messagePanel == null) {
+			Console.WriteLine("Show was called before initialization. Not displaying anything");
+			return;
+		}
+
+		SelectableTextBlock messageTextBlock = new () {
+			Text = text,
+			Margin = new Thickness(5)
+		};
+		_messages.Add(messageTextBlock);
+		_messagePanel.Children.Add(messageTextBlock);
+	}
+
+	public void DecryptAndAddMessage(Message message) => AddMessage(_controller.Decrypt(message, false));
+
 	public void Show(string username, RsaKeyParameters publicKey) {
 		// _messagePanel should never be null, because a user cannot open this panel before the UI is done.
 		// However, in theory, when the program is loaded from a saved state, it is theoretically possible to trigger this. So this is just for debug.
@@ -57,12 +74,7 @@ public class ChatPanel : DockPanel {
 
 		foreach (string message in messages) {
 			string fullMessage = $"{username} | {message}";
-			SelectableTextBlock messageTextBlock = new () {
-				Text = fullMessage,
-				Margin = new Thickness(5)
-			};
-			_messages.Add(messageTextBlock);
-			_messagePanel.Children.Add(messageTextBlock);
+			AddMessage(fullMessage);
 		}
 	}
 
