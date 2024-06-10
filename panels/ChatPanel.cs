@@ -29,6 +29,8 @@ public class ChatPanel : DockPanel {
 									return;
 
 								_controller.Send(textBox.Text);
+								AddMessage(textBox.Text);
+								textBox.Text = null;
 							}
 						};
 					}
