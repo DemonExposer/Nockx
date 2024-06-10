@@ -16,7 +16,7 @@ public partial class MainWindow : Window {
 
 	public MainWindow() {
 		_controller = new MainWindowController(this);
-	//	new Thread(_controller.ListenOnWebsocket).Start();
+		_ = _controller.ListenOnWebsocket();
 
 		InitializeComponent();
 	}

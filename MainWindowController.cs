@@ -42,17 +42,7 @@ public class MainWindowController {
 			isWebsocketInitialized = true;
 
 			byte[] buffer = new byte[1024];
-
-			// This code is duplicate with the code in ListenOnWebsocket, this is temporary
-			List<byte> bytes = new ();
-			WebSocketReceiveResult result;
-			do {
-				result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
-				bytes.AddRange(buffer[..result.Count]);
-			} while (result.Count == 1024);
-
-			File.WriteAllText("out.txt", Encoding.UTF8.GetString(bytes.ToArray()));
-		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+		} catch (OperationCanceledException e) when (cts.IsCancellationRequested) {
 			Console.WriteLine("websocket timeout"); // TODO: handle this differently
 			return;
 		} catch (Exception e) {
@@ -61,7 +51,7 @@ public class MainWindowController {
 		}
 	}
 
-	public async void ListenOnWebsocket() {
+	public async Task ListenOnWebsocket() {
 		while (!isWebsocketInitialized) {
 			await Task.Delay(1000);
 		}
