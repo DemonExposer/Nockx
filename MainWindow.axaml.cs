@@ -3,13 +3,13 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.panels;
-using System.Threading;
 
 namespace SecureChat;
 
 public partial class MainWindow : Window {
 	private DockPanel _mainPanel;
 	private Panel? _uiPanel;
+	private Button? _pressedButton;
 	public ChatPanel ChatPanel { get; private set; }
 
 	private readonly MainWindowController _controller;
@@ -33,8 +33,26 @@ public partial class MainWindow : Window {
 		addUserPanel.SetOnEnter(OnAddUser);
 
 		SetUiPanel(addUserPanel);
-		this.FindControl<Button>("AddChatButton")!.Click += (_, _) => SetUiPanel(addUserPanel);
-		this.FindControl<Button>("UserInfoButton")!.Click += (_, _) => SetUiPanel(userInfoPanel);
+		
+		Button addChatButton = this.FindControl<Button>("AddChatButton")!;
+		SetPressedButton(addChatButton);
+		addChatButton.Click += (_, _) => {
+			SetPressedButton(addChatButton);
+			SetUiPanel(addUserPanel);
+		};
+		
+		Button userInfoButton = this.FindControl<Button>("UserInfoButton")!;
+		userInfoButton.Click += (_, _) => {
+			SetPressedButton(userInfoButton);
+			SetUiPanel(userInfoPanel);
+		};
+	}
+
+	private void SetPressedButton(Button button) {
+		_pressedButton?.Classes.Remove("selected");
+
+		_pressedButton = button;
+		button.Classes.Add("selected");
 	}
 
 	private void SetUiPanel(Panel panel) {
@@ -45,12 +63,7 @@ public partial class MainWindow : Window {
 		_mainPanel.Children.Add(panel);
 	}
 
-	public RsaKeyParameters? GetCurrentChatIdentity() {
-		if (_uiPanel is not panels.ChatPanel)
-			return null;
-
-		return ChatPanel.GetForeignPublicKey();
-	}
+	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
 	private void OnAddUser(RsaKeyParameters publicKey) {
 		SetUiPanel(ChatPanel);
@@ -60,7 +73,9 @@ public partial class MainWindow : Window {
 			Width = 200,
 			Content = "chat"
 		};
+		SetPressedButton(chatButton);
 		chatButton.Click += (_, _) => {
+			SetPressedButton(chatButton);
 			SetUiPanel(ChatPanel);
 			ChatPanel.Show("someone", publicKey);
 		};
