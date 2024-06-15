@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.util;
+using SecureChat.windows;
 
 namespace SecureChat;
 
@@ -28,8 +30,28 @@ public class MainWindowController {
 		PemReader pemReader = new (reader);
 		PublicKey = (RsaKeyParameters) pemReader.ReadObject();
 
+		LoadChats();
+
 		_webSocket = new ClientWebSocket();
 		_ = InitializeWebsocket();
+	}
+
+	private void LoadChats() {
+		try {
+			JsonArray chats = JsonNode.Parse(File.ReadAllText(Constants.ChatsFile))!.AsArray();
+		} catch (JsonException) {
+			PopupWindow errorWindow = new ($"{Constants.ChatsFile} not found or corrupted");
+			errorWindow.Show();
+			EventHandler activatedEventHandler = (_, _) => errorWindow.Topmost = true;
+			EventHandler deactivatedEventHandler = (_, _) => errorWindow.Topmost = false;
+			_context.Activated += activatedEventHandler;
+			_context.Deactivated += deactivatedEventHandler;
+
+			errorWindow.Closed += (_, _) => {
+				_context.Activated -= activatedEventHandler;
+				_context.Deactivated -= deactivatedEventHandler;
+			};
+		}
 	}
 
 	public async Task InitializeWebsocket() {

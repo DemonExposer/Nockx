@@ -16,6 +16,9 @@ public partial class App : Application {
 	private bool _isKeyLoadedSuccessfully; 
 	
 	public override void Initialize() {
+		if (!File.Exists(Constants.ChatsFile))
+			File.WriteAllText(Constants.ChatsFile, "[]");
+
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
 	}
