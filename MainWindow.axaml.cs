@@ -68,6 +68,7 @@ public partial class MainWindow : Window {
 	private void OnAddUser(RsaKeyParameters publicKey) {
 		SetUiPanel(ChatPanel);
 		ChatPanel.Show("someone", publicKey);
+
 		Button chatButton = new () {
 			Background = new SolidColorBrush(Color.Parse("Transparent")),
 			Width = 200,
@@ -79,6 +80,7 @@ public partial class MainWindow : Window {
 			SetUiPanel(ChatPanel);
 			ChatPanel.Show("someone", publicKey);
 		};
+
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
 	}
 }
