@@ -21,10 +21,10 @@
 
 	<ItemGroup>
 		<Compile Update="panels\ChatPanelController.cs">
-			<DependentUpon>panels\ChatPanel.cs</DependentUpon>
+			<DependentUpon>ChatPanel.cs</DependentUpon>
 		</Compile>
 		<Compile Update="panels\UserInfoPanelController.cs">
-			<DependentUpon>panels\UserInfoPanel.cs</DependentUpon>
+			<DependentUpon>UserInfoPanel.cs</DependentUpon>
 		</Compile>
         <Compile Update="MainWindowController.cs">
             <DependentUpon>MainWindow.axaml.cs</DependentUpon>
