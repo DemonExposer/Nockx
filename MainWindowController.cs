@@ -39,18 +39,34 @@ public class MainWindowController {
 	private void LoadChats() {
 		try {
 			JsonArray chats = JsonNode.Parse(File.ReadAllText(Constants.ChatsFile))!.AsArray();
+			foreach (JsonNode? jsonNode in chats) {
+				JsonObject chat = jsonNode!.AsObject();
+				RsaKeyParameters publicKey = new (
+					false,
+					new BigInteger(chat["publicKey"]!["modulus"]!.GetValue<string>(), 16),
+					new BigInteger(chat["publicKey"]!["exponent"]!.GetValue<string>(), 16)
+				);
+				string name = chat["name"]!.GetValue<string>();
+				_context.AddUser(publicKey, name);
+			}
 		} catch (JsonException) {
-			PopupWindow errorWindow = new ($"{Constants.ChatsFile} not found or corrupted");
-			errorWindow.Show();
-			EventHandler activatedEventHandler = (_, _) => errorWindow.Topmost = true;
-			EventHandler deactivatedEventHandler = (_, _) => errorWindow.Topmost = false;
-			_context.Activated += activatedEventHandler;
-			_context.Deactivated += deactivatedEventHandler;
+			_context.ShowPopupWindowOnTop(new PopupWindow($"{Constants.ChatsFile} not found or corrupted"));
+		}
+	}
 
-			errorWindow.Closed += (_, _) => {
-				_context.Activated -= activatedEventHandler;
-				_context.Deactivated -= deactivatedEventHandler;
-			};
+	public void AddChatToFile(RsaKeyParameters publicKey, string name) {
+		try {
+			JsonArray chats = JsonNode.Parse(File.ReadAllText(Constants.ChatsFile))!.AsArray();
+			chats.Add(new JsonObject {
+				["publicKey"] = new JsonObject {
+					["modulus"] = publicKey.Modulus.ToString(16),
+					["exponent"] = publicKey.Exponent.ToString(16)
+				},
+				["name"] = name
+			});
+			File.WriteAllText(Constants.ChatsFile, JsonSerializer.Serialize(chats, new JsonSerializerOptions { WriteIndented = true }));
+		} catch (JsonException) {
+			_context.ShowPopupWindowOnTop(new PopupWindow($"{Constants.ChatsFile} not found or corrupted"));
 		}
 	}
 

@@ -1,8 +1,14 @@
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.panels;
+using SecureChat.util;
+using SecureChat.windows;
 
 namespace SecureChat;
 
@@ -15,10 +21,10 @@ public partial class MainWindow : Window {
 	private readonly MainWindowController _controller;
 
 	public MainWindow() {
+		InitializeComponent();
+		
 		_controller = new MainWindowController(this);
 		_ = _controller.ListenOnWebsocket();
-
-		InitializeComponent();
 	}
 
 	private void InitializeComponent() {
@@ -65,14 +71,14 @@ public partial class MainWindow : Window {
 
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
-	private void OnAddUser(RsaKeyParameters publicKey) {
+	public void AddUser(RsaKeyParameters publicKey, string name) {
 		SetUiPanel(ChatPanel);
-		ChatPanel.Show("someone", publicKey);
+		ChatPanel.Show(name, publicKey);
 
 		Button chatButton = new () {
 			Background = new SolidColorBrush(Color.Parse("Transparent")),
 			Width = 200,
-			Content = "chat"
+			Content = name
 		};
 		SetPressedButton(chatButton);
 		chatButton.Click += (_, _) => {
@@ -80,7 +86,25 @@ public partial class MainWindow : Window {
 			SetUiPanel(ChatPanel);
 			ChatPanel.Show("someone", publicKey);
 		};
-
+		
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
+	}
+	
+	private void OnAddUser(RsaKeyParameters publicKey, string name) {
+		AddUser(publicKey, name);
+		_controller.AddChatToFile(publicKey, name);
+	}
+
+	public void ShowPopupWindowOnTop(PopupWindow popupWindow) {
+		popupWindow.Show();
+		EventHandler activatedEventHandler = (_, _) => popupWindow.Topmost = true;
+		EventHandler deactivatedEventHandler = (_, _) => popupWindow.Topmost = false;
+		Activated += activatedEventHandler;
+		Deactivated += deactivatedEventHandler;
+
+		popupWindow.Closed += (_, _) => {
+			Activated -= activatedEventHandler;
+			Deactivated -= deactivatedEventHandler;
+		};
 	}
 }

@@ -2,12 +2,13 @@
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
 using System.Collections.Generic;
 
 namespace SecureChat.panels;
 
 public class AddUserPanel : StackPanel {
-	public delegate void DataCallback(RsaKeyParameters publicKey);
+	public delegate void DataCallback(RsaKeyParameters publicKey, string name);
 
 	public void SetOnEnter(DataCallback callback) {
 		using IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
@@ -29,7 +30,14 @@ public class AddUserPanel : StackPanel {
 
 		exponentTextBox!.KeyDown += (_, args) => {
 			if (args.Key == Key.Enter) {
-				callback(new RsaKeyParameters(false, new Org.BouncyCastle.Math.BigInteger(modulusTextBox!.Text, 16), new Org.BouncyCastle.Math.BigInteger(exponentTextBox.Text, 16)));
+				callback(
+					new RsaKeyParameters(
+						false,
+						new BigInteger(modulusTextBox!.Text, 16),
+						new BigInteger(exponentTextBox.Text, 16)
+					),
+					"someone"
+				);
 			}
 		};
 	}
