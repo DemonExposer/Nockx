@@ -23,7 +23,7 @@ public class ChatPanelController {
 
 	private readonly RsaKeyParameters _personalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
-	
+
 	public ChatPanelController() {
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
@@ -123,7 +123,7 @@ public class ChatPanelController {
 			bool isOwnMessage = Equals(message.Sender, _personalPublicKey);
 			string messageBody = Decrypt(message, isOwnMessage);
 			if (!Verify(messageBody, message.Signature, isOwnMessage))
-				Console.WriteLine("Data has been messed with!"); // TODO: handle this properly
+				continue; // Just don't add the message if it is not legitimate
 			
 			res.Add(messageBody);
 		}
