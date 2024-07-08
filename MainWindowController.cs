@@ -19,7 +19,7 @@ public class MainWindowController {
 	public RsaKeyParameters PublicKey;
 
 	private readonly MainWindow _context;
-	private readonly ClientWebSocket _webSocket;
+	private ClientWebSocket _webSocket;
 
 	private bool isWebsocketInitialized = false;
 
@@ -70,7 +70,7 @@ public class MainWindowController {
 		}
 	}
 
-	public async Task InitializeWebsocket() {
+	private async Task InitializeWebsocket() {
 		using CancellationTokenSource cts = new (5000);
 		try {
 			await _webSocket.ConnectAsync(new Uri("ws://localhost:5000/ws"), cts.Token);
@@ -80,11 +80,25 @@ public class MainWindowController {
 			isWebsocketInitialized = true;
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 			Console.WriteLine("websocket timeout"); // TODO: handle this differently
-			return;
+		} catch (WebSocketException) {
+			Console.WriteLine("connection failed");
 		} catch (Exception e) {
 			Console.WriteLine(e.ToString());
-			return;
 		}
+	}
+
+	private async Task ReinitializeWebsocket() { // TODO: retrieve all messages after reinitialization, so that missed messages are loaded
+		if (isWebsocketInitialized) {
+			isWebsocketInitialized = false;
+			_webSocket.Abort();
+			_webSocket.Dispose();
+		} else {
+			isWebsocketInitialized = false;
+		}
+
+		_webSocket = new ClientWebSocket();
+
+		await InitializeWebsocket();
 	}
 
 	public async Task ListenOnWebsocket() {
@@ -94,13 +108,27 @@ public class MainWindowController {
 		int arrSize = 1024;
 		byte[] buffer = new byte[arrSize];
 
+		Timer timer = new (_ => {
+			if (_webSocket.State != WebSocketState.Open)
+				ReinitializeWebsocket().Wait();
+		}, null, 0, 5000);
+		
 		while (true) {
 			List<byte> bytes = new ();
 			WebSocketReceiveResult result;
-			do {
-				result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
-				bytes.AddRange(buffer[..result.Count]);
-			} while (result.Count == arrSize);
+			try {
+				if (!isWebsocketInitialized)
+					throw new WebSocketException();
+				
+				do {
+					result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
+					bytes.AddRange(buffer[..result.Count]);
+				} while (result.Count == arrSize);
+			} catch (WebSocketException e) {
+				Console.WriteLine(e.ToString());
+				await Task.Delay(500);
+				continue;
+			}
 
 			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
 			Message message = new () {
