@@ -55,6 +55,8 @@ public class ChatPanel : DockPanel {
 		};
 		_messages.Add(messageTextBlock);
 		_messagePanel.Children.Add(messageTextBlock);
+		
+		// TODO: scroll down to the bottom when a message is added
 	}
 
 	public void DecryptAndAddMessage(Message message) => AddMessage(_controller.Decrypt(message, false));
@@ -63,7 +65,8 @@ public class ChatPanel : DockPanel {
 		// _messagePanel should never be null, because a user cannot open this panel before the UI is done.
 		// However, in theory, when the program is loaded from a saved state, it is theoretically possible to trigger this. So this is just for debug.
 		if (_messagePanel == null) {
-			Console.WriteLine("Show was called before initialization. Not displaying anything");
+			Console.WriteLine("Show was called before initialization. Retrying with delay");
+			Dispatcher.UIThread.InvokeAsync(() => Show(username, publicKey)); // Just call itself after UI has been initialized
 			return;
 		}
 		
