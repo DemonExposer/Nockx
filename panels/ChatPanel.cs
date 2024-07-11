@@ -15,6 +15,12 @@ public class ChatPanel : DockPanel {
 	private readonly List<SelectableTextBlock> _messages = new ();
 
 	private StackPanel? _messagePanel;
+	private ScrollViewer? _messageScrollView;
+
+	private double _distanceScrolledFromBottom;
+
+	private bool _isResized = false;
+	private bool _isShowCalled = false;
 
 	public ChatPanel() {
 		Dispatcher.UIThread.InvokeAsync(() => {
@@ -38,6 +44,18 @@ public class ChatPanel : DockPanel {
 					StackPanel stackPanel = (StackPanel) enumerator.Current;
 					if (stackPanel.Name == "MessagePanel")
 						_messagePanel = stackPanel;
+				} else if (enumerator.Current.GetType() == typeof(ScrollViewer)) {
+					ScrollViewer scrollViewer = (ScrollViewer) enumerator.Current;
+					if (scrollViewer.Name == "MessageScrollView") {
+						_messageScrollView = scrollViewer;
+						_distanceScrolledFromBottom = _messageScrollView.ScrollBarMaximum.Y - _messageScrollView.Offset.Y;
+						_messageScrollView.ScrollChanged += (sender, args) => {
+							if (!_isResized)
+								_distanceScrolledFromBottom = _messageScrollView.ScrollBarMaximum.Y - _messageScrollView.Offset.Y;
+							else
+								_isResized = false;
+						};
+					}
 				}
 			}
 		});
@@ -56,24 +74,31 @@ public class ChatPanel : DockPanel {
 		_messages.Add(messageTextBlock);
 		_messagePanel.Children.Add(messageTextBlock);
 		
-		// TODO: scroll down to the bottom when a message is added
+		// Scrolling to end twice is necessary, otherwise it does not always scroll to the end
+		if (_distanceScrolledFromBottom == 0) {
+			_messageScrollView!.ScrollToEnd();
+			_messageScrollView.ScrollToEnd();
+		}
 	}
 
 	public void DecryptAndAddMessage(Message message) => AddMessage(_controller.Decrypt(message, false));
-
-	public void Show(string username, RsaKeyParameters publicKey) {
+	
+	// TODO: this should probably be moved to the controller
+	private void OnSizeChanged(object? sender, SizeChangedEventArgs args) {
+		_isResized = true;
+		_messageScrollView!.Offset = _messageScrollView.Offset.WithY(_messageScrollView.ScrollBarMaximum.Y - _distanceScrolledFromBottom);
+	}
+	
+	public void Show(string username, RsaKeyParameters publicKey, MainWindow context) {
 		// _messagePanel should never be null, because a user cannot open this panel before the UI is done.
 		// However, in theory, when the program is loaded from a saved state, it is theoretically possible to trigger this. So this is just for debug.
 		if (_messagePanel == null) {
 			Console.WriteLine("Show was called before initialization. Retrying with delay");
-			Dispatcher.UIThread.InvokeAsync(() => Show(username, publicKey)); // Just call itself after UI has been initialized
+			Dispatcher.UIThread.InvokeAsync(() => Show(username, publicKey, context)); // Just call itself after UI has been initialized
 			return;
 		}
 		
 		_controller.ForeignPublicKey = publicKey;
-		
-		_messagePanel.Children.RemoveAll(_messages);
-		_messages.Clear();
 					
 		string[] messages = _controller.GetPastMessages();
 
@@ -81,6 +106,20 @@ public class ChatPanel : DockPanel {
 			string fullMessage = $"{username} | {message}";
 			AddMessage(fullMessage);
 		}
+
+		context.SizeChanged += OnSizeChanged;
+
+		_isShowCalled = true;
+	}
+
+	public void Unshow(MainWindow context) {
+		if (!_isShowCalled)
+			return;
+		
+		_messagePanel.Children.RemoveAll(_messages);
+		_messages.Clear();
+
+		context.SizeChanged -= OnSizeChanged;
 	}
 
 	public RsaKeyParameters GetForeignPublicKey() => _controller.ForeignPublicKey;

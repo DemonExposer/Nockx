@@ -1,13 +1,9 @@
 using System;
-using System.IO;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.panels;
-using SecureChat.util;
 using SecureChat.windows;
 
 namespace SecureChat;
@@ -62,8 +58,11 @@ public partial class MainWindow : Window {
 	}
 
 	private void SetUiPanel(Panel panel) {
-		if (_uiPanel != null)
+		if (_uiPanel != null) {
+			if (_uiPanel is ChatPanel chatPanel)
+				chatPanel.Unshow(this);
 			_mainPanel.Children.Remove(_uiPanel);
+		}
 
 		_uiPanel = panel;
 		_mainPanel.Children.Add(panel);
@@ -73,7 +72,7 @@ public partial class MainWindow : Window {
 
 	public void AddUser(RsaKeyParameters publicKey, string name) {
 		SetUiPanel(ChatPanel);
-		ChatPanel.Show(name, publicKey);
+		ChatPanel.Show(name, publicKey, this);
 
 		Button chatButton = new () {
 			Background = new SolidColorBrush(Color.Parse("Transparent")),
@@ -84,7 +83,7 @@ public partial class MainWindow : Window {
 		chatButton.Click += (_, _) => {
 			SetPressedButton(chatButton);
 			SetUiPanel(ChatPanel);
-			ChatPanel.Show("someone", publicKey);
+			ChatPanel.Show("someone", publicKey, this);
 		};
 		
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
