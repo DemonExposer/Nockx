@@ -16,7 +16,7 @@ using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using SecureChat.util;
 
-namespace SecureChat;
+namespace SecureChat.panels;
 
 public class ChatPanelController {
 	public RsaKeyParameters ForeignPublicKey;
