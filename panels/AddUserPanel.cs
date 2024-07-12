@@ -28,6 +28,7 @@ public class AddUserPanel : StackPanel {
 			}
 		}
 
+		// TODO: add check to see whether TextBoxes are actually filled
 		exponentTextBox!.KeyDown += (_, args) => {
 			if (args.Key == Key.Enter) {
 				callback(
@@ -36,7 +37,7 @@ public class AddUserPanel : StackPanel {
 						new BigInteger(modulusTextBox!.Text, 16),
 						new BigInteger(exponentTextBox.Text, 16)
 					),
-					"someone"
+					modulusTextBox.Text!
 				);
 			}
 		};

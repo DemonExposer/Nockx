@@ -113,8 +113,8 @@ public class ChatPanelController {
 		return Encoding.UTF8.GetString(plainBytes, 0, length);
 	}
 
-	public string[] GetPastMessages() {
-		List<string> res = new ();
+	public model.Message[] GetPastMessages() {
+		List<model.Message> res = new ();
 		
 		string getVariables = $"requestingUserModulus={_personalPublicKey.Modulus.ToString(16)}&requestingUserExponent={_personalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
 		JsonArray messages = JsonNode.Parse(Https.Get("http://localhost:5000/messages?" + getVariables).Body)!.AsArray();
@@ -125,7 +125,7 @@ public class ChatPanelController {
 			if (!Verify(messageBody, message.Signature, isOwnMessage))
 				continue; // Just don't add the message if it is not legitimate
 			
-			res.Add(messageBody);
+			res.Add(new model.Message { Body = messageBody, DateTime = DateTime.MinValue, UserName = message.Sender.Modulus.ToString(16)});
 		}
 
 		return res.ToArray();

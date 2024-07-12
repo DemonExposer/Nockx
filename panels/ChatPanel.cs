@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Collections.Generic;
+using Avalonia.Media;
 using Avalonia.Threading;
 using SecureChat.util;
 
@@ -69,7 +70,8 @@ public class ChatPanel : DockPanel {
 
 		SelectableTextBlock messageTextBlock = new () {
 			Text = text,
-			Margin = new Thickness(5)
+			Margin = new Thickness(5),
+			TextWrapping = TextWrapping.Wrap
 		};
 		_messages.Add(messageTextBlock);
 		_messagePanel.Children.Add(messageTextBlock);
@@ -89,21 +91,21 @@ public class ChatPanel : DockPanel {
 		_messageScrollView!.Offset = _messageScrollView.Offset.WithY(_messageScrollView.ScrollBarMaximum.Y - _distanceScrolledFromBottom);
 	}
 	
-	public void Show(string username, RsaKeyParameters publicKey, MainWindow context) {
+	public void Show(RsaKeyParameters publicKey, MainWindow context) {
 		// _messagePanel should never be null, because a user cannot open this panel before the UI is done.
 		// However, in theory, when the program is loaded from a saved state, it is theoretically possible to trigger this. So this is just for debug.
 		if (_messagePanel == null) {
 			Console.WriteLine("Show was called before initialization. Retrying with delay");
-			Dispatcher.UIThread.InvokeAsync(() => Show(username, publicKey, context)); // Just call itself after UI has been initialized
+			Dispatcher.UIThread.InvokeAsync(() => Show(publicKey, context)); // Just call itself after UI has been initialized
 			return;
 		}
 		
 		_controller.ForeignPublicKey = publicKey;
-					
-		string[] messages = _controller.GetPastMessages();
+		
+		model.Message[] messages = _controller.GetPastMessages();
 
-		foreach (string message in messages) {
-			string fullMessage = $"{username} | {message}";
+		foreach (model.Message message in messages) {
+			string fullMessage = $"{message.UserName.Crop(16)} | {message.Body}";
 			AddMessage(fullMessage);
 		}
 

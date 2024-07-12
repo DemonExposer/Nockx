@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.panels;
+using SecureChat.util;
 using SecureChat.windows;
 
 namespace SecureChat;
@@ -72,18 +73,18 @@ public partial class MainWindow : Window {
 
 	public void AddUser(RsaKeyParameters publicKey, string name) {
 		SetUiPanel(ChatPanel);
-		ChatPanel.Show(name, publicKey, this);
+		ChatPanel.Show(publicKey, this);
 
 		Button chatButton = new () {
 			Background = new SolidColorBrush(Color.Parse("Transparent")),
 			Width = 200,
-			Content = name
+			Content = name.Crop(22)
 		};
 		SetPressedButton(chatButton);
 		chatButton.Click += (_, _) => {
 			SetPressedButton(chatButton);
 			SetUiPanel(ChatPanel);
-			ChatPanel.Show("someone", publicKey, this);
+			ChatPanel.Show(publicKey, this);
 		};
 		
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
