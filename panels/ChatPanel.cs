@@ -83,6 +83,7 @@ public class ChatPanel : DockPanel {
 		}
 	}
 
+	// TODO: add username to this
 	public void DecryptAndAddMessage(Message message) => AddMessage(_controller.Decrypt(message, false));
 	
 	// TODO: this should probably be moved to the controller
