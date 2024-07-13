@@ -11,3 +11,4 @@ Load only part of a conversation and dynamically load more
 Forbid self-messages
 Translations
 Saved states
+Load things in the background so it doesn't block UI
