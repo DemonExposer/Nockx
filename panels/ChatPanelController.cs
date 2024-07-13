@@ -4,6 +4,9 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Media;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Encodings;
@@ -24,7 +27,11 @@ public class ChatPanelController {
 	private readonly RsaKeyParameters _personalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
 
-	public ChatPanelController() {
+	private readonly ChatPanel _context;
+
+	public ChatPanelController(ChatPanel context) {
+		_context = context;
+		
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
 			_personalPublicKey = (RsaKeyParameters) pemReader.ReadObject();
@@ -36,6 +43,40 @@ public class ChatPanelController {
 		}
 	}
 
+	public void AddListenersToContextMenu(MenuItem copyMenuItem, SelectableTextBlock messageTextBlock, Border border, IBrush originalBackground, ContextMenu contextMenu) {
+		int start = 0, end = 0;
+
+		// For some reason this solves automatic unselecting of text, not only for copyMenuItem, but for all of them
+		copyMenuItem.PointerMoved += (_, _) => {
+			messageTextBlock.SelectionStart = start;
+			messageTextBlock.SelectionEnd = end;
+		};
+
+		messageTextBlock.ContextFlyout = null;
+		messageTextBlock.PointerReleased += (_, args) => {
+			if (args.GetCurrentPoint(_context).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonReleased)
+				return;
+
+			start = messageTextBlock.SelectionStart;
+			end = messageTextBlock.SelectionEnd;
+			
+			copyMenuItem.IsVisible = messageTextBlock.SelectedText != "";
+			// TODO: check whether the sender of the message is the user, to see whether it's allowed to remove the message
+			contextMenu.Open((Control) args.Source!);
+		};
+		
+		border.PointerEntered += (_, _) => border.Background = new SolidColorBrush(Color.Parse("#252525")); 
+		border.PointerExited += (_, _) => border.Background = originalBackground;
+		border.PointerPressed += (_, args) => {
+			if (args.GetCurrentPoint(_context).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonPressed)
+				return;
+
+			copyMenuItem.IsVisible = false;
+			// TODO: check whether the sender of the message is the user, to see whether it's allowed to remove the message
+			contextMenu.Open((Control) args.Source!);
+		};
+	}
+	
 	private string Sign(string text) {
 		byte[] bytes = Encoding.UTF8.GetBytes(text);
 		ISigner signer = new RsaDigestSigner(new Sha256Digest());

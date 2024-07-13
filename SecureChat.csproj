@@ -29,5 +29,8 @@
         <Compile Update="MainWindowController.cs">
             <DependentUpon>MainWindow.axaml.cs</DependentUpon>
         </Compile>
+        <Compile Update="panels\ChatPanelCommands.cs">
+          <DependentUpon>ChatPanel.cs</DependentUpon>
+        </Compile>
 	</ItemGroup>
 </Project>

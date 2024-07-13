@@ -12,7 +12,7 @@ using SecureChat.util;
 namespace SecureChat.panels;
 
 public class ChatPanel : DockPanel {
-	private readonly ChatPanelController _controller = new ();
+	private readonly ChatPanelController _controller;
 	private readonly List<Border> _messages = new ();
 
 	private StackPanel? _messagePanel;
@@ -24,6 +24,8 @@ public class ChatPanel : DockPanel {
 	private bool _isShowCalled = false;
 
 	public ChatPanel() {
+		_controller = new ChatPanelController(this);
+		
 		Dispatcher.UIThread.InvokeAsync(() => {
 			using IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
 			while (enumerator.MoveNext()) {
@@ -61,7 +63,7 @@ public class ChatPanel : DockPanel {
 			}
 		});
 	}
-
+	
 	private void AddMessage(string text) {
 		if (_messagePanel == null) {
 			Console.WriteLine("Show was called before initialization. Not displaying anything");
@@ -78,9 +80,30 @@ public class ChatPanel : DockPanel {
 			Margin = new Thickness(5),
 			TextWrapping = TextWrapping.Wrap
 		};
+
+		MenuItem copyMenuItem = new () {
+			Header = "Copy",
+			Cursor = new Cursor(StandardCursorType.Arrow),
+			Command = new ChatPanelCommands.CopyCommand(messageTextBlock)
+		};
+
+		MenuItem deleteMenuItem = new () {
+			Header = "Delete message",
+			Name = "DeleteMenuItem",
+			Cursor = new Cursor(StandardCursorType.Arrow),
+			Command = new ChatPanelCommands.DeleteMessageCommand(messageTextBlock)
+		};
 		
-		border.PointerEntered += (_, _) => border.Background = new SolidColorBrush(Color.Parse("#252525")); 
-		border.PointerExited += (_, _) => border.Background = originalBackground;
+		deleteMenuItem.Classes.Add("delete_menu_item");
+		
+		ContextMenu contextMenu = new () {
+			Items = {
+				copyMenuItem,
+				deleteMenuItem
+			}
+		};
+
+		_controller.AddListenersToContextMenu(copyMenuItem, messageTextBlock, border, originalBackground, contextMenu);
 
 		border.Child = messageTextBlock;
 		

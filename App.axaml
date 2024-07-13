@@ -32,6 +32,14 @@
 			<Setter Property="HorizontalAlignment" Value="Left"/>
 			<Setter Property="Margin" Value="10"/>
 		</Style>
+        
+        <Style Selector="MenuItem.delete_menu_item">
+            <Setter Property="Foreground" Value="#FF0000"/>
+        </Style>
+        
+        <Style Selector="MenuItem.delete_menu_item:pointerover /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#FF0000"/>
+        </Style>
 		
 		<FluentTheme/>
 	</Application.Styles>
