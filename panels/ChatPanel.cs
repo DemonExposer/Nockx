@@ -83,8 +83,7 @@ public class ChatPanel : DockPanel {
 		}
 	}
 
-	// TODO: add username to this
-	public void DecryptAndAddMessage(Message message) => AddMessage(_controller.Decrypt(message, false));
+	public void DecryptAndAddMessage(Message message) => AddMessage($"{message.Sender.Modulus.ToString(16).Crop(16)} | {_controller.Decrypt(message, false)}");
 	
 	// TODO: this should probably be moved to the controller
 	private void OnSizeChanged(object? sender, SizeChangedEventArgs args) {
