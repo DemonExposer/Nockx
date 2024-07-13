@@ -13,7 +13,7 @@ namespace SecureChat.panels;
 
 public class ChatPanel : DockPanel {
 	private readonly ChatPanelController _controller = new ();
-	private readonly List<SelectableTextBlock> _messages = new ();
+	private readonly List<Border> _messages = new ();
 
 	private StackPanel? _messagePanel;
 	private ScrollViewer? _messageScrollView;
@@ -68,13 +68,24 @@ public class ChatPanel : DockPanel {
 			return;
 		}
 
+		IBrush originalBackground = new SolidColorBrush(Color.Parse("Transparent"));
+		Border border = new () {
+			Background = originalBackground
+		};
+		
 		SelectableTextBlock messageTextBlock = new () {
 			Text = text,
 			Margin = new Thickness(5),
 			TextWrapping = TextWrapping.Wrap
 		};
-		_messages.Add(messageTextBlock);
-		_messagePanel.Children.Add(messageTextBlock);
+		
+		border.PointerEntered += (_, _) => border.Background = new SolidColorBrush(Color.Parse("#252525")); 
+		border.PointerExited += (_, _) => border.Background = originalBackground;
+
+		border.Child = messageTextBlock;
+		
+		_messages.Add(border);
+		_messagePanel.Children.Add(border);
 		
 		// Scrolling to end twice is necessary, otherwise it does not always scroll to the end
 		if (_distanceScrolledFromBottom == 0) {
