@@ -77,6 +77,7 @@ public class ChatPanel : DockPanel {
 			Background = originalBackground
 		};
 		
+		// TODO: fix this so that text becomes selectable again
 		MessageTextBlock messageTextBlock = new () {
 			Id = message.Id,
 			Text = $"{message.Sender.Crop(16)} | {message.Body}",
