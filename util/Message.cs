@@ -5,11 +5,13 @@ using Org.BouncyCastle.Math;
 namespace SecureChat.util;
 
 public class Message {
+	public long Id;
 	public string Body, ReceiverEncryptedKey, SenderEncryptedKey, Signature;
 	public RsaKeyParameters Sender, Receiver;
 	
 	public static Message Parse(JsonObject jsonMessage) {
 		return new Message {
+			Id = jsonMessage["id"]!.GetValue<long>(),
 			Body = jsonMessage["text"]!.GetValue<string>(),
 			ReceiverEncryptedKey = jsonMessage["receiverEncryptedKey"]!.GetValue<string>(),
 			SenderEncryptedKey = jsonMessage["senderEncryptedKey"]!.GetValue<string>(),

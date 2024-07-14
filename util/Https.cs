@@ -34,4 +34,17 @@ public static class Https {
 
 		return new Response { IsSuccessful = response.IsSuccessStatusCode, Body = response.Content.ReadAsStringAsync().Result };
 	}
+
+	public static Response Delete(string endpoint, string body) {
+		using HttpClient client = new ();
+		HttpRequestMessage request = new () {
+			RequestUri = new Uri(endpoint),
+			Method = HttpMethod.Delete,
+			Content = new StringContent(body, Encoding.UTF8, "application/json")
+		};
+
+		HttpResponseMessage response = client.SendAsync(request).Result;
+
+		return new Response { IsSuccessful = response.IsSuccessStatusCode, Body = response.Content.ReadAsStringAsync().Result };
+	}
 }

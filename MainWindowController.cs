@@ -132,6 +132,7 @@ public class MainWindowController {
 
 			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
 			Message message = new () {
+				Id = messageJson["id"]!.GetValue<long>(),
 				Body = messageJson["text"]!.GetValue<string>(),
 				Sender = new RsaKeyParameters(false, new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)),
 				ReceiverEncryptedKey = messageJson["receiverEncryptedKey"]!.GetValue<string>(),

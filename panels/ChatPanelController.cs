@@ -17,6 +17,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
+using SecureChat.model;
 using SecureChat.util;
 
 namespace SecureChat.panels;
@@ -24,7 +25,7 @@ namespace SecureChat.panels;
 public class ChatPanelController {
 	public RsaKeyParameters ForeignPublicKey;
 
-	private readonly RsaKeyParameters _personalPublicKey;
+	public readonly RsaKeyParameters PersonalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
 
 	private readonly ChatPanel _context;
@@ -34,7 +35,7 @@ public class ChatPanelController {
 		
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
-			_personalPublicKey = (RsaKeyParameters) pemReader.ReadObject();
+			PersonalPublicKey = (RsaKeyParameters) pemReader.ReadObject();
 		}
 		
 		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
@@ -93,7 +94,7 @@ public class ChatPanelController {
 		byte[] signatureBytes = Convert.FromBase64String(signature);
 
 		ISigner verifier = new RsaDigestSigner(new Sha256Digest());
-		verifier.Init(false, isOwnMessage ? _personalPublicKey : ForeignPublicKey);
+		verifier.Init(false, isOwnMessage ? PersonalPublicKey : ForeignPublicKey);
 		
 		verifier.BlockUpdate(textBytes, 0, textBytes.Length);
 
@@ -117,7 +118,7 @@ public class ChatPanelController {
 		
 		// Encrypt the AES key using RSA
 		OaepEncoding rsaEngine = new (new RsaEngine());
-		rsaEngine.Init(true, _personalPublicKey);
+		rsaEngine.Init(true, PersonalPublicKey);
 		byte[] personalEncryptedKey = rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
 		
 		rsaEngine.Init(true, ForeignPublicKey);
@@ -129,11 +130,11 @@ public class ChatPanelController {
 			ReceiverEncryptedKey = Convert.ToBase64String(foreignEncryptedKey),
 			Signature = Sign(inputText),
 			Receiver = ForeignPublicKey,
-			Sender = _personalPublicKey
+			Sender = PersonalPublicKey
 		};
 	}
 
-	public string Decrypt(Message message, bool isOwnMessage) {
+	public DecryptedMessage Decrypt(Message message, bool isOwnMessage) {
 		// Decrypt the AES key using RSA
 		byte[] aesKeyEncrypted = Convert.FromBase64String(isOwnMessage ? message.SenderEncryptedKey : message.ReceiverEncryptedKey);
 		OaepEncoding rsaEngine = new (new RsaEngine());
@@ -151,33 +152,34 @@ public class ChatPanelController {
 		int length = cipher.ProcessBytes(encryptedBodyBytes, 0, encryptedBodyBytes.Length, plainBytes, 0);
 		length += cipher.DoFinal(plainBytes, length);
 
-		return Encoding.UTF8.GetString(plainBytes, 0, length);
+		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
+		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), DateTime = DateTime.MinValue};
 	}
 
-	public model.Message[] GetPastMessages() {
-		List<model.Message> res = new ();
+	public DecryptedMessage[] GetPastMessages() {
+		List<DecryptedMessage> res = new ();
 		
-		string getVariables = $"requestingUserModulus={_personalPublicKey.Modulus.ToString(16)}&requestingUserExponent={_personalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
+		string getVariables = $"requestingUserModulus={PersonalPublicKey.Modulus.ToString(16)}&requestingUserExponent={PersonalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
 		JsonArray messages = JsonNode.Parse(Https.Get("http://localhost:5000/messages?" + getVariables).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
-			bool isOwnMessage = Equals(message.Sender, _personalPublicKey);
-			string messageBody = Decrypt(message, isOwnMessage);
-			if (!Verify(messageBody, message.Signature, isOwnMessage))
+			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
+			DecryptedMessage decryptedMessage = Decrypt(message, isOwnMessage);
+			if (!Verify(decryptedMessage.Body, message.Signature, isOwnMessage))
 				continue; // Just don't add the message if it is not legitimate
 			
-			res.Add(new model.Message { Body = messageBody, DateTime = DateTime.MinValue, UserName = message.Sender.Modulus.ToString(16)});
+			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16)});
 		}
 
 		return res.ToArray();
 	}
 	
-	public void Send(string message) {
+	public long SendMessage(string message) {
 		Message encryptedMessage = Encrypt(message);
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
-				["modulus"] = _personalPublicKey.Modulus.ToString(16),
-				["exponent"] = _personalPublicKey.Exponent.ToString(16)
+				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
+				["exponent"] = PersonalPublicKey.Exponent.ToString(16)
 			},
 			["receiver"] = new JsonObject {
 				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
@@ -188,6 +190,16 @@ public class ChatPanelController {
 			["receiverEncryptedKey"] = encryptedMessage.ReceiverEncryptedKey,
 			["signature"] = encryptedMessage.Signature
 		};
-		Console.WriteLine(Https.Post("http://localhost:5000/messages", JsonSerializer.Serialize(body)).Body);
+		
+		string response = Https.Post("http://localhost:5000/messages", JsonSerializer.Serialize(body)).Body;
+		return long.Parse(response);
+	}
+
+	public void DeleteMessage(long id) {
+		JsonObject body = new () {
+			["id"] = id,
+			["signature"] = Sign(id.ToString())
+		};
+		Https.Delete("http://localhost:5000/messages", JsonSerializer.Serialize(body));
 	}
 }

@@ -5,8 +5,10 @@ using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Media;
 using Avalonia.Threading;
+using SecureChat.model;
 using SecureChat.util;
 
 namespace SecureChat.panels;
@@ -37,8 +39,8 @@ public class ChatPanel : DockPanel {
 								if (textBox.Text == null)
 									return;
 
-								_controller.Send(textBox.Text);
-								AddMessage(textBox.Text);
+								long id = _controller.SendMessage(textBox.Text);
+								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.Modulus.ToString(16)});
 								textBox.Text = null;
 							}
 						};
@@ -64,7 +66,7 @@ public class ChatPanel : DockPanel {
 		});
 	}
 	
-	private void AddMessage(string text) {
+	private void AddMessage(DecryptedMessage message) {
 		if (_messagePanel == null) {
 			Console.WriteLine("Show was called before initialization. Not displaying anything");
 			return;
@@ -75,10 +77,12 @@ public class ChatPanel : DockPanel {
 			Background = originalBackground
 		};
 		
-		SelectableTextBlock messageTextBlock = new () {
-			Text = text,
+		MessageTextBlock messageTextBlock = new () {
+			Id = message.Id,
+			Text = $"{message.Sender.Crop(16)} | {message.Body}",
 			Margin = new Thickness(5),
-			TextWrapping = TextWrapping.Wrap
+			TextWrapping = TextWrapping.Wrap,
+			Sender = message.Sender
 		};
 
 		MenuItem copyMenuItem = new () {
@@ -91,7 +95,7 @@ public class ChatPanel : DockPanel {
 			Header = "Delete message",
 			Name = "DeleteMenuItem",
 			Cursor = new Cursor(StandardCursorType.Arrow),
-			Command = new ChatPanelCommands.DeleteMessageCommand(messageTextBlock)
+			Command = new ChatPanelCommands.DeleteMessageCommand(messageTextBlock, _controller.DeleteMessage)
 		};
 		
 		deleteMenuItem.Classes.Add("delete_menu_item");
@@ -117,7 +121,7 @@ public class ChatPanel : DockPanel {
 		}
 	}
 
-	public void DecryptAndAddMessage(Message message) => AddMessage($"{message.Sender.Modulus.ToString(16).Crop(16)} | {_controller.Decrypt(message, false)}");
+	public void DecryptAndAddMessage(Message message) => AddMessage(_controller.Decrypt(message, false));
 	
 	// TODO: this should probably be moved to the controller
 	private void OnSizeChanged(object? sender, SizeChangedEventArgs args) {
@@ -136,12 +140,9 @@ public class ChatPanel : DockPanel {
 		
 		_controller.ForeignPublicKey = publicKey;
 		
-		model.Message[] messages = _controller.GetPastMessages();
+		DecryptedMessage[] messages = _controller.GetPastMessages();
 
-		foreach (model.Message message in messages) {
-			string fullMessage = $"{message.UserName.Crop(16)} | {message.Body}";
-			AddMessage(fullMessage);
-		}
+		messages.ToList().ForEach(AddMessage);
 
 		context.SizeChanged += OnSizeChanged;
 
