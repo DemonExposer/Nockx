@@ -15,7 +15,7 @@ namespace SecureChat.panels;
 
 public class ChatPanel : DockPanel {
 	private readonly ChatPanelController _controller;
-	private readonly List<Border> _messages = new ();
+	private readonly List<MessageTextBlock> _messages = new ();
 
 	private StackPanel? _messagePanel;
 	private ScrollViewer? _messageScrollView;
@@ -76,20 +76,24 @@ public class ChatPanel : DockPanel {
 		Border border = new () {
 			Background = originalBackground
 		};
-		
-		// TODO: fix this so that text becomes selectable again
-		MessageTextBlock messageTextBlock = new () {
-			Id = message.Id,
+
+		SelectableTextBlock block = new () {
 			Text = $"{message.Sender.Crop(16)} | {message.Body}",
 			Margin = new Thickness(5),
-			TextWrapping = TextWrapping.Wrap,
+			TextWrapping = TextWrapping.Wrap
+		};
+		
+		MessageTextBlock messageTextBlock = new () {
+			Id = message.Id,
+			Border = border,
+			TextBlock = block,
 			Sender = message.Sender
 		};
 
 		MenuItem copyMenuItem = new () {
 			Header = "Copy",
 			Cursor = new Cursor(StandardCursorType.Arrow),
-			Command = new ChatPanelCommands.CopyCommand(messageTextBlock)
+			Command = new ChatPanelCommands.CopyCommand(messageTextBlock.TextBlock)
 		};
 
 		MenuItem deleteMenuItem = new () {
@@ -108,11 +112,11 @@ public class ChatPanel : DockPanel {
 			}
 		};
 
-		_controller.AddListenersToContextMenu(copyMenuItem, messageTextBlock, border, originalBackground, contextMenu);
+		_controller.AddListenersToContextMenu(copyMenuItem, block, border, originalBackground, contextMenu);
 
-		border.Child = messageTextBlock;
-		
-		_messages.Add(border);
+		border.Child = block;
+        
+		_messages.Add(messageTextBlock);
 		_messagePanel.Children.Add(border);
 		
 		// Scrolling to end twice is necessary, otherwise it does not always scroll to the end
@@ -154,7 +158,7 @@ public class ChatPanel : DockPanel {
 		if (!_isShowCalled)
 			return;
 		
-		_messagePanel.Children.RemoveAll(_messages);
+		_messagePanel.Children.RemoveAll(_messages.Select(block => block.Border));
 		_messages.Clear();
 
 		context.SizeChanged -= OnSizeChanged;
