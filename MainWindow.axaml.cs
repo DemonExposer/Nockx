@@ -49,6 +49,11 @@ public partial class MainWindow : Window {
 			SetPressedButton(userInfoButton);
 			SetUiPanel(userInfoPanel);
 		};
+
+		Button settingsButton = this.FindControl<Button>("SettingsButton")!;
+		settingsButton.Click += (_, _) => {
+			ShowPopupWindowOnTop(new SettingsPopupWindow());
+		};
 	}
 
 	private void SetPressedButton(Button button) {

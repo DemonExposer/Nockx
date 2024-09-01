@@ -61,7 +61,7 @@ public partial class App : Application {
 				desktop.MainWindow = new MainWindow();
 			else
 				// TODO: add option to generate public key from private key if only the private key is available or the option to regenerate both
-				desktop.MainWindow = new PopupWindow("one key file found, zero or two expected");
+				desktop.MainWindow = new ErrorPopupWindow("one key file found, zero or two expected");
 		}
 
 		base.OnFrameworkInitializationCompleted();

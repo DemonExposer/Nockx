@@ -50,7 +50,7 @@ public class MainWindowController {
 				_context.AddUser(publicKey, name);
 			}
 		} catch (JsonException) {
-			_context.ShowPopupWindowOnTop(new PopupWindow($"{Constants.ChatsFile} not found or corrupted"));
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"{Constants.ChatsFile} not found or corrupted"));
 		}
 	}
 
@@ -66,7 +66,7 @@ public class MainWindowController {
 			});
 			File.WriteAllText(Constants.ChatsFile, JsonSerializer.Serialize(chats, new JsonSerializerOptions { WriteIndented = true }));
 		} catch (JsonException) {
-			_context.ShowPopupWindowOnTop(new PopupWindow($"{Constants.ChatsFile} not found or corrupted"));
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"{Constants.ChatsFile} not found or corrupted"));
 		}
 	}
 

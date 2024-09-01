@@ -34,7 +34,10 @@
 	
 	<DockPanel>
 		<DockPanel DockPanel.Dock="Left" Width="200">
-			<Button DockPanel.Dock="Bottom" Name="UserInfoButton" Content="User info" Classes="chat_selector"/>
+            <StackPanel DockPanel.Dock="Bottom">
+                <Button Name="UserInfoButton" Content="User info" Classes="chat_selector"/>
+                <Button Name="SettingsButton" Content="Settings" Classes="settings"/>
+            </StackPanel>
 			<StackPanel Name="ChatListPanel" Width="200">
 				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
 			</StackPanel>
