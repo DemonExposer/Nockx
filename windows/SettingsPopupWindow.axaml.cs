@@ -1,4 +1,4 @@
-using System;
+using System.Net;
 using Avalonia.Controls;
 
 namespace SecureChat.windows;
@@ -16,7 +16,9 @@ public partial class SettingsPopupWindow : PopupWindow {
 		
 		Button setServerButton = this.FindControl<Button>("SetServerButton")!;
 		setServerButton.Click += (_, _) => {
-			Console.WriteLine(serverAddressTextBox.Text);
+			// TODO: check for errors, resolve FQDNs, maybe automatically check if server is online
+			settings.IpAddress = IPAddress.Parse(serverAddressTextBox.Text);
+			Settings.Save();
 		};
 	}
 }

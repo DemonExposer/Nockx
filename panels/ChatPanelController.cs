@@ -28,6 +28,8 @@ public class ChatPanelController {
 	public readonly RsaKeyParameters PersonalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
 
+	private readonly Settings _settings = Settings.GetInstance();
+	
 	private readonly ChatPanel _context;
 
 	public ChatPanelController(ChatPanel context) {
@@ -160,7 +162,7 @@ public class ChatPanelController {
 		List<DecryptedMessage> res = new ();
 		
 		string getVariables = $"requestingUserModulus={PersonalPublicKey.Modulus.ToString(16)}&requestingUserExponent={PersonalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
-		JsonArray messages = JsonNode.Parse(Https.Get("http://localhost:5000/messages?" + getVariables).Body)!.AsArray();
+		JsonArray messages = JsonNode.Parse(Https.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
@@ -191,7 +193,7 @@ public class ChatPanelController {
 			["signature"] = encryptedMessage.Signature
 		};
 		
-		string response = Https.Post("http://localhost:5000/messages", JsonSerializer.Serialize(body)).Body;
+		string response = Https.Post($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body)).Body;
 		return long.Parse(response);
 	}
 
@@ -200,6 +202,6 @@ public class ChatPanelController {
 			["id"] = id,
 			["signature"] = Sign(id.ToString())
 		};
-		Https.Delete("http://localhost:5000/messages", JsonSerializer.Serialize(body));
+		Https.Delete($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body));
 	}
 }
