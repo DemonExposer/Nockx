@@ -13,8 +13,8 @@
 		WindowState="Maximized">
 	<Window.Resources>
 		<panels:AddUserPanel x:Key="AddUserPanel">
-			<TextBox Name="ModulusTextBox"/>
-			<TextBox Name="ExponentTextBox"/>
+			<TextBox Name="ModulusTextBox" Watermark="Modulus"/>
+			<TextBox Name="ExponentTextBox" Watermark="Exponent"/>
 		</panels:AddUserPanel>
 		<panels:ChatPanel x:Key="ChatPanel">
 			<TextBox DockPanel.Dock="Bottom" Name="MessageBox" Margin="0" Width="NaN" HorizontalAlignment="Stretch"/>
