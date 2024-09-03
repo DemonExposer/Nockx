@@ -11,6 +11,24 @@ public class Settings {
 	public IPAddress IpAddress { get; set; }
 	
 	private static Settings? _instance = null;
+
+	private Settings() {
+		
+	}
+
+	public static void LoadOrDefault(string filename) {
+		if (File.Exists(filename)) {
+			Load(filename);
+			return;
+		}
+		
+		_instance = new Settings {
+			_file = filename,
+			IpAddress = IPAddress.Parse("127.0.0.1")
+		};
+		
+		Save();
+	}
 	
 	public static void Load(string filename) {
 		JsonObject settingsObject = JsonNode.Parse(File.ReadAllText(filename))!.AsObject();

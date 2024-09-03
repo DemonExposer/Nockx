@@ -18,6 +18,8 @@ public partial class App : Application {
 	public override void Initialize() {
 		if (!File.Exists(Constants.ChatsFile))
 			File.WriteAllText(Constants.ChatsFile, "[]");
+		
+		Settings.LoadOrDefault(Constants.SettingsFile);
 
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);

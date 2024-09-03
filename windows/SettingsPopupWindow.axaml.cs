@@ -9,7 +9,10 @@ public partial class SettingsPopupWindow : PopupWindow {
 		
 		PostInitialization();
 
+		Settings settings = Settings.GetInstance();
+		
 		TextBox serverAddressTextBox = this.FindControl<TextBox>("ServerAddressTextBox")!;
+		serverAddressTextBox.Text = settings.IpAddress.ToString();
 		
 		Button setServerButton = this.FindControl<Button>("SetServerButton")!;
 		setServerButton.Click += (_, _) => {
