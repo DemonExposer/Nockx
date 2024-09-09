@@ -96,8 +96,8 @@ public partial class MainWindow : Window {
 	}
 	
 	private void OnAddUser(RsaKeyParameters publicKey, string name) {
+		Chats.Add(publicKey);
 		AddUser(publicKey, name);
-		_controller.AddChatToFile(publicKey, name);
 	}
 
 	public void ShowPopupWindowOnTop(PopupWindow popupWindow) {

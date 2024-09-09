@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +10,6 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.util;
-using SecureChat.windows;
 
 namespace SecureChat;
 
@@ -30,50 +28,16 @@ public class MainWindowController {
 		PemReader pemReader = new (reader);
 		PublicKey = (RsaKeyParameters) pemReader.ReadObject();
 
-		LoadChats();
+		Chats.Show(_context);
 
 		_webSocket = new ClientWebSocket();
 		_ = InitializeWebsocket();
 	}
 
-	private void LoadChats() {
-		try {
-			JsonArray chats = JsonNode.Parse(File.ReadAllText(Constants.ChatsFile))!.AsArray();
-			foreach (JsonNode? jsonNode in chats) {
-				JsonObject chat = jsonNode!.AsObject();
-				RsaKeyParameters publicKey = new (
-					false,
-					new BigInteger(chat["publicKey"]!["modulus"]!.GetValue<string>(), 16),
-					new BigInteger(chat["publicKey"]!["exponent"]!.GetValue<string>(), 16)
-				);
-				string name = chat["name"]!.GetValue<string>();
-				_context.AddUser(publicKey, name);
-			}
-		} catch (JsonException) {
-			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"{Constants.ChatsFile} not found or corrupted"));
-		}
-	}
-
-	public void AddChatToFile(RsaKeyParameters publicKey, string name) {
-		try {
-			JsonArray chats = JsonNode.Parse(File.ReadAllText(Constants.ChatsFile))!.AsArray();
-			chats.Add(new JsonObject {
-				["publicKey"] = new JsonObject {
-					["modulus"] = publicKey.Modulus.ToString(16),
-					["exponent"] = publicKey.Exponent.ToString(16)
-				},
-				["name"] = name
-			});
-			File.WriteAllText(Constants.ChatsFile, JsonSerializer.Serialize(chats, new JsonSerializerOptions { WriteIndented = true }));
-		} catch (JsonException) {
-			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"{Constants.ChatsFile} not found or corrupted"));
-		}
-	}
-
 	private async Task InitializeWebsocket() {
 		using CancellationTokenSource cts = new (5000);
 		try {
-			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
+			await _webSocket.ConnectAsync(new Uri($"ws://localhost:5000/ws"), cts.Token);
 
 			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -101,10 +65,10 @@ public class MainWindowController {
 		await InitializeWebsocket();
 	}
 
-	public async Task ListenOnWebsocket() {
+	public async Task ListenOnWebsocket() { // TODO: put async methods in a big try/catch because they can silent fail
 		while (!isWebsocketInitialized)
 			await Task.Delay(1000);
-
+		
 		int arrSize = 1024;
 		byte[] buffer = new byte[arrSize];
 
@@ -139,6 +103,10 @@ public class MainWindowController {
 				Signature = messageJson["signature"]!.GetValue<string>()
 			};
 
+			// Add new chat if sender does not yet have a chat with receiver
+			if (!Chats.ChatExists(message.Sender))
+				_context.AddUser(message.Sender, message.Sender.Modulus.ToString(16));
+			
 			RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 			if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender))
 				return;
