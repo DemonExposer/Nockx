@@ -112,10 +112,12 @@ public class MainWindowController {
 			Signature = messageJson["signature"]!.GetValue<string>()
 		};
 		
-		// Add new chat if sender does not yet have a chat with receiver
-		if (!Chats.ChatExists(message.Sender))
+		// Add new chat if receiver does not yet have a chat with sender
+		if (!Chats.ChatExists(message.Sender)) {
+			Chats.Add(message.Sender);
 			_context.AddUser(message.Sender, message.Sender.Modulus.ToString(16), false);
-			
+		}
+
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender))
 			return;
