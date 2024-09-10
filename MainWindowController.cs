@@ -94,24 +94,46 @@ public class MainWindowController {
 				continue;
 			}
 
-			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
-			Message message = new () {
-				Id = messageJson["id"]!.GetValue<long>(),
-				Body = messageJson["text"]!.GetValue<string>(),
-				Sender = new RsaKeyParameters(false, new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)),
-				ReceiverEncryptedKey = messageJson["receiverEncryptedKey"]!.GetValue<string>(),
-				Signature = messageJson["signature"]!.GetValue<string>()
-			};
-
-			// Add new chat if sender does not yet have a chat with receiver
-			if (!Chats.ChatExists(message.Sender))
-				_context.AddUser(message.Sender, message.Sender.Modulus.ToString(16), false);
+			IDictionary<string, Action<JsonObject>> actions = new Dictionary<string, Action<JsonObject>>();
+			actions["add"] = AddMessage;
+			actions["delete"] = DeleteMessage;
 			
-			RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
-			if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender))
-				return;
-
-			_context.ChatPanel.DecryptAndAddMessage(message);
+			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
+			actions[messageJson["action"]!.GetValue<string>()](messageJson);
 		}
+	}
+
+	private void AddMessage(JsonObject messageJson) {
+		Message message = new () {
+			Id = messageJson["id"]!.GetValue<long>(),
+			Body = messageJson["text"]!.GetValue<string>(),
+			Sender = new RsaKeyParameters(false, new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)),
+			ReceiverEncryptedKey = messageJson["receiverEncryptedKey"]!.GetValue<string>(),
+			Signature = messageJson["signature"]!.GetValue<string>()
+		};
+		
+		// Add new chat if sender does not yet have a chat with receiver
+		if (!Chats.ChatExists(message.Sender))
+			_context.AddUser(message.Sender, message.Sender.Modulus.ToString(16), false);
+			
+		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
+		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender))
+			return;
+
+		_context.ChatPanel.DecryptAndAddMessage(message);
+	}
+
+	private void DeleteMessage(JsonObject messageJson) {
+		RsaKeyParameters sender = new RsaKeyParameters(
+			false,
+			new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16),
+			new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)
+		);
+		
+		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
+		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(sender))
+			return;
+
+		_context.ChatPanel.RemoveMessage(messageJson["id"]!.GetValue<long>());
 	}
 }
