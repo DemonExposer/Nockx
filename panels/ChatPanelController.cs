@@ -46,36 +46,48 @@ public class ChatPanelController {
 		}
 	}
 
-	public void AddListenersToContextMenu(MenuItem copyMenuItem, SelectableTextBlock messageTextBlock, Border border, IBrush originalBackground, ContextMenu contextMenu) {
+	public void AddListenersToContextMenu(MessageTextBlock messageTextBlock, IBrush originalBackground, ContextMenu contextMenu) {
 		int start = 0, end = 0;
 
+		MenuItem? copyMenuItem = null, deleteMenuItem = null;
+		foreach (MenuItem? contextMenuItem in contextMenu.Items) {
+			switch (contextMenuItem!.Name) {
+				case "CopyMenuItem":
+					copyMenuItem = contextMenuItem;
+					break;
+				case "DeleteMenuItem":
+					deleteMenuItem = contextMenuItem;
+					break;
+			}
+		}
+		
 		// For some reason this solves automatic unselecting of text, not only for copyMenuItem, but for all of them
-		copyMenuItem.PointerMoved += (_, _) => {
-			messageTextBlock.SelectionStart = start;
-			messageTextBlock.SelectionEnd = end;
+		copyMenuItem!.PointerMoved += (_, _) => {
+			messageTextBlock.TextBlock.SelectionStart = start;
+			messageTextBlock.TextBlock.SelectionEnd = end;
 		};
 
-		messageTextBlock.ContextFlyout = null;
-		messageTextBlock.PointerReleased += (_, args) => {
+		messageTextBlock.TextBlock.ContextFlyout = null;
+		messageTextBlock.TextBlock.PointerReleased += (_, args) => {
 			if (args.GetCurrentPoint(_context).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonReleased)
 				return;
 
-			start = messageTextBlock.SelectionStart;
-			end = messageTextBlock.SelectionEnd;
+			start = messageTextBlock.TextBlock.SelectionStart;
+			end = messageTextBlock.TextBlock.SelectionEnd;
 			
-			copyMenuItem.IsVisible = messageTextBlock.SelectedText != "";
-			// TODO: check whether the sender of the message is the user, to see whether it's allowed to remove the message
+			copyMenuItem.IsVisible = messageTextBlock.TextBlock.SelectedText != "";
+			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.Modulus.ToString(16);
 			contextMenu.Open((Control) args.Source!);
 		};
 		
-		border.PointerEntered += (_, _) => border.Background = new SolidColorBrush(Color.Parse("#252525")); 
-		border.PointerExited += (_, _) => border.Background = originalBackground;
-		border.PointerPressed += (_, args) => {
+		messageTextBlock.Border.PointerEntered += (_, _) => messageTextBlock.Border.Background = new SolidColorBrush(Color.Parse("#252525")); 
+		messageTextBlock.Border.PointerExited += (_, _) => messageTextBlock.Border.Background = originalBackground;
+		messageTextBlock.Border.PointerPressed += (_, args) => {
 			if (args.GetCurrentPoint(_context).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonPressed)
 				return;
 
 			copyMenuItem.IsVisible = false;
-			// TODO: check whether the sender of the message is the user, to see whether it's allowed to remove the message
+			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.Modulus.ToString(16);
 			contextMenu.Open((Control) args.Source!);
 		};
 	}

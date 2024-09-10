@@ -92,6 +92,7 @@ public class ChatPanel : DockPanel {
 
 		MenuItem copyMenuItem = new () {
 			Header = "Copy",
+			Name = "CopyMenuItem",
 			Cursor = new Cursor(StandardCursorType.Arrow),
 			Command = new ChatPanelCommands.CopyCommand(messageTextBlock.TextBlock)
 		};
@@ -112,7 +113,7 @@ public class ChatPanel : DockPanel {
 			}
 		};
 
-		_controller.AddListenersToContextMenu(copyMenuItem, block, border, originalBackground, contextMenu);
+		_controller.AddListenersToContextMenu(messageTextBlock, originalBackground, contextMenu);
 
 		border.Child = block;
         
