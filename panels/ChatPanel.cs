@@ -155,6 +155,16 @@ public class ChatPanel : DockPanel {
 		_isShowCalled = true;
 	}
 
+	public void RemoveMessage(long id) {
+		// TODO: maybe change to a binary search, since ids are always increasing
+		for (int i = 0; i < _messages.Count; i++) {
+			if (_messages[i].Id == id) {
+				_messages.RemoveAt(i);
+				_messagePanel.Children.RemoveAt(i);
+			}
+		}
+	}
+
 	public void Unshow(MainWindow context) {
 		if (!_isShowCalled)
 			return;

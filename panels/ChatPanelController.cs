@@ -214,6 +214,7 @@ public class ChatPanelController {
 			["id"] = id,
 			["signature"] = Sign(id.ToString())
 		};
+		_context.RemoveMessage(id);
 		Https.Delete($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body));
 	}
 }
