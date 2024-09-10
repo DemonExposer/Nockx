@@ -76,16 +76,21 @@ public partial class MainWindow : Window {
 
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
-	public void AddUser(RsaKeyParameters publicKey, string name) {
-		SetUiPanel(ChatPanel);
-		ChatPanel.Show(publicKey, this);
+	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
+		if (doAutoFocus) {
+			SetUiPanel(ChatPanel);
+			ChatPanel.Show(publicKey, this);
+		}
 
 		Button chatButton = new () {
 			Background = new SolidColorBrush(Color.Parse("Transparent")),
 			Width = 200,
 			Content = name.Crop(22)
 		};
-		SetPressedButton(chatButton);
+		
+		if (doAutoFocus)
+			SetPressedButton(chatButton);
+		
 		chatButton.Click += (_, _) => {
 			SetPressedButton(chatButton);
 			SetUiPanel(ChatPanel);
@@ -97,7 +102,7 @@ public partial class MainWindow : Window {
 	
 	private void OnAddUser(RsaKeyParameters publicKey, string name) {
 		Chats.Add(publicKey);
-		AddUser(publicKey, name);
+		AddUser(publicKey, name, true);
 	}
 
 	public void ShowPopupWindowOnTop(PopupWindow popupWindow) {

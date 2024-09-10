@@ -77,7 +77,7 @@ public class Chats {
 	public static void Show(MainWindow window) {
 		foreach (RsaKeyParameters key in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be shown"))._pubKeys) {
 			string name = key.Modulus.ToString(16);
-			window.AddUser(key, name);
+			window.AddUser(key, name, false);
 		}
 	}
 }

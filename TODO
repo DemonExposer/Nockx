@@ -3,7 +3,7 @@ Burner chats
 Peer-to-peer
 Message format
 Notifications
-Auto additions of conversations when someone messages (when online (websocket), this works now, except that it shouldn't automatically switch to the new conversation)
+Auto additions of conversations when someone messages (when online (websocket), this works now)
 Show when someone is typing
 Load only part of a conversation and dynamically load more
 Forbid self-messages
