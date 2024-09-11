@@ -170,7 +170,7 @@ public class ChatPanelController {
 		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), DateTime = DateTime.MinValue};
 	}
 
-	public DecryptedMessage[] GetPastMessages() {
+	public DecryptedMessage[] GetPastMessages() { // TODO: Add signature to this request
 		List<DecryptedMessage> res = new ();
 		
 		string getVariables = $"requestingUserModulus={PersonalPublicKey.Modulus.ToString(16)}&requestingUserExponent={PersonalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";

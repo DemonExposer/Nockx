@@ -28,10 +28,20 @@ public class MainWindowController {
 		PemReader pemReader = new (reader);
 		PublicKey = (RsaKeyParameters) pemReader.ReadObject();
 
+		// Load chats from file
 		Chats.Show(_context);
+		
+		// Check if new chats were created while offline
+		CheckForNewChats();
 
 		_webSocket = new ClientWebSocket();
 		_ = InitializeWebsocket();
+	}
+
+	private void CheckForNewChats() {
+		// TODO: Implement this. Note: this request should be signed
+	//	string getVariables = $"modulus={PublicKey.Modulus.ToString(16)}&exponent={PublicKey.Exponent.ToString(16)}";
+	//	Https.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}");
 	}
 
 	private async Task InitializeWebsocket() {
