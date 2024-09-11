@@ -37,7 +37,7 @@ public class MainWindowController {
 	private async Task InitializeWebsocket() {
 		using CancellationTokenSource cts = new (5000);
 		try {
-			await _webSocket.ConnectAsync(new Uri($"ws://localhost:5000/ws"), cts.Token);
+			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
 
 			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
