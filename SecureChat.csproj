@@ -32,5 +32,8 @@
         <Compile Update="panels\ChatPanelCommands.cs">
           <DependentUpon>ChatPanel.cs</DependentUpon>
         </Compile>
+        <Compile Update="MainWindowModel.cs">
+          <DependentUpon>MainWindow.axaml.cs</DependentUpon>
+        </Compile>
 	</ItemGroup>
 </Project>

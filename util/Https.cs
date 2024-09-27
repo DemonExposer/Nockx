@@ -1,21 +1,32 @@
 using System;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace SecureChat.util; 
 
 public static class Https {
+	public class Header {
+		public string Name;
+		public string Value;
+	}
+    
 	public class Response {
 		public string Body;
 		public bool IsSuccessful;
 	}
 	
-	public static Response Get(string endpoint) {
+	public static Response Get(string endpoint, Header[]? headers = null) {
 		using HttpClient client = new ();
 		HttpRequestMessage request = new () {
 			RequestUri = new Uri(endpoint),
 			Method = HttpMethod.Get
 		};
+		
+		if (headers != null)
+			foreach (Header header in headers)
+				request.Headers.Add(header.Name, header.Value);
 		
 		HttpResponseMessage response = client.SendAsync(request).Result;
 

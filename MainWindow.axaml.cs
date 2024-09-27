@@ -16,12 +16,16 @@ public partial class MainWindow : Window {
 	public ChatPanel ChatPanel { get; private set; }
 
 	private readonly MainWindowController _controller;
+	private readonly MainWindowModel _model;
 
 	public MainWindow() {
+		_model = new MainWindowModel();
+		
 		InitializeComponent();
 		
 		_controller = new MainWindowController(this);
 		_ = _controller.ListenOnWebsocket();
+		
 	}
 
 	private void InitializeComponent() {
@@ -77,6 +81,11 @@ public partial class MainWindow : Window {
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
+		if (_model.ContainsChat(name))
+			return;
+		
+		_model.AddChat(name);
+		
 		if (doAutoFocus) {
 			SetUiPanel(ChatPanel);
 			ChatPanel.Show(publicKey, this);

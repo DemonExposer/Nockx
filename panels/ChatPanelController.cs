@@ -91,84 +91,8 @@ public class ChatPanelController {
 			contextMenu.Open((Control) args.Source!);
 		};
 	}
-	
-	private string Sign(string text) {
-		byte[] bytes = Encoding.UTF8.GetBytes(text);
-		ISigner signer = new RsaDigestSigner(new Sha256Digest());
-		signer.Init(true, _privateKey);
-		
-		signer.BlockUpdate(bytes, 0, bytes.Length);
-		byte[] signature = signer.GenerateSignature();
 
-		return Convert.ToBase64String(signature);
-	}
-
-	private bool Verify(string text, string signature, bool isOwnMessage) {
-		byte[] textBytes = Encoding.UTF8.GetBytes(text);
-		byte[] signatureBytes = Convert.FromBase64String(signature);
-
-		ISigner verifier = new RsaDigestSigner(new Sha256Digest());
-		verifier.Init(false, isOwnMessage ? PersonalPublicKey : ForeignPublicKey);
-		
-		verifier.BlockUpdate(textBytes, 0, textBytes.Length);
-
-		return verifier.VerifySignature(signatureBytes);
-	}
-
-	private Message Encrypt(string inputText) {
-		// Encrypt using AES
-		CipherKeyGenerator aesKeyGen = new ();
-		aesKeyGen.Init(new KeyGenerationParameters(new SecureRandom(), 256));
-		byte[] aesKey = aesKeyGen.GenerateKey();
-
-		AesEngine aesEngine = new ();
-		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
-		cipher.Init(true, new KeyParameter(aesKey));
-		
-		byte[] plainBytes = Encoding.UTF8.GetBytes(inputText);
-		byte[] cipherBytes = new byte[cipher.GetOutputSize(plainBytes.Length)];
-		int length = cipher.ProcessBytes(plainBytes, 0, plainBytes.Length, cipherBytes, 0);
-		length += cipher.DoFinal(cipherBytes, length);
-		
-		// Encrypt the AES key using RSA
-		OaepEncoding rsaEngine = new (new RsaEngine());
-		rsaEngine.Init(true, PersonalPublicKey);
-		byte[] personalEncryptedKey = rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
-		
-		rsaEngine.Init(true, ForeignPublicKey);
-		byte[] foreignEncryptedKey = rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
-
-		return new Message {
-			Body = Convert.ToBase64String(cipherBytes),
-			SenderEncryptedKey = Convert.ToBase64String(personalEncryptedKey),
-			ReceiverEncryptedKey = Convert.ToBase64String(foreignEncryptedKey),
-			Signature = Sign(inputText),
-			Receiver = ForeignPublicKey,
-			Sender = PersonalPublicKey
-		};
-	}
-
-	public DecryptedMessage Decrypt(Message message, bool isOwnMessage) {
-		// Decrypt the AES key using RSA
-		byte[] aesKeyEncrypted = Convert.FromBase64String(isOwnMessage ? message.SenderEncryptedKey : message.ReceiverEncryptedKey);
-		OaepEncoding rsaEngine = new (new RsaEngine());
-		rsaEngine.Init(false, _privateKey);
-		
-		byte[] aesKey = rsaEngine.ProcessBlock(aesKeyEncrypted, 0, aesKeyEncrypted.Length);
-		
-		// Decrypt the message using AES
-		AesEngine aesEngine = new ();
-		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
-		cipher.Init(false, new KeyParameter(aesKey));
-
-		byte[] encryptedBodyBytes = Convert.FromBase64String(message.Body);
-		byte[] plainBytes = new byte[cipher.GetOutputSize(encryptedBodyBytes.Length)];
-		int length = cipher.ProcessBytes(encryptedBodyBytes, 0, encryptedBodyBytes.Length, plainBytes, 0);
-		length += cipher.DoFinal(plainBytes, length);
-
-		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
-		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), DateTime = DateTime.MinValue};
-	}
+	public DecryptedMessage Decrypt(Message message, bool isOwnMessage) => Cryptography.Decrypt(message, _privateKey, isOwnMessage);
 
 	public DecryptedMessage[] GetPastMessages() { // TODO: Add signature to this request
 		List<DecryptedMessage> res = new ();
@@ -178,8 +102,8 @@ public class ChatPanelController {
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
-			DecryptedMessage decryptedMessage = Decrypt(message, isOwnMessage);
-			if (!Verify(decryptedMessage.Body, message.Signature, isOwnMessage))
+			DecryptedMessage decryptedMessage = Cryptography.Decrypt(message, _privateKey, isOwnMessage);
+			if (!Cryptography.Verify(decryptedMessage.Body, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage))
 				continue; // Just don't add the message if it is not legitimate
 			
 			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16)});
@@ -189,7 +113,7 @@ public class ChatPanelController {
 	}
 	
 	public long SendMessage(string message) {
-		Message encryptedMessage = Encrypt(message);
+		Message encryptedMessage = Cryptography.Encrypt(message, PersonalPublicKey, ForeignPublicKey, _privateKey);
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
 				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
@@ -212,7 +136,7 @@ public class ChatPanelController {
 	public void DeleteMessage(long id) {
 		JsonObject body = new () {
 			["id"] = id,
-			["signature"] = Sign(id.ToString())
+			["signature"] = Cryptography.Sign(id.ToString(), _privateKey)
 		};
 		_context.RemoveMessage(id);
 		Https.Delete($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body));

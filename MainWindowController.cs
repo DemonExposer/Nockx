@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
@@ -14,7 +15,7 @@ using SecureChat.util;
 namespace SecureChat;
 
 public class MainWindowController {
-	public RsaKeyParameters PublicKey;
+	private readonly RsaKeyParameters _publicKey, _privateKey;
 
 	private readonly MainWindow _context;
 	private ClientWebSocket _webSocket;
@@ -24,9 +25,15 @@ public class MainWindowController {
 	public MainWindowController(MainWindow context) {
 		_context = context;
 
-		using StreamReader reader = File.OpenText(Constants.PublicKeyFile);
-		PemReader pemReader = new (reader);
-		PublicKey = (RsaKeyParameters) pemReader.ReadObject();
+		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
+			PemReader pemReader = new (reader);
+			_publicKey = (RsaKeyParameters) pemReader.ReadObject();
+		}
+
+		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
+			PemReader pemReader = new (reader);
+			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
+		}
 
 		// Load chats from file
 		Chats.Show(_context);
@@ -39,9 +46,27 @@ public class MainWindowController {
 	}
 
 	private void CheckForNewChats() {
-		// TODO: Implement this. Note: this request should be signed
-	//	string getVariables = $"modulus={PublicKey.Modulus.ToString(16)}&exponent={PublicKey.Exponent.ToString(16)}";
-	//	Https.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}");
+		string getVariables = $"modulus={_publicKey.Modulus.ToString(16)}&exponent={_publicKey.Exponent.ToString(16)}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+		Https.Response response = Https.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", new [] {new Https.Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}});
+		if (!response.IsSuccessful)
+			return; // TODO: give a popup or try again. handle it differently than this anyway
+
+		JsonArray chats = JsonNode.Parse(response.Body)!.AsArray();
+		foreach (JsonNode? jsonNode in chats) {
+			JsonObject chatObject = jsonNode!.AsObject();
+			if (chatObject["user1"]!["modulus"]!.GetValue<string>() != _publicKey.Modulus.ToString(16))
+				_context.AddUser(new RsaKeyParameters(
+					false,
+					new BigInteger(chatObject["user1"]!["modulus"]!.GetValue<string>(), 16),
+					new BigInteger(chatObject["user1"]!["exponent"]!.GetValue<string>(), 16)
+				), chatObject["user1"]!["modulus"]!.GetValue<string>(), false);
+			else
+				_context.AddUser(new RsaKeyParameters(
+					false,
+					new BigInteger(chatObject["user2"]!["modulus"]!.GetValue<string>(), 16),
+					new BigInteger(chatObject["user2"]!["exponent"]!.GetValue<string>(), 16)
+				), chatObject["user2"]!["modulus"]!.GetValue<string>(), false);
+		}
 	}
 
 	private async Task InitializeWebsocket() {
@@ -49,7 +74,7 @@ public class MainWindowController {
 		try {
 			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
 
-			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(PublicKey.Modulus.ToString(16));
+			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(_publicKey.Modulus.ToString(16));
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
 			isWebsocketInitialized = true;
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
