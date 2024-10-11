@@ -28,7 +28,12 @@ public static class Https {
 			foreach (Header header in headers)
 				request.Headers.Add(header.Name, header.Value);
 		
-		HttpResponseMessage response = client.SendAsync(request).Result;
+		HttpResponseMessage response;
+		try {
+			response = client.SendAsync(request).Result;
+		} catch (Exception) {
+			return new Response { IsSuccessful = false, Body = "" };
+		} 
 
 		return new Response { IsSuccessful = response.IsSuccessStatusCode, Body = response.Content.ReadAsStringAsync().Result };
 	}
