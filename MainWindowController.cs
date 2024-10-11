@@ -11,6 +11,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.util;
+using SecureChat.windows;
 
 namespace SecureChat;
 
@@ -48,8 +49,10 @@ public class MainWindowController {
 	private void CheckForNewChats() {
 		string getVariables = $"modulus={_publicKey.Modulus.ToString(16)}&exponent={_publicKey.Exponent.ToString(16)}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 		Https.Response response = Https.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", new [] {new Https.Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}});
-		if (!response.IsSuccessful)
-			return; // TODO: give a popup or try again. handle it differently than this anyway
+		if (!response.IsSuccessful) {
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
+			return;
+		}
 
 		JsonArray chats = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? jsonNode in chats) {
@@ -78,9 +81,9 @@ public class MainWindowController {
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
 			isWebsocketInitialized = true;
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
-			Console.WriteLine("websocket timeout"); // TODO: handle this differently
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket timeout ({Settings.GetInstance().IpAddress})"));
 		} catch (WebSocketException) {
-			Console.WriteLine("connection failed");
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket could not be connected ({Settings.GetInstance().IpAddress})"));
 		} catch (Exception e) {
 			Console.WriteLine(e.ToString());
 		}
