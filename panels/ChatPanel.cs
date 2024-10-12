@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media;
 using Avalonia.Threading;
+using SecureChat.extended_controls;
 using SecureChat.model;
 using SecureChat.util;
 

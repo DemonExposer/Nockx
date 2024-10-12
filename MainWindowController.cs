@@ -19,12 +19,14 @@ public class MainWindowController {
 	private readonly RsaKeyParameters _publicKey, _privateKey;
 
 	private readonly MainWindow _context;
+	private readonly MainWindowModel _model;
 	private ClientWebSocket _webSocket;
 
-	private bool isWebsocketInitialized = false;
+	private bool _isWebsocketInitialized = false;
 
-	public MainWindowController(MainWindow context) {
+	public MainWindowController(MainWindow context, MainWindowModel model) {
 		_context = context;
+		_model = model;
 
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
@@ -79,7 +81,7 @@ public class MainWindowController {
 
 			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(_publicKey.Modulus.ToString(16));
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
-			isWebsocketInitialized = true;
+			_isWebsocketInitialized = true;
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket timeout ({Settings.GetInstance().IpAddress})"));
 		} catch (WebSocketException) {
@@ -90,12 +92,12 @@ public class MainWindowController {
 	}
 
 	private async Task ReinitializeWebsocket() { // TODO: retrieve all messages after reinitialization, so that missed messages are loaded
-		if (isWebsocketInitialized) {
-			isWebsocketInitialized = false;
+		if (_isWebsocketInitialized) {
+			_isWebsocketInitialized = false;
 			_webSocket.Abort();
 			_webSocket.Dispose();
 		} else {
-			isWebsocketInitialized = false;
+			_isWebsocketInitialized = false;
 		}
 
 		_webSocket = new ClientWebSocket();
@@ -104,7 +106,7 @@ public class MainWindowController {
 	}
 
 	public async Task ListenOnWebsocket() { // TODO: put async methods in a big try/catch because they can silent fail
-		while (!isWebsocketInitialized)
+		while (!_isWebsocketInitialized)
 			await Task.Delay(1000);
 		
 		int arrSize = 1024;
@@ -116,10 +118,10 @@ public class MainWindowController {
 		}, null, 0, 5000);
 		
 		while (true) {
-			List<byte> bytes = new ();
+			List<byte> bytes = [];
 			WebSocketReceiveResult result;
 			try {
-				if (!isWebsocketInitialized)
+				if (!_isWebsocketInitialized)
 					throw new WebSocketException();
 				
 				do {
@@ -142,13 +144,7 @@ public class MainWindowController {
 	}
 
 	private void AddMessage(JsonObject messageJson) {
-		Message message = new () {
-			Id = messageJson["id"]!.GetValue<long>(),
-			Body = messageJson["text"]!.GetValue<string>(),
-			Sender = new RsaKeyParameters(false, new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)),
-			ReceiverEncryptedKey = messageJson["receiverEncryptedKey"]!.GetValue<string>(),
-			Signature = messageJson["signature"]!.GetValue<string>()
-		};
+		Message message = Message.Parse(messageJson);
 		
 		// Add new chat if receiver does not yet have a chat with sender
 		if (!Chats.ChatExists(message.Sender)) {
@@ -157,14 +153,17 @@ public class MainWindowController {
 		}
 
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
-		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender))
+		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender)) {
+			if (!message.IsRead)
+				_model.GetChat(message.Sender.Modulus.ToString(16))!.ChatButton.Tag = "\u25cf";
 			return;
+		}
 
 		_context.ChatPanel.DecryptAndAddMessage(message);
 	}
 
 	private void DeleteMessage(JsonObject messageJson) {
-		RsaKeyParameters sender = new RsaKeyParameters(
+		RsaKeyParameters sender = new (
 			false,
 			new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16),
 			new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)

@@ -1,8 +1,8 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
 using Org.BouncyCastle.Crypto.Parameters;
+using SecureChat.model;
 using SecureChat.panels;
 using SecureChat.util;
 using SecureChat.windows;
@@ -23,9 +23,8 @@ public partial class MainWindow : Window {
 		
 		InitializeComponent();
 		
-		_controller = new MainWindowController(this);
+		_controller = new MainWindowController(this, _model);
 		_ = _controller.ListenOnWebsocket();
-		
 	}
 
 	private void InitializeComponent() {
@@ -84,18 +83,17 @@ public partial class MainWindow : Window {
 		if (_model.ContainsChat(name))
 			return;
 		
-		_model.AddChat(name);
-		
 		if (doAutoFocus) {
 			SetUiPanel(ChatPanel);
 			ChatPanel.Show(publicKey, this);
 		}
 
 		Button chatButton = new () {
-			Background = new SolidColorBrush(Color.Parse("Transparent")),
-			Width = 200,
-			Content = name.Crop(22)
+			Content = name.Crop(20)
 		};
+		chatButton.Classes.Add("chat_selector");
+
+		_model.AddChat(new Chat(chatButton, name));
 		
 		if (doAutoFocus)
 			SetPressedButton(chatButton);

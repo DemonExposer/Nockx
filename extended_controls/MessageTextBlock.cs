@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace SecureChat.util;
+namespace SecureChat.extended_controls;
 
 public class MessageTextBlock {
 	public long Id { get; init; }

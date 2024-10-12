@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 using Avalonia.Controls;
-using SecureChat.util;
+using SecureChat.extended_controls;
 
 namespace SecureChat.panels;
 
