@@ -15,6 +15,8 @@ using SecureChat.util;
 namespace SecureChat.panels;
 
 public class ChatPanel : DockPanel {
+	private MainWindowModel? _mainWindowModel;
+	
 	private readonly ChatPanelController _controller;
 	private readonly List<MessageTextBlock> _messages = new ();
 
@@ -65,6 +67,13 @@ public class ChatPanel : DockPanel {
 				}
 			}
 		});
+	}
+
+	public void SetMainWindowModel(MainWindowModel mainWindowModel) {
+		if (_mainWindowModel != null)
+			return;
+		
+		_mainWindowModel = mainWindowModel;
 	}
 	
 	private void AddMessage(DecryptedMessage message) {
@@ -137,6 +146,9 @@ public class ChatPanel : DockPanel {
 	}
 	
 	public void Show(RsaKeyParameters publicKey, MainWindow context) {
+		if (_mainWindowModel == null)
+			throw new InvalidOperationException("Show may not be called before _mainWindowModel is set, using SetMainWindowModel");
+		
 		// _messagePanel should never be null, because a user cannot open this panel before the UI is done.
 		// However, in theory, when the program is loaded from a saved state, it is theoretically possible to trigger this. So this is just for debug.
 		if (_messagePanel == null) {
@@ -146,6 +158,12 @@ public class ChatPanel : DockPanel {
 		}
 		
 		_controller.ForeignPublicKey = publicKey;
+
+		// If chat is unread, make it read
+		if (!_mainWindowModel.GetChatReadStatus(publicKey.Modulus.ToString(16))) {
+			_mainWindowModel.SetChatReadStatus(publicKey.Modulus.ToString(16), true);
+			_controller.SetChatRead();
+		}
 		
 		DecryptedMessage[] messages = _controller.GetPastMessages();
 

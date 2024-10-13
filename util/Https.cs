@@ -38,13 +38,17 @@ public static class Https {
 		return new Response { IsSuccessful = response.IsSuccessStatusCode, Body = response.Content.ReadAsStringAsync().Result };
 	}
 
-	public static Response Post(string endpoint, string postData) {
+	public static Response Post(string endpoint, string postData, Header[]? headers = null) {
 		using HttpClient client = new ();
 		HttpRequestMessage request = new () {
 			RequestUri = new Uri(endpoint),
 			Method = HttpMethod.Post,
 			Content = new StringContent(postData, Encoding.UTF8, "application/json")
 		};
+		
+		if (headers != null)
+			foreach (Header header in headers)
+				request.Headers.Add(header.Name, header.Value);
 		
 		HttpResponseMessage response = client.SendAsync(request).Result;
 

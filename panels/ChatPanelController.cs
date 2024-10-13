@@ -134,4 +134,21 @@ public class ChatPanelController {
 		_context.RemoveMessage(id);
 		Https.Delete($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body));
 	}
+
+	public void SetChatRead() {
+		JsonObject body = new () {
+			["receiver"] = new JsonObject {
+				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
+				["exponent"] = PersonalPublicKey.Exponent.ToString(16)
+			},
+			["sender"] = new JsonObject {
+				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
+				["exponent"] = ForeignPublicKey.Exponent.ToString(16)
+			},
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+		};
+		
+		string bodyString = JsonSerializer.Serialize(body);
+		Https.Post($"http://{_settings.IpAddress}:5000/makeChatRead", bodyString, [new Https.Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]);
+	}
 }

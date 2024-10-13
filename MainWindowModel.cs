@@ -14,4 +14,6 @@ public class MainWindowModel {
 	public Chat? GetChat(string name) => _chats.Find(chat => chat.Name == name);
 	
 	public void SetChatReadStatus(string name, bool isRead) => GetChat(name)!.ChatButton.Tag = isRead ? "" : "\u25cf";
+	
+	public bool GetChatReadStatus(string name) => (string) GetChat(name)!.ChatButton.Tag! == "";
 }
