@@ -50,7 +50,7 @@ public class MainWindowController {
 
 	private void CheckForNewChats() {
 		string getVariables = $"modulus={_publicKey.Modulus.ToString(16)}&exponent={_publicKey.Exponent.ToString(16)}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-		Https.Response response = Https.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", new [] {new Https.Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}});
+		Https.Response response = Https.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Https.Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}]);
 		if (!response.IsSuccessful) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
 			return;
@@ -59,18 +59,21 @@ public class MainWindowController {
 		JsonArray chats = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? jsonNode in chats) {
 			JsonObject chatObject = jsonNode!.AsObject();
-			if (chatObject["user1"]!["modulus"]!.GetValue<string>() != _publicKey.Modulus.ToString(16))
+			if (chatObject["user1"]!["modulus"]!.GetValue<string>() != _publicKey.Modulus.ToString(16)) {
 				_context.AddUser(new RsaKeyParameters(
 					false,
 					new BigInteger(chatObject["user1"]!["modulus"]!.GetValue<string>(), 16),
 					new BigInteger(chatObject["user1"]!["exponent"]!.GetValue<string>(), 16)
 				), chatObject["user1"]!["modulus"]!.GetValue<string>(), false);
-			else
+				_model.SetChatReadStatus(chatObject["user1"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+			} else {
 				_context.AddUser(new RsaKeyParameters(
 					false,
 					new BigInteger(chatObject["user2"]!["modulus"]!.GetValue<string>(), 16),
 					new BigInteger(chatObject["user2"]!["exponent"]!.GetValue<string>(), 16)
 				), chatObject["user2"]!["modulus"]!.GetValue<string>(), false);
+				_model.SetChatReadStatus(chatObject["user2"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+			}
 		}
 	}
 
@@ -155,7 +158,8 @@ public class MainWindowController {
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender)) {
 			if (!message.IsRead)
-				_model.GetChat(message.Sender.Modulus.ToString(16))!.ChatButton.Tag = "\u25cf";
+				_model.SetChatReadStatus(message.Sender.Modulus.ToString(16), false);
+			
 			return;
 		}
 
