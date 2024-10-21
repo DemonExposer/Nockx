@@ -26,8 +26,8 @@ public partial class App : Application {
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
 		
-		// TODO: Test this untested code and add code to unpack the zip file
-		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest");
+		// TODO: Add code to unpack the zip file
+		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest", [new Https.Header {Name = "User-Agent", Value = "SecureChat"}]);
 		if (response.IsSuccessful) {
 			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
 			if (releaseObj["name"]!.GetValue<string>() != Version) {
