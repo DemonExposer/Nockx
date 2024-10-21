@@ -1,8 +1,5 @@
-using System;
 using System.IO;
-using System.Net.Http;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -19,27 +16,26 @@ namespace SecureChat;
 public partial class App : Application {
 	public const string Version = "v1.0-beta";
 	
-	private bool _isKeyLoadedSuccessfully; 
+	private bool _isKeyLoadedSuccessfully;
+	private bool _doUpdate;
+	private JsonObject _releaseFileObject;
 	
 	public override void Initialize() {
 		Chats.LoadOrDefault(Constants.ChatsFile);
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
 		
-		// TODO: Add code to unpack the zip file
 		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest", [new Https.Header {Name = "User-Agent", Value = "SecureChat"}]);
 		if (response.IsSuccessful) {
 			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
 			if (releaseObj["name"]!.GetValue<string>() != Version) {
 				foreach (JsonNode? node in releaseObj["assets"]!.AsArray()) {
-					// e.g. "SecureChat_debian-x64.zip" in this case it takes everything after the underscore and removes ".zip" (4 characters)
+					// e.g. "SecureChat_linux-x64.zip" in this case it takes everything after the underscore and removes ".zip" (4 characters)
 					if (node!["name"]!.GetValue<string>().Split("_")[1][..^4] != System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier)
 						continue;
 
-					using HttpClient httpClient = new ();
-					using Task<Stream> streamTask = httpClient.GetStreamAsync(node["browser_download_url"]!.GetValue<string>());
-					using FileStream fileStream = new (node["name"]!.GetValue<string>(), FileMode.Create);
-					streamTask.Result.CopyTo(fileStream);
+					_doUpdate = true;
+					_releaseFileObject = node.AsObject();
 				}
 			}
 		}
@@ -83,11 +79,15 @@ public partial class App : Application {
 
 	public override void OnFrameworkInitializationCompleted() {
 		if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
-			if (_isKeyLoadedSuccessfully)
-				desktop.MainWindow = new MainWindow();
-			else
+			if (!_isKeyLoadedSuccessfully) {
 				// TODO: add option to generate public key from private key if only the private key is available or the option to regenerate both
 				desktop.MainWindow = new ErrorPopupWindow("one key file found, zero or two expected");
+			} else if (_doUpdate) {
+				desktop.MainWindow = new UpdateWindow();
+				((UpdateWindow) desktop.MainWindow!).Update(_releaseFileObject);
+			} else {
+				desktop.MainWindow = new MainWindow();
+			}
 		}
 
 		base.OnFrameworkInitializationCompleted();
