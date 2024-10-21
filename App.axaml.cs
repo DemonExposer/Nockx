@@ -1,9 +1,7 @@
 using System;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text.Json.Nodes;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -19,27 +17,33 @@ using SecureChat.windows;
 namespace SecureChat;
 
 public partial class App : Application {
+	public const string Version = "v1.0-beta";
+	
 	private bool _isKeyLoadedSuccessfully; 
 	
 	public override void Initialize() {
 		Chats.LoadOrDefault(Constants.ChatsFile);
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
-
-		/* TODO: Finish this auto-update stuff
+		
+		// TODO: Test this untested code and add code to unpack the zip file
 		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest");
 		if (response.IsSuccessful) {
 			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
-			foreach (JsonNode? node in releaseObj["assets"]!.AsArray()) {
-				if (node!["name"]!.GetValue<string>() == )
+			if (releaseObj["name"]!.GetValue<string>() != Version) {
+				foreach (JsonNode? node in releaseObj["assets"]!.AsArray()) {
+					// e.g. "SecureChat_debian-x64.zip" in this case it takes everything after the underscore and removes ".zip" (4 characters)
+					if (node!["name"]!.GetValue<string>().Split("_")[1][..^4] != System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier)
+						continue;
+
+					using HttpClient httpClient = new ();
+					using Task<Stream> streamTask = httpClient.GetStreamAsync(node["browser_download_url"]!.GetValue<string>());
+					using FileStream fileStream = new (node["name"]!.GetValue<string>(), FileMode.Create);
+					streamTask.Result.CopyTo(fileStream);
+				}
 			}
 		}
-		using (HttpClient httpClient = new ()) {
-			using Task<Stream> streamTask = httpClient.GetStreamAsync("");
-			using FileStream fileStream = new ("SecureChat_osx-x64.zip", FileMode.Create);
-			streamTask.Result.CopyTo(fileStream);
-		}
-		*/
+		
 		
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
