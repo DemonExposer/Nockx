@@ -1,4 +1,10 @@
+using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -20,6 +26,21 @@ public partial class App : Application {
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
 
+		/* TODO: Finish this auto-update stuff
+		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest");
+		if (response.IsSuccessful) {
+			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
+			foreach (JsonNode? node in releaseObj["assets"]!.AsArray()) {
+				if (node!["name"]!.GetValue<string>() == )
+			}
+		}
+		using (HttpClient httpClient = new ()) {
+			using Task<Stream> streamTask = httpClient.GetStreamAsync("");
+			using FileStream fileStream = new ("SecureChat_osx-x64.zip", FileMode.Create);
+			streamTask.Result.CopyTo(fileStream);
+		}
+		*/
+		
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
 	}
