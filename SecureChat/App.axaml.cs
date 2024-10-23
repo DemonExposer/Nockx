@@ -25,7 +25,7 @@ public partial class App : Application {
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
 		
-		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/release-test/releases/latest", [new Https.Header {Name = "User-Agent", Value = "SecureChat"}]);
+		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest", [new Https.Header {Name = "User-Agent", Value = "SecureChat"}]);
 		if (response.IsSuccessful) {
 			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
 			if (releaseObj["name"]!.GetValue<string>() != Version) {
