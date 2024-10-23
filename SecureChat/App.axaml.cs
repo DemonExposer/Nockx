@@ -25,7 +25,7 @@ public partial class App : Application {
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
 		
-		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest", [new Https.Header {Name = "User-Agent", Value = "SecureChat"}]);
+		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/release-test/releases/latest", [new Https.Header {Name = "User-Agent", Value = "SecureChat"}]);
 		if (response.IsSuccessful) {
 			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
 			if (releaseObj["name"]!.GetValue<string>() != Version) {
@@ -33,13 +33,12 @@ public partial class App : Application {
 					// e.g. "SecureChat_linux-x64.zip" in this case it takes everything after the underscore and removes ".zip" (4 characters)
 					if (node!["name"]!.GetValue<string>().Split("_")[1][..^4] != System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier)
 						continue;
-
+					
 					_doUpdate = true;
 					_releaseFileObject = node.AsObject();
 				}
 			}
 		}
-		
 		
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
