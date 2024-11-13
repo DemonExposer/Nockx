@@ -6,8 +6,6 @@ namespace SecureChat.windows;
 public partial class SettingsPopupWindow : PopupWindow {
 	public SettingsPopupWindow() {
 		InitializeComponent();
-		
-		PostInitialization();
 
 		Settings settings = Settings.GetInstance();
 		

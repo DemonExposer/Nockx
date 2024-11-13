@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -14,10 +15,15 @@ public partial class MainWindow : Window {
 	private Panel? _uiPanel;
 	private Button? _pressedButton;
 	public ChatPanel ChatPanel { get; private set; }
+	
+	private bool _isRendered;
+	private readonly List<Action> _onRenderedActions = [];
 
 	private readonly MainWindowController _controller;
 	private readonly MainWindowModel _model;
 
+	public static MainWindow Instance { get; private set; }
+	
 	public MainWindow() {
 		_model = new MainWindowModel();
 		
@@ -25,6 +31,10 @@ public partial class MainWindow : Window {
 		
 		_controller = new MainWindowController(this, _model);
 		_ = _controller.ListenOnWebsocket();
+
+		Instance = this;
+		
+		PositionChanged += OnRendered;
 	}
 
 	private void InitializeComponent() {
@@ -112,9 +122,19 @@ public partial class MainWindow : Window {
 		Chats.Add(publicKey);
 		AddUser(publicKey, name, true);
 	}
+	
+	private void OnRendered(object? sender, PixelPointEventArgs e) {
+		_isRendered = true;
+		_onRenderedActions.ForEach(task => task());
+		PositionChanged -= OnRendered;
+	}
 
 	public void ShowPopupWindowOnTop(PopupWindow popupWindow) {
-		popupWindow.Show();
+		if (_isRendered)
+			popupWindow.Show(this);
+		else
+			_onRenderedActions.Add(() => popupWindow.Show(this));
+		
 		EventHandler activatedEventHandler = (_, _) => popupWindow.Topmost = true;
 		EventHandler deactivatedEventHandler = (_, _) => popupWindow.Topmost = false;
 		Activated += activatedEventHandler;
