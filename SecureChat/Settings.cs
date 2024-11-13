@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using SecureChat.windows;
 
 namespace SecureChat;
 
@@ -32,9 +34,26 @@ public class Settings {
 	
 	public static void Load(string filename) {
 		JsonObject settingsObject = JsonNode.Parse(File.ReadAllText(filename))!.AsObject();
+
+		IPAddress ipAddress;
+		try {
+			ipAddress = IPAddress.Parse(settingsObject["ipAddress"]!.GetValue<string>());
+		} catch (Exception) {
+			try {
+				IPHostEntry hostEntry = Dns.GetHostEntry(settingsObject["ipAddress"]!.GetValue<string>());
+				ipAddress = hostEntry.AddressList[0];
+			} catch (SocketException) {
+				new ErrorPopupWindow("Server domain name not found").Show(MainWindow.Instance);
+				return;
+			} catch (Exception) {
+				new ErrorPopupWindow("Server IP address is not correct").Show(MainWindow.Instance);
+				return;
+			}
+		}
+		
 		_instance = new Settings {
 			_file = filename,
-			IpAddress = IPAddress.Parse(settingsObject["ipAddress"]!.GetValue<string>())
+			IpAddress = ipAddress
 		};
 	}
 

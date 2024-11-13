@@ -3,7 +3,6 @@ Peer-to-peer
 Message format
 Notifications
 Write offline automatically added chats to file
-Allow domain names as server addresses
 Show when someone is typing
 Load only part of a conversation and dynamically load more
 Forbid self-messages
