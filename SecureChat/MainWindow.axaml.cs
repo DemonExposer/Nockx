@@ -93,11 +93,6 @@ public partial class MainWindow : Window {
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
 		if (_model.ContainsChat(name))
 			return;
-		
-		if (doAutoFocus) {
-			SetUiPanel(ChatPanel);
-			ChatPanel.Show(publicKey, this);
-		}
 
 		Button chatButton = new () {
 			Content = name.Crop(20)
@@ -105,6 +100,11 @@ public partial class MainWindow : Window {
 		chatButton.Classes.Add("chat_selector");
 
 		_model.AddChat(new Chat(chatButton, name));
+		
+		if (doAutoFocus) {
+			SetUiPanel(ChatPanel);
+			ChatPanel.Show(publicKey, this);
+		}
 		
 		if (doAutoFocus)
 			SetPressedButton(chatButton);
