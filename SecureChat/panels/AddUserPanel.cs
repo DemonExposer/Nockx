@@ -1,9 +1,11 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using System.Collections.Generic;
+using SecureChat.windows;
 
 namespace SecureChat.panels;
 
@@ -31,14 +33,27 @@ public class AddUserPanel : StackPanel {
 		// TODO: add check to see whether TextBoxes are actually filled
 		exponentTextBox!.KeyDown += (_, args) => {
 			if (args.Key == Key.Enter) {
-				callback(
-					new RsaKeyParameters(
+				RsaKeyParameters rsaKeyParameters;
+				try {
+					rsaKeyParameters = new RsaKeyParameters(
 						false,
 						new BigInteger(modulusTextBox!.Text, 16),
 						new BigInteger(exponentTextBox.Text, 16)
-					),
-					modulusTextBox.Text!
-				);
+					);
+				} catch (ArgumentException e) {
+					switch (e.ParamName) {
+						case "modulus":
+							new ErrorPopupWindow("The specified modulus is invalid").Show(MainWindow.Instance);
+							break;
+						case "exponent":
+							new ErrorPopupWindow("The specified exponent is invalid").Show(MainWindow.Instance);
+							break;
+					}
+
+					return;
+				}
+
+				callback(rsaKeyParameters, modulusTextBox.Text!);
 			}
 		};
 	}
