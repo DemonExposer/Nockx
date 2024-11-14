@@ -18,15 +18,17 @@ public class ChatPanel : DockPanel {
 	private MainWindowModel? _mainWindowModel;
 	
 	private readonly ChatPanelController _controller;
-	private readonly List<MessageTextBlock> _messages = new ();
+	private readonly List<MessageTextBlock> _messages = [];
 
 	private StackPanel? _messagePanel;
 	private ScrollViewer? _messageScrollView;
+	private TextBlock? _headerUsernameTextBlock;
+	private Button? _callButton;
 
 	private double _distanceScrolledFromBottom;
 
-	private bool _isResized = false;
-	private bool _isShowCalled = false;
+	private bool _isResized;
+	private bool _isShowCalled;
 
 	public ChatPanel() {
 		_controller = new ChatPanelController(this);
@@ -64,6 +66,14 @@ public class ChatPanel : DockPanel {
 								_isResized = false;
 						};
 					}
+				} else if (enumerator.Current.GetType() == typeof(TextBlock)) {
+					TextBlock textBlock = (TextBlock) enumerator.Current;
+					if (textBlock.Name == "HeaderForeignUsername")
+						_headerUsernameTextBlock = textBlock;
+				} else if (enumerator.Current.GetType() == typeof(Button)) {
+					Button button = (Button) enumerator.Current;
+					if (button.Name == "CallButton")
+						_callButton = button;
 				}
 			}
 		});
@@ -158,6 +168,7 @@ public class ChatPanel : DockPanel {
 		}
 		
 		_controller.ForeignPublicKey = publicKey;
+		_headerUsernameTextBlock!.Text = _controller.ForeignPublicKey.Modulus.ToString(16).Crop(30);
 
 		// If chat is unread, make it read
 		if (!_mainWindowModel.GetChatReadStatus(publicKey.Modulus.ToString(16))) {
@@ -168,6 +179,8 @@ public class ChatPanel : DockPanel {
 		DecryptedMessage[] messages = _controller.GetPastMessages();
 
 		messages.ToList().ForEach(AddMessage);
+
+		_callButton.Click += _controller.OnCallButtonClicked;
 
 		context.SizeChanged += OnSizeChanged;
 
@@ -191,6 +204,8 @@ public class ChatPanel : DockPanel {
 		_messagePanel.Children.RemoveAll(_messages.Select(block => block.Border));
 		_messages.Clear();
 
+		_callButton.Click -= _controller.OnCallButtonClicked;
+		
 		context.SizeChanged -= OnSizeChanged;
 	}
 

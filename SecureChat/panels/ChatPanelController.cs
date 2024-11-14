@@ -88,7 +88,7 @@ public class ChatPanelController {
 	public DecryptedMessage Decrypt(Message message, bool isOwnMessage) => Cryptography.Decrypt(message, _privateKey, isOwnMessage);
 
 	public DecryptedMessage[] GetPastMessages() { // TODO: Add signature to this request
-		List<DecryptedMessage> res = new ();
+		List<DecryptedMessage> res = [];
 		
 		string getVariables = $"requestingUserModulus={PersonalPublicKey.Modulus.ToString(16)}&requestingUserExponent={PersonalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
 		JsonArray messages = JsonNode.Parse(Https.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables).Body)!.AsArray();
@@ -150,5 +150,11 @@ public class ChatPanelController {
 		
 		string bodyString = JsonSerializer.Serialize(body);
 		Https.Post($"http://{_settings.IpAddress}:5000/makeChatRead", bodyString, [new Https.Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]);
+	}
+
+	public void OnCallButtonClicked(object? sender, EventArgs e) => StartCall();
+
+	private void StartCall() {
+		throw new NotImplementedException();
 	}
 }

@@ -17,6 +17,10 @@
 			<TextBox Name="ExponentTextBox" Watermark="Exponent"/>
 		</panels:AddUserPanel>
 		<panels:ChatPanel x:Key="ChatPanel">
+			<DockPanel DockPanel.Dock="Top" Background="#202020">
+				<Button DockPanel.Dock="Right" Name="CallButton" Content="Call"/>
+				<TextBlock Name="HeaderForeignUsername" VerticalAlignment="Center" FontSize="15" Margin="10"/>
+			</DockPanel>
 			<TextBox DockPanel.Dock="Bottom" Name="MessageBox" Margin="0" Width="NaN" HorizontalAlignment="Stretch"/>
 			<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
 				<StackPanel Name="MessagePanel">
