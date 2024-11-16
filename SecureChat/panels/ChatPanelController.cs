@@ -12,6 +12,7 @@ using Org.BouncyCastle.OpenSsl;
 using SecureChat.extended_controls;
 using SecureChat.model;
 using SecureChat.util;
+using SecureChat.windows;
 
 namespace SecureChat.panels;
 
@@ -155,6 +156,6 @@ public class ChatPanelController {
 	public void OnCallButtonClicked(object? sender, EventArgs e) => StartCall();
 
 	private void StartCall() {
-		throw new NotImplementedException();
+		new CallPopupWindow().Show(MainWindow.Instance);
 	}
 }
