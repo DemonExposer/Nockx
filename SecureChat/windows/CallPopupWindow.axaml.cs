@@ -6,15 +6,12 @@ using Avalonia.Styling;
 namespace SecureChat.windows;
 
 public partial class CallPopupWindow : PopupWindow {
-	private TextBlock _volumeTextBlock = null!;
-	
 	public CallPopupWindow() {
 		InitializeComponent();
 	}
 
 	private void InitializeComponent() {
 		AvaloniaXamlLoader.Load(this);
-		_volumeTextBlock = this.FindControl<TextBlock>("VolumeTextBlock")!;
 		Slider slider = this.FindControl<Slider>("VolumeSlider")!;
 		slider.Value = 50;
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Thumb>()) {
@@ -23,9 +20,14 @@ public partial class CallPopupWindow : PopupWindow {
 				new Setter(MaxWidthProperty, 15D)
 			}
 		});
+		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Track>()) {
+			Setters = {
+				new Setter(MaxHeightProperty, 3D)
+			}
+		});
 	}
 
 	private void VolumeSlider_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e) {
-		_volumeTextBlock.Text = ((int) e.NewValue).ToString();
+		
 	}
 }
