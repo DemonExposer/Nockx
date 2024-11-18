@@ -9,19 +9,20 @@ using OpenTK.Audio.OpenAL;
 namespace SecureChat.audio;
 
 public class Receiver {
-	private static int _sourceId;
+	private int _sourceId;
 
-	private static ALDevice _device;
-	private static readonly List<int> Buffers = [];
+	public IEnumerable<string> Devices;
+	public ALDevice _device;
+	private readonly List<int> _buffers = [];
 
-	private static bool _doneOnce;
+	private bool _doneOnce;
 	
-	static Receiver() {
-		IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
-		_device = ALC.OpenDevice(devices.FirstOrDefault());
+	public Receiver() {
+		Devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
+		_device = ALC.OpenDevice(Devices.FirstOrDefault());
 	}
 	
-	public static void OnReceive(IPEndPoint endPoint, byte[] data) {
+	public void OnReceive(IPEndPoint endPoint, byte[] data) {
 		try {
 			const int frequency = 44100; // Sampling frequency
 			const ALFormat format = ALFormat.Mono16; // 16-bit mono
@@ -40,12 +41,12 @@ public class Receiver {
 		}
 	}
 
-	private static unsafe void AddBuffer(short[] buffer, int lengthInBytes) {
+	private unsafe void AddBuffer(short[] buffer, int lengthInBytes) {
 		AL.GetSource(_sourceId, ALGetSourcei.BuffersProcessed, out int amount);
 		if (amount > 0) {
-			AL.SourceUnqueueBuffers(_sourceId, amount, Buffers.ToArray());
-			AL.DeleteBuffers(amount, Buffers.ToArray());
-			Buffers.RemoveRange(0, amount);
+			AL.SourceUnqueueBuffers(_sourceId, amount, _buffers.ToArray());
+			AL.DeleteBuffers(amount, _buffers.ToArray());
+			_buffers.RemoveRange(0, amount);
 		}
 		
 		int bufferId = AL.GenBuffer();
@@ -58,13 +59,13 @@ public class Receiver {
 		if (error != ALError.NoError)
 			Console.WriteLine($"AddBuffer {error}");
 		else
-			Buffers.Add(bufferId);
+			_buffers.Add(bufferId);
 
 		if ((ALSourceState) AL.GetSource(_sourceId, ALGetSourcei.SourceState) != ALSourceState.Playing)
 			AL.SourcePlay(_sourceId);
 	}
 
-	private static unsafe void PlayAudio(short[] buffer, int lengthInBytes) {
+	private unsafe void PlayAudio(short[] buffer, int lengthInBytes) {
 		try {
 			ALContext context = ALC.CreateContext(_device, new ALContextAttributes(44100,1,0,200,false));
 			ALC.MakeContextCurrent(context);

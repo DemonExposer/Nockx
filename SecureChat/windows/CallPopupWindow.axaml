@@ -11,7 +11,10 @@
 	<Grid Margin="10" RowDefinitions="*,*,*" ColumnDefinitions="*,*">
 		<StackPanel Grid.Row="0" Grid.Column="0">
 			<Slider Name="VolumeSlider" Maximum="200" Margin="0,0,5,0" HorizontalAlignment="Stretch" ValueChanged="VolumeSlider_OnValueChanged" VerticalAlignment="Center"/>
+			<Popup Name="MovableTooltip" IsLightDismissEnabled="False" Placement="TopEdgeAlignedLeft">
+				<TextBlock Name="TooltipText" Background="#202020"/>
+			</Popup>
 		</StackPanel>
-		<ComboBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" HorizontalAlignment="Stretch"/>
+		<ComboBox Grid.Row="0" Grid.Column="1" Name="InputSelector" Margin="5,0,0,0" HorizontalAlignment="Stretch"/>
 	</Grid>
 </Window>

@@ -15,8 +15,6 @@ public class Sender {
 				const int bufferSize = 44100; // 1 second of audio
 				short[] buffer = new short[bufferSize];
 
-				UdpClient client = new ();
-
 				string deviceName = ALC.GetString(ALDevice.Null, AlcGetString.CaptureDeviceSpecifier);
 				Console.WriteLine(deviceName);
 				ALCaptureDevice captureDevice = ALC.CaptureOpenDevice(deviceName, frequency, format, bufferSize);
@@ -54,7 +52,6 @@ public class Sender {
 					//	Console.WriteLine("Recording saved as recordedAudio.wav");
 				}
 
-				client.Close();
 				ALC.CaptureStop(captureDevice);
 
 				ALC.CaptureCloseDevice(captureDevice);
