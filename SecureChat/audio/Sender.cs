@@ -1,5 +1,6 @@
 using System;
-using System.Net.Sockets;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OpenTK.Audio.OpenAL;
@@ -7,39 +8,45 @@ using OpenTK.Audio.OpenAL;
 namespace SecureChat.audio;
 
 public class Sender {
-	public static void Run(Network network) {
+	public IEnumerable<string> Devices;
+	public ALCaptureDevice _captureDevice;
+	
+	private const int BufferSize = 44100; // 1 second of audio
+	
+	public Sender() {
+		const int frequency = 44100; // Sampling frequency
+		const ALFormat format = ALFormat.Mono16; // 16-bit mono
+		
+		Devices = ALC.GetString(ALDevice.Null, AlcGetStringList.CaptureDeviceSpecifier);
+		_captureDevice = ALC.CaptureOpenDevice(Devices.FirstOrDefault(), frequency, format, BufferSize);
+	}
+    
+	public void Run(Network network) {
 		Task.Run(() => {
 			while (true) try {
-				const int frequency = 44100; // Sampling frequency
-				const ALFormat format = ALFormat.Mono16; // 16-bit mono
-				const int bufferSize = 44100; // 1 second of audio
-				short[] buffer = new short[bufferSize];
-
-				string deviceName = ALC.GetString(ALDevice.Null, AlcGetString.CaptureDeviceSpecifier);
-				Console.WriteLine(deviceName);
-				ALCaptureDevice captureDevice = ALC.CaptureOpenDevice(deviceName, frequency, format, bufferSize);
-
-				if (captureDevice == IntPtr.Zero) {
+				short[] buffer = new short[BufferSize];
+				
+				if (_captureDevice == IntPtr.Zero) {
 					Console.WriteLine("Failed to open capture device.");
 					return;
 				}
 
-				ALC.CaptureStart(captureDevice);
+				ALC.CaptureStart(_captureDevice);
 
 				while (true) {
 					Console.WriteLine("Recording...");
 
 					// Wait for the capture buffer to be filled
 					int samplesAvailable = 0;
-					ALC.GetInteger(new ALDevice(captureDevice), AlcGetInteger.CaptureSamples, out samplesAvailable);
+					ALC.GetInteger(new ALDevice(_captureDevice), AlcGetInteger.CaptureSamples, out samplesAvailable);
 
 					while (samplesAvailable * sizeof(short) < 2048) {
-						ALC.GetInteger(new ALDevice(captureDevice), AlcGetInteger.CaptureSamples, out samplesAvailable);
+						ALC.GetInteger(new ALDevice(_captureDevice), AlcGetInteger.CaptureSamples, out samplesAvailable);
 						Thread.Sleep(10);
 					}
 
 					// Capture samples from the microphone
-					ALC.CaptureSamples(captureDevice, buffer, samplesAvailable);
+					ALC.CaptureSamples(_captureDevice, buffer, samplesAvailable);
 					Console.WriteLine($"Captured {samplesAvailable * sizeof(short)} samples.");
 
 					byte[] byteArray = new byte[buffer.Length * sizeof(short)];
@@ -52,9 +59,9 @@ public class Sender {
 					//	Console.WriteLine("Recording saved as recordedAudio.wav");
 				}
 
-				ALC.CaptureStop(captureDevice);
+				ALC.CaptureStop(_captureDevice);
 
-				ALC.CaptureCloseDevice(captureDevice);
+				ALC.CaptureCloseDevice(_captureDevice);
 			} catch (Exception e) {
 				Console.WriteLine(e);
 			}

@@ -27,7 +27,7 @@ public class CallPopupWindowController {
 		_volumeSliderTooltip = _context.FindControl<Popup>("MovableTooltip")!;
 		_context.TooltipTextBlock = _context.FindControl<TextBlock>("TooltipText")!;
 		
-		IEnumerable<ComboBoxItem> comboBoxItems = _receiver.Devices.Select(inputDevice => new ComboBoxItem { Content = inputDevice });
+		IEnumerable<ComboBoxItem> comboBoxItems = _sender.Devices.Select(inputDevice => new ComboBoxItem { Content = inputDevice });
 		comboBoxItems.ToList().ForEach(item => _context.InputSelectorComboBox.Items.Add(item));
 		_context.InputSelectorComboBox.SelectedIndex = 0;
 	}
