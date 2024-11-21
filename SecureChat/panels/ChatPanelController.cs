@@ -120,10 +120,12 @@ public class ChatPanelController {
 			["text"] = encryptedMessage.Body,
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
 			["receiverEncryptedKey"] = encryptedMessage.ReceiverEncryptedKey,
-			["signature"] = encryptedMessage.Signature
+			["signature"] = encryptedMessage.Signature,
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
 		
-		string response = Https.Post($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body)).Body;
+		string bodyString = JsonSerializer.Serialize(body);
+		string response = Https.Post($"http://{_settings.IpAddress}:5000/messages", bodyString, [new Https.Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]).Body;
 		return long.Parse(response);
 	}
 
