@@ -46,7 +46,7 @@ public class MainWindowController {
 		CheckForNewChats();
 
 		_webSocket = new ClientWebSocket();
-		_ = InitializeWebsocket();
+		_ = InitializeWebsocket(true);
 	}
 
 	private void CheckForNewChats() {
@@ -78,7 +78,7 @@ public class MainWindowController {
 		}
 	}
 
-	private async Task InitializeWebsocket() {
+	private async Task InitializeWebsocket(bool isCalledFromUI) {
 		using CancellationTokenSource cts = new (5000);
 		try {
 			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
@@ -87,8 +87,12 @@ public class MainWindowController {
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
 			_isWebsocketInitialized = true;
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+			if (!isCalledFromUI)
+				return;
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket timeout ({Settings.GetInstance().IpAddress})"));
 		} catch (WebSocketException) {
+			if (!isCalledFromUI)
+				return;
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket could not be connected ({Settings.GetInstance().IpAddress})"));
 		} catch (Exception e) {
 			Console.WriteLine(e.ToString());
@@ -106,7 +110,7 @@ public class MainWindowController {
 
 		_webSocket = new ClientWebSocket();
 
-		await InitializeWebsocket();
+		await InitializeWebsocket(false);
 	}
 
 	public async Task ListenOnWebsocket() { // TODO: put async methods in a big try/catch because they can silent fail
