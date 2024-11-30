@@ -140,7 +140,7 @@ public class MainWindowController {
 
 			Dictionary<string, Action<JsonObject>> actions = new () {
 				["add"] = message => {
-					WavPlayer.PlayFile("sounds/notification.wav");
+					Sounds.Notification.Play();
 					AddMessage(message);
 				},
 				["delete"] = DeleteMessage
