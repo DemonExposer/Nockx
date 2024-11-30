@@ -10,7 +10,7 @@ namespace SecureChat.audio;
 public static class WavPlayer {
 	public static unsafe void PlayFile(string file) {
 		Task.Run(() => {
-			using BinaryReader reader = new(File.Open(file, FileMode.Open));
+			using BinaryReader reader = new (File.Open(file, FileMode.Open));
 			reader.ReadBytes(4);
 			reader.ReadInt32();
 			reader.ReadBytes(4);

@@ -10,6 +10,7 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
+using SecureChat.audio;
 using SecureChat.util;
 using SecureChat.windows;
 
@@ -137,9 +138,13 @@ public class MainWindowController {
 				continue;
 			}
 
-			IDictionary<string, Action<JsonObject>> actions = new Dictionary<string, Action<JsonObject>>();
-			actions["add"] = AddMessage;
-			actions["delete"] = DeleteMessage;
+			Dictionary<string, Action<JsonObject>> actions = new () {
+				["add"] = message => {
+					WavPlayer.PlayFile("sounds/notification.wav");
+					AddMessage(message);
+				},
+				["delete"] = DeleteMessage
+			};
 			
 			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
 			actions[messageJson["action"]!.GetValue<string>()](messageJson);
