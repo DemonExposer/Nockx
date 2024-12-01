@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -23,6 +24,7 @@ public class CallPopupWindowController {
 		_sender = new Sender();
 		_receiver = new Receiver();
 		_network = new Network(_receiver.OnReceive, new IPEndPoint(Settings.GetInstance().IpAddress, 5001));
+		_network.Run();
 
 		_volumeSliderTooltip = _context.FindControl<Popup>("MovableTooltip")!;
 		_context.TooltipTextBlock = _context.FindControl<TextBlock>("TooltipText")!;
@@ -30,6 +32,10 @@ public class CallPopupWindowController {
 		IEnumerable<ComboBoxItem> comboBoxItems = _sender.Devices.Select(inputDevice => new ComboBoxItem { Content = inputDevice });
 		comboBoxItems.ToList().ForEach(item => _context.InputSelectorComboBox.Items.Add(item));
 		_context.InputSelectorComboBox.SelectedIndex = 0;
+
+		string initializationMessage = $"{_context.PersonalKey.Modulus.ToString(16)}-{_context.ForeignKey.Modulus.ToString(16)}";
+		_network.Send(Encoding.UTF8.GetBytes(initializationMessage), initializationMessage.Length);
+		_sender.Run(_network);
 	}
 
 	public void OnMousePointerEnteredSlider(object? sender, PointerEventArgs e) {

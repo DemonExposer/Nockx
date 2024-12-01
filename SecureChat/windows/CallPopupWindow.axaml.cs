@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SecureChat.windows;
 
@@ -10,8 +11,13 @@ public partial class CallPopupWindow : PopupWindow {
 
 	public ComboBox InputSelectorComboBox = null!;
 	public TextBlock TooltipTextBlock = null!;
+
+	public readonly RsaKeyParameters PersonalKey, ForeignKey;
 	
-	public CallPopupWindow() {
+	public CallPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey) {
+		PersonalKey = personalKey;
+		ForeignKey = foreignKey;
+
 		InitializeComponent();
 	}
 
