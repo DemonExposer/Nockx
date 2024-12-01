@@ -11,14 +11,16 @@ public class Sender {
 	public IEnumerable<string> Devices;
 	public ALCaptureDevice _captureDevice;
 	
+	private const int Frequency = 44100;
+	private const ALFormat Format = ALFormat.Mono16;
 	private const int BufferSize = 44100; // 1 second of audio
+
+	private bool _doChangeDevice;
+	private int _newDeviceIndex = -1;
 	
 	public Sender() {
-		const int frequency = 44100; // Sampling frequency
-		const ALFormat format = ALFormat.Mono16; // 16-bit mono
-		
 		Devices = ALC.GetString(ALDevice.Null, AlcGetStringList.CaptureDeviceSpecifier);
-		_captureDevice = ALC.CaptureOpenDevice(Devices.FirstOrDefault(), frequency, format, BufferSize);
+		_captureDevice = ALC.CaptureOpenDevice(Devices.FirstOrDefault(), Frequency, Format, BufferSize);
 	}
     
 	public void Run(Network network) {
@@ -57,14 +59,25 @@ public class Sender {
 					network.Send(byteArray, samplesAvailable * sizeof(short));
 					//	PlayAudio(buffer);
 					//	Console.WriteLine("Recording saved as recordedAudio.wav");
+
+					if (_doChangeDevice) {
+						_doChangeDevice = false;
+						ALC.CaptureStop(_captureDevice);
+						ALC.CaptureCloseDevice(_captureDevice);
+
+						_captureDevice = ALC.CaptureOpenDevice(Devices.ToArray()[_newDeviceIndex], Frequency, Format, BufferSize);
+						_newDeviceIndex = -1;
+						break;
+					}
 				}
-
-				ALC.CaptureStop(_captureDevice);
-
-				ALC.CaptureCloseDevice(_captureDevice);
 			} catch (Exception e) {
 				Console.WriteLine(e);
 			}
 		});
+	}
+
+	public void SetInputDevice(int index) {
+		_newDeviceIndex = index;
+		_doChangeDevice = true;
 	}
 }

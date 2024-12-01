@@ -15,6 +15,6 @@
 				<TextBlock Name="TooltipText" Background="#202020"/>
 			</Popup>
 		</StackPanel>
-		<ComboBox Grid.Row="0" Grid.Column="1" Name="InputSelector" Margin="5,0,0,0" HorizontalAlignment="Stretch"/>
+		<ComboBox Grid.Row="0" Grid.Column="1" Name="InputSelector" Margin="5,0,0,0" HorizontalAlignment="Stretch" SelectionChanged="InputSelector_OnSelectionChanged"/>
 	</Grid>
 </Window>

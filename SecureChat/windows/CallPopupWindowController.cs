@@ -38,6 +38,11 @@ public class CallPopupWindowController {
 		_sender.Run(_network);
 	}
 
+	public void OnInputDeviceChanged(object? sender, SelectionChangedEventArgs e) {
+		ComboBox inputSelector = (ComboBox) sender!;
+		_sender.SetInputDevice(inputSelector.SelectedIndex);
+	}
+
 	public void OnMousePointerEnteredSlider(object? sender, PointerEventArgs e) {
 		Point position = e.GetPosition(_context);
 		_volumeSliderTooltip.HorizontalOffset = position.X;

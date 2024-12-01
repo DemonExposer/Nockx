@@ -47,6 +47,13 @@ public partial class CallPopupWindow : PopupWindow {
 		slider.PointerMoved += _controller.OnMousePointerMovedInSlider;
 	}
 
+	private void InputSelector_OnSelectionChanged(object? sender, SelectionChangedEventArgs e) {
+		if (_controller == null!)
+			return;
+
+		_controller.OnInputDeviceChanged(sender, e);
+	}
+
 	private void VolumeSlider_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e) {
 		if (_controller == null!)
 			return;
