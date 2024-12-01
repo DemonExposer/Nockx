@@ -26,7 +26,7 @@ public partial class CallPopupWindow : PopupWindow {
 		Slider slider = this.FindControl<Slider>("VolumeSlider")!;
 		InputSelectorComboBox = this.FindControl<ComboBox>("InputSelector")!;
 		TooltipTextBlock = this.FindControl<TextBlock>("TooltipText")!;
-		slider.Value = 50;
+		slider.Value = 100;
 		TooltipTextBlock.Text = (int) slider.Value + "%";
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Thumb>()) {
 			Setters = {

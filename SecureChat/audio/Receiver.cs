@@ -119,4 +119,6 @@ public class Receiver {
 			Console.WriteLine(e);
 		}
 	}
+
+	public void SetVolume(float volume) => AL.Source(_sourceId, ALSourcef.Gain, volume);
 }

@@ -56,5 +56,8 @@ public class CallPopupWindowController {
 		_volumeSliderTooltip.VerticalOffset = position.Y;
 	}
 
-	public void OnVolumeSliderValueChanged(object? sender, RangeBaseValueChangedEventArgs e) => _context.TooltipTextBlock.Text = (int) e.NewValue + "%";
+	public void OnVolumeSliderValueChanged(object? sender, RangeBaseValueChangedEventArgs e) {
+		_context.TooltipTextBlock.Text = (int) e.NewValue + "%";
+		_receiver.SetVolume((float) e.NewValue / 100);
+	}
 }
