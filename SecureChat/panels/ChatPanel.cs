@@ -147,8 +147,13 @@ public class ChatPanel : DockPanel {
 		}
 	}
 
-	public void DecryptAndAddMessage(Message message) => AddMessage(_controller.Decrypt(message, false));
-	
+	public void DecryptAndAddMessage(Message message) {
+		if (!_controller.Decrypt(message, false, out DecryptedMessage? decryptedMessage))
+			return;
+
+		AddMessage(decryptedMessage!);
+	}
+
 	// TODO: this should probably be moved to the controller
 	private void OnSizeChanged(object? sender, SizeChangedEventArgs args) {
 		_isResized = true;

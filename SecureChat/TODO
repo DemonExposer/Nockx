@@ -10,4 +10,3 @@ Translations
 Saved states
 Load things in the background so it doesn't block UI
 Don't crash when connection to server cannot be established or is lost
-Move message verification to Decrypt or AddMessage, because currently websocket messages are not verified

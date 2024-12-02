@@ -86,7 +86,16 @@ public class ChatPanelController {
 		};
 	}
 
-	public DecryptedMessage Decrypt(Message message, bool isOwnMessage) => Cryptography.Decrypt(message, _privateKey, isOwnMessage);
+	public bool Decrypt(Message message, bool isOwnMessage, out DecryptedMessage? decryptedMessage) {
+		DecryptedMessage uncheckedMessage = Cryptography.Decrypt(message, _privateKey, isOwnMessage);
+		if (Cryptography.Verify(uncheckedMessage.Body, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage)) {
+			decryptedMessage = uncheckedMessage;
+			return true;
+		}
+
+		decryptedMessage = null;
+		return false;
+	}
 
 	public DecryptedMessage[] GetPastMessages() { // TODO: Add signature to this request
 		List<DecryptedMessage> res = [];
@@ -96,11 +105,10 @@ public class ChatPanelController {
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
-			DecryptedMessage decryptedMessage = Cryptography.Decrypt(message, _privateKey, isOwnMessage);
-			if (!Cryptography.Verify(decryptedMessage.Body, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage))
+			if (!Decrypt(message, isOwnMessage, out DecryptedMessage? decryptedMessage))
 				continue; // Just don't add the message if it is not legitimate
 			
-			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16)});
+			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16)});
 		}
 
 		return res.ToArray();
