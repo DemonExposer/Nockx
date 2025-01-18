@@ -1,2 +1,2 @@
-# SecureChat
+# Nockx™
 Encrypted chat with GUI
