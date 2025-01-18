@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
@@ -51,7 +52,7 @@ public class MainWindowController {
 
 	private void CheckForNewChats() {
 		string getVariables = $"modulus={_publicKey.Modulus.ToString(16)}&exponent={_publicKey.Exponent.ToString(16)}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-		Https.Response response = Https.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Https.Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}]);
+		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}]);
 		if (!response.IsSuccessful) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
 			return;

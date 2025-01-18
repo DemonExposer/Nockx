@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -25,7 +26,7 @@ public partial class App : Application {
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
 		
-		Https.Response response = Https.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest", [new Https.Header {Name = "User-Agent", Value = "SecureChat"}]);
+		Response response = Http.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest", [new Header {Name = "User-Agent", Value = "SecureChat"}]);
 		if (response.IsSuccessful) {
 			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
 			if (releaseObj["name"]!.GetValue<string>() != Version) {

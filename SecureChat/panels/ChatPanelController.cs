@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
@@ -101,7 +102,7 @@ public class ChatPanelController {
 		List<DecryptedMessage> res = [];
 		
 		string getVariables = $"requestingUserModulus={PersonalPublicKey.Modulus.ToString(16)}&requestingUserExponent={PersonalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
-		JsonArray messages = JsonNode.Parse(Https.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables).Body)!.AsArray();
+		JsonArray messages = JsonNode.Parse(Http.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
@@ -133,7 +134,7 @@ public class ChatPanelController {
 		};
 		
 		string bodyString = JsonSerializer.Serialize(body);
-		string response = Https.Post($"http://{_settings.IpAddress}:5000/messages", bodyString, [new Https.Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]).Body;
+		string response = Http.Post($"http://{_settings.IpAddress}:5000/messages", bodyString, [new Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]).Body;
 		return long.Parse(response);
 	}
 
@@ -143,7 +144,7 @@ public class ChatPanelController {
 			["signature"] = Cryptography.Sign(id.ToString(), _privateKey)
 		};
 		_context.RemoveMessage(id);
-		Https.Delete($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body));
+		Http.Delete($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body));
 	}
 
 	public void SetChatRead() {
@@ -160,7 +161,7 @@ public class ChatPanelController {
 		};
 		
 		string bodyString = JsonSerializer.Serialize(body);
-		Https.Post($"http://{_settings.IpAddress}:5000/makeChatRead", bodyString, [new Https.Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]);
+		Http.Post($"http://{_settings.IpAddress}:5000/makeChatRead", bodyString, [new Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]);
 	}
 
 	public void OnCallButtonClicked(object? sender, EventArgs e) => StartCall();
