@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,7 +7,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Threading;
+using LessAnnoyingHttp;
 using SecureChat.audio;
+using SecureChat.util;
 
 namespace SecureChat.windows;
 
@@ -23,7 +27,8 @@ public class CallPopupWindowController {
 		_context = context;
 		_sender = new Sender();
 		_receiver = new Receiver();
-		_network = new Network(_receiver.OnReceive, new IPEndPoint(Settings.GetInstance().IpAddress, 5001));
+		_network = new Network(_receiver.OnReceive, new IPEndPoint(Settings.GetInstance().IpAddress, 5001), RegisterVoiceChat);
+		_context.ConnectionStatusTextBlock.Text = "Pinging server...";
 		_network.Run();
 
 		_volumeSliderTooltip = _context.FindControl<Popup>("MovableTooltip")!;
@@ -64,5 +69,13 @@ public class CallPopupWindowController {
 	public void OnVolumeSliderValueChanged(object? sender, RangeBaseValueChangedEventArgs e) {
 		_context.TooltipTextBlock.Text = (int) e.NewValue + "%";
 		_receiver.SetVolume((float) e.NewValue / 100);
+	}
+
+	private void RegisterVoiceChat(int port) {
+		Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Registering voice chat...");
+		byte[] aesKey = Cryptography.GenerateAesKey();
+		byte[] encryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.ForeignKey);
+		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat?personalModulus={_context.PersonalKey.Modulus.ToString(16)}&foreignModulus={_context.ForeignKey.Modulus.ToString(16)}&encryptedKeyBase64={Convert.ToBase64String(encryptedAesKey)}&port={port}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", "{}");
+		
 	}
 }

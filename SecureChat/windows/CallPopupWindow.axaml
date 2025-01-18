@@ -16,5 +16,6 @@
 			</Popup>
 		</StackPanel>
 		<ComboBox Grid.Row="0" Grid.Column="1" Name="InputSelector" Margin="5,0,0,0" HorizontalAlignment="Stretch" SelectionChanged="InputSelector_OnSelectionChanged"/>
+		<TextBlock Grid.Row="1" Grid.Column="0" Name="ConnectionStatus"/>
 	</Grid>
 </Window>

@@ -10,7 +10,7 @@ public partial class CallPopupWindow : PopupWindow {
 	private CallPopupWindowController _controller = null!;
 
 	public ComboBox InputSelectorComboBox = null!;
-	public TextBlock TooltipTextBlock = null!;
+	public TextBlock TooltipTextBlock = null!, ConnectionStatusTextBlock = null!;
 
 	public readonly RsaKeyParameters PersonalKey, ForeignKey;
 	
@@ -26,6 +26,7 @@ public partial class CallPopupWindow : PopupWindow {
 		Slider slider = this.FindControl<Slider>("VolumeSlider")!;
 		InputSelectorComboBox = this.FindControl<ComboBox>("InputSelector")!;
 		TooltipTextBlock = this.FindControl<TextBlock>("TooltipText")!;
+		ConnectionStatusTextBlock = this.FindControl<TextBlock>("ConnectionStatus")!;
 		slider.Value = 100;
 		TooltipTextBlock.Text = (int) slider.Value + "%";
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Thumb>()) {

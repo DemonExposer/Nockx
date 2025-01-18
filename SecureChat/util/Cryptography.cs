@@ -13,7 +13,25 @@ using SecureChat.model;
 
 namespace SecureChat.util;
 
-public class Cryptography {
+public static class Cryptography {
+	public static byte[] GenerateAesKey() {
+		CipherKeyGenerator aesKeyGen = new ();
+		aesKeyGen.Init(new KeyGenerationParameters(new SecureRandom(), 256));
+		return aesKeyGen.GenerateKey();
+	}
+
+	public static byte[] EncryptAesKey(byte[] aesKey, RsaKeyParameters rsaPublicKey) {
+		OaepEncoding rsaEngine = new (new RsaEngine());
+		rsaEngine.Init(true, rsaPublicKey);
+		return rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
+	}
+
+	public static byte[] DecryptAesKey(byte[] encryptedAesKey, RsaKeyParameters rsaPrivateKey) {
+		OaepEncoding rsaEngine = new (new RsaEngine());
+		rsaEngine.Init(false, rsaPrivateKey);
+		return rsaEngine.ProcessBlock(encryptedAesKey, 0, encryptedAesKey.Length);
+	}
+	
 	public static string Sign(string text, RsaKeyParameters privateKey) {
 		byte[] bytes = Encoding.UTF8.GetBytes(text);
 		ISigner signer = new RsaDigestSigner(new Sha256Digest());
@@ -46,9 +64,7 @@ public class Cryptography {
 
 	public static Message Encrypt(string inputText, RsaKeyParameters personalPublicKey, RsaKeyParameters foreignPublicKey, RsaKeyParameters privateKey) {
 		// Encrypt using AES
-		CipherKeyGenerator aesKeyGen = new ();
-		aesKeyGen.Init(new KeyGenerationParameters(new SecureRandom(), 256));
-		byte[] aesKey = aesKeyGen.GenerateKey();
+		byte[] aesKey = GenerateAesKey();
 
 		AesEngine aesEngine = new ();
 		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
@@ -60,12 +76,9 @@ public class Cryptography {
 		length += cipher.DoFinal(cipherBytes, length);
 		
 		// Encrypt the AES key using RSA
-		OaepEncoding rsaEngine = new (new RsaEngine());
-		rsaEngine.Init(true, personalPublicKey);
-		byte[] personalEncryptedKey = rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
+		byte[] personalEncryptedKey = EncryptAesKey(aesKey, personalPublicKey);
 		
-		rsaEngine.Init(true, foreignPublicKey);
-		byte[] foreignEncryptedKey = rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
+		byte[] foreignEncryptedKey = EncryptAesKey(aesKey, foreignPublicKey);
 
 		return new Message {
 			Body = Convert.ToBase64String(cipherBytes),
@@ -80,10 +93,8 @@ public class Cryptography {
 	public static DecryptedMessage Decrypt(Message message, RsaKeyParameters privateKey, bool isOwnMessage) {
 		// Decrypt the AES key using RSA
 		byte[] aesKeyEncrypted = Convert.FromBase64String(isOwnMessage ? message.SenderEncryptedKey : message.ReceiverEncryptedKey);
-		OaepEncoding rsaEngine = new (new RsaEngine());
-		rsaEngine.Init(false, privateKey);
 		
-		byte[] aesKey = rsaEngine.ProcessBlock(aesKeyEncrypted, 0, aesKeyEncrypted.Length);
+		byte[] aesKey = DecryptAesKey(aesKeyEncrypted, privateKey);
 		
 		// Decrypt the message using AES
 		AesEngine aesEngine = new ();
