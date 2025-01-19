@@ -31,6 +31,30 @@ public static class Cryptography {
 		rsaEngine.Init(false, rsaPrivateKey);
 		return rsaEngine.ProcessBlock(encryptedAesKey, 0, encryptedAesKey.Length);
 	}
+
+	public static byte[] EncryptWithAes(byte[] data, int inputLength, byte[] aesKey) {
+		AesEngine aesEngine = new ();
+		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
+		cipher.Init(true, new KeyParameter(aesKey));
+		
+		byte[] cipherBytes = new byte[cipher.GetOutputSize(inputLength)];
+		int length = cipher.ProcessBytes(data, 0, inputLength, cipherBytes, 0);
+		length += cipher.DoFinal(cipherBytes, length);
+
+		return cipherBytes;
+	}
+
+	public static byte[] DecryptWithAes(byte[] data, byte[] aesKey) {
+		AesEngine aesEngine = new ();
+		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
+		cipher.Init(false, new KeyParameter(aesKey));
+		
+		byte[] plainBytes = new byte[cipher.GetOutputSize(data.Length)];
+		int length = cipher.ProcessBytes(data, 0, data.Length, plainBytes, 0);
+		length += cipher.DoFinal(plainBytes, length);
+
+		return data;
+	}
 	
 	public static string Sign(string text, RsaKeyParameters privateKey) {
 		byte[] bytes = Encoding.UTF8.GetBytes(text);
@@ -66,14 +90,8 @@ public static class Cryptography {
 		// Encrypt using AES
 		byte[] aesKey = GenerateAesKey();
 
-		AesEngine aesEngine = new ();
-		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
-		cipher.Init(true, new KeyParameter(aesKey));
-		
 		byte[] plainBytes = Encoding.UTF8.GetBytes(inputText);
-		byte[] cipherBytes = new byte[cipher.GetOutputSize(plainBytes.Length)];
-		int length = cipher.ProcessBytes(plainBytes, 0, plainBytes.Length, cipherBytes, 0);
-		length += cipher.DoFinal(cipherBytes, length);
+		byte[] cipherBytes = EncryptWithAes(plainBytes, plainBytes.Length, aesKey);
 		
 		// Encrypt the AES key using RSA
 		byte[] personalEncryptedKey = EncryptAesKey(aesKey, personalPublicKey);
@@ -97,16 +115,9 @@ public static class Cryptography {
 		byte[] aesKey = DecryptAesKey(aesKeyEncrypted, privateKey);
 		
 		// Decrypt the message using AES
-		AesEngine aesEngine = new ();
-		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
-		cipher.Init(false, new KeyParameter(aesKey));
+		byte[] plainBytes = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
 
-		byte[] encryptedBodyBytes = Convert.FromBase64String(message.Body);
-		byte[] plainBytes = new byte[cipher.GetOutputSize(encryptedBodyBytes.Length)];
-		int length = cipher.ProcessBytes(encryptedBodyBytes, 0, encryptedBodyBytes.Length, plainBytes, 0);
-		length += cipher.DoFinal(plainBytes, length);
-
-		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
+		string body = Encoding.UTF8.GetString(plainBytes, 0, plainBytes.Length);
 		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), DateTime = DateTime.MinValue};
 	}
 }

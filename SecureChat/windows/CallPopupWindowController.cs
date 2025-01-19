@@ -1,14 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Threading;
 using LessAnnoyingHttp;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.OpenSsl;
 using SecureChat.audio;
 using SecureChat.util;
 
@@ -22,8 +28,15 @@ public class CallPopupWindowController {
 	private readonly Network _network;
 
 	private readonly Popup _volumeSliderTooltip;
+
+	private readonly RsaKeyParameters _privateKey; 
 	
 	public CallPopupWindowController(CallPopupWindow context) {
+		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
+			PemReader pemReader = new (reader);
+			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
+		}
+		
 		_context = context;
 		_sender = new Sender();
 		_receiver = new Receiver();
@@ -74,8 +87,17 @@ public class CallPopupWindowController {
 	private void RegisterVoiceChat(int port) {
 		Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Registering voice chat...");
 		byte[] aesKey = Cryptography.GenerateAesKey();
-		byte[] encryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.ForeignKey);
-		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat?personalModulus={_context.PersonalKey.Modulus.ToString(16)}&foreignModulus={_context.ForeignKey.Modulus.ToString(16)}&encryptedKeyBase64={Convert.ToBase64String(encryptedAesKey)}&port={port}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", "{}");
-		
+		byte[] foreignEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.ForeignKey);
+		byte[] personalEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.PersonalKey);
+		JsonObject body = new () {
+			["personalModulus"] = _context.PersonalKey.Modulus.ToString(16),
+			["foreignModulus"] = _context.ForeignKey.Modulus.ToString(16),
+			["personalEncryptedKeyBase64"] = Convert.ToBase64String(personalEncryptedAesKey),
+			["foreignEncryptedKeyBase64"] = Convert.ToBase64String(foreignEncryptedAesKey)
+		};
+		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat?timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", JsonSerializer.Serialize(body));
+		// TODO: add verification for the encrypted key, so that the server can't spoof its users
+		Console.WriteLine(response.Body);
+		Console.WriteLine(Convert.ToBase64String(Cryptography.DecryptAesKey(Convert.FromBase64String(response.Body), _privateKey)));
 	}
 }
