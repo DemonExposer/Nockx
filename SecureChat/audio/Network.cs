@@ -34,9 +34,9 @@ public class Network(Network.DataReceivedCallback dataReceivedCallback, IPEndPoi
 				if (_key == null)
 					continue;
 
-				byte[] plainBytes = Cryptography.DecryptWithAes(data, _key);
+				(byte[] plainBytes, int length) = Cryptography.DecryptWithAes(data, _key);
 
-				dataReceivedCallback(endPoint, plainBytes);
+				dataReceivedCallback(endPoint, plainBytes.Take(length).ToArray());
 			} catch (Exception e) {
 				Console.WriteLine(e);
 			}

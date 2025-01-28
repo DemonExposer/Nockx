@@ -44,7 +44,7 @@ public static class Cryptography {
 		return cipherBytes;
 	}
 
-	public static byte[] DecryptWithAes(byte[] data, byte[] aesKey) {
+	public static (byte[] plainBytes, int length) DecryptWithAes(byte[] data, byte[] aesKey) {
 		AesEngine aesEngine = new ();
 		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
 		cipher.Init(false, new KeyParameter(aesKey));
@@ -53,12 +53,12 @@ public static class Cryptography {
 		int length = cipher.ProcessBytes(data, 0, data.Length, plainBytes, 0);
 		length += cipher.DoFinal(plainBytes, length);
 
-		return data;
+		return (plainBytes, length);
 	}
 	
 	public static string Sign(string text, RsaKeyParameters privateKey) {
 		byte[] bytes = Encoding.UTF8.GetBytes(text);
-		ISigner signer = new RsaDigestSigner(new Sha256Digest());
+		RsaDigestSigner signer = new (new Sha256Digest());
 		signer.Init(true, privateKey);
 		
 		signer.BlockUpdate(bytes, 0, bytes.Length);
@@ -78,7 +78,7 @@ public static class Cryptography {
 		byte[] textBytes = Encoding.UTF8.GetBytes(text);
 		byte[] signatureBytes = Convert.FromBase64String(signature);
 
-		ISigner verifier = new RsaDigestSigner(new Sha256Digest());
+		RsaDigestSigner verifier = new (new Sha256Digest());
 		verifier.Init(false, isOwnMessage ? personalPublicKey : foreignPublicKey);
 		
 		verifier.BlockUpdate(textBytes, 0, textBytes.Length);
@@ -115,9 +115,9 @@ public static class Cryptography {
 		byte[] aesKey = DecryptAesKey(aesKeyEncrypted, privateKey);
 		
 		// Decrypt the message using AES
-		byte[] plainBytes = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
+		(byte[] plainBytes, int length) = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
 
-		string body = Encoding.UTF8.GetString(plainBytes, 0, plainBytes.Length);
+		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
 		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), DateTime = DateTime.MinValue};
 	}
 }
