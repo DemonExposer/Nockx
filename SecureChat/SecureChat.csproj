@@ -42,4 +42,10 @@
           <DependentUpon>CallPopupWindow.axaml.cs</DependentUpon>
         </Compile>
 	</ItemGroup>
+    
+    <ItemGroup>
+        <None Include="sounds\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>
