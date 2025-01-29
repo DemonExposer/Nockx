@@ -109,7 +109,7 @@ public class ChatPanelController {
 			if (!Decrypt(message, isOwnMessage, out DecryptedMessage? decryptedMessage))
 				continue; // Just don't add the message if it is not legitimate
 			
-			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16)});
+			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16), Nickname = message.SenderNickname});
 		}
 
 		return res.ToArray();

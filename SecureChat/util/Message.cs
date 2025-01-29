@@ -7,7 +7,7 @@ namespace SecureChat.util;
 
 public class Message {
 	public long Id;
-	public string Body, ReceiverEncryptedKey, SenderEncryptedKey, Signature;
+	public string Body, ReceiverEncryptedKey, SenderEncryptedKey, Signature, SenderNickname, ReceiverNickname;
 	public RsaKeyParameters Sender, Receiver;
 	public bool IsRead;
 	
@@ -22,10 +22,13 @@ public class Message {
 				Signature = jsonMessage["signature"]!.GetValue<string>(),
 				Sender = new RsaKeyParameters(false, new BigInteger(jsonMessage["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(jsonMessage["sender"]!["exponent"]!.GetValue<string>(), 16)),
 				Receiver = jsonMessage["receiver"] == null ? null : new RsaKeyParameters(false, new BigInteger(jsonMessage["receiver"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(jsonMessage["receiver"]!["exponent"]!.GetValue<string>(), 16)),
+				SenderNickname = jsonMessage["sender"]!["nickname"]!.GetValue<string>(),
+				ReceiverNickname = jsonMessage["receiver"]!["nickname"]!.GetValue<string>(),
 				IsRead = jsonMessage["isRead"]!.GetValue<bool>()
 			};
 		} catch (Exception e) { // TODO: make this better. currently this is just easy for identifying issues between client and server
 			Console.WriteLine(e.Message);
+			Console.WriteLine("asjdhjbasjsabdasjhd");
 			
 			if (jsonMessage["id"] == null)
 				Console.WriteLine("id null");

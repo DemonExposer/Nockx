@@ -45,7 +45,7 @@ public class ChatPanel : DockPanel {
 									return;
 
 								long id = _controller.SendMessage(textBox.Text);
-								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.Modulus.ToString(16)});
+								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.Modulus.ToString(16), Nickname = ""});
 								textBox.Text = null;
 							}
 						};
@@ -98,7 +98,7 @@ public class ChatPanel : DockPanel {
 		};
 
 		SelectableTextBlock block = new () {
-			Text = $"{message.Sender.Crop(16)} | {message.Body}",
+			Text = $"{message.Nickname.Crop(16)} | {message.Body}",
 			Margin = new Thickness(5),
 			TextWrapping = TextWrapping.Wrap
 		};

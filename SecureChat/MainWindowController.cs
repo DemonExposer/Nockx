@@ -66,14 +66,14 @@ public class MainWindowController {
 					false,
 					new BigInteger(chatObject["user1"]!["modulus"]!.GetValue<string>(), 16),
 					new BigInteger(chatObject["user1"]!["exponent"]!.GetValue<string>(), 16)
-				), chatObject["user1"]!["modulus"]!.GetValue<string>(), false);
+				), chatObject["user1"]!["nickname"]!.GetValue<string>(), false);
 				_model.SetChatReadStatus(chatObject["user1"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
 			} else {
 				_context.AddUser(new RsaKeyParameters(
 					false,
 					new BigInteger(chatObject["user2"]!["modulus"]!.GetValue<string>(), 16),
 					new BigInteger(chatObject["user2"]!["exponent"]!.GetValue<string>(), 16)
-				), chatObject["user2"]!["modulus"]!.GetValue<string>(), false);
+				), chatObject["user2"]!["nickname"]!.GetValue<string>(), false);
 				_model.SetChatReadStatus(chatObject["user2"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
 			}
 		}
