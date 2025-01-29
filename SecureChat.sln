@@ -6,6 +6,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecureChat", "SecureChat\Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Updater", "Updater\Updater.csproj", "{89B213AC-A1A1-4C83-B3BF-A4A83966F3B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSecureChat", "TestSecureChat\TestSecureChat.csproj", "{A0E2628D-0594-4C8A-8A4C-B095EA383B28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{89B213AC-A1A1-4C83-B3BF-A4A83966F3B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89B213AC-A1A1-4C83-B3BF-A4A83966F3B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89B213AC-A1A1-4C83-B3BF-A4A83966F3B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0E2628D-0594-4C8A-8A4C-B095EA383B28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0E2628D-0594-4C8A-8A4C-B095EA383B28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0E2628D-0594-4C8A-8A4C-B095EA383B28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0E2628D-0594-4C8A-8A4C-B095EA383B28}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

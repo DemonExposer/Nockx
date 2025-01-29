@@ -44,26 +44,30 @@ public class Sound {
 
 	public unsafe void Play() {
 		Task.Run(() => {
-			IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
-			ALDevice device = ALC.OpenDevice(devices.FirstOrDefault());
+			try {
+				IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
+				ALDevice device = ALC.OpenDevice(devices.FirstOrDefault());
 
-			ALContext context = ALC.CreateContext(device, new ALContextAttributes(44100, _numChannels == 1 ? 1 : 0, _numChannels == 2 ? 1 : 0, 200, false));
-			ALC.MakeContextCurrent(context);
+				ALContext context = ALC.CreateContext(device, new ALContextAttributes(44100, _numChannels == 1 ? 1 : 0, _numChannels == 2 ? 1 : 0, 200, false));
+				ALC.MakeContextCurrent(context);
 
-			int buffer = AL.GenBuffer();
-			int source = AL.GenSource();
+				int buffer = AL.GenBuffer();
+				int source = AL.GenSource();
 
-			fixed (void* dataPointer = _data)
-				AL.BufferData(buffer, _format, dataPointer, _data.Length, _sampleRate);
+				fixed (void* dataPointer = _data)
+					AL.BufferData(buffer, _format, dataPointer, _data.Length, _sampleRate);
 
-			AL.Source(source, ALSourcei.Buffer, buffer);
+				AL.Source(source, ALSourcei.Buffer, buffer);
 
-			AL.SourcePlay(source);
+				AL.SourcePlay(source);
 
-			Thread.Sleep((int) ((long) _data.Length * 1010 / _sampleRate));
+				Thread.Sleep((int) ((long) _data.Length * 1010 / _sampleRate));
 
-			AL.DeleteSource(source);
-			AL.DeleteBuffer(buffer);
+				AL.DeleteSource(source);
+				AL.DeleteBuffer(buffer);
+			} catch (Exception e) {
+				Console.WriteLine(e);
+			}
 		});
 	}
 }
