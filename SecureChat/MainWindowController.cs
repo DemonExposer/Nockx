@@ -114,45 +114,49 @@ public class MainWindowController {
 		await InitializeWebsocket(false);
 	}
 
-	public async Task ListenOnWebsocket() { // TODO: put async methods in a big try/catch because they can silent fail
-		while (!_isWebsocketInitialized)
-			await Task.Delay(1000);
-		
-		int arrSize = 1024;
-		byte[] buffer = new byte[arrSize];
+	public async Task ListenOnWebsocket() {
+		try {
+			while (!_isWebsocketInitialized)
+				await Task.Delay(1000);
 
-		Timer timer = new (_ => {
-			if (_webSocket.State != WebSocketState.Open)
-				ReinitializeWebsocket().Wait();
-		}, null, 0, 5000);
-		
-		while (true) {
-			List<byte> bytes = [];
-			WebSocketReceiveResult result;
-			try {
-				if (!_isWebsocketInitialized)
-					throw new WebSocketException();
-				
-				do {
-					result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
-					bytes.AddRange(buffer[..result.Count]);
-				} while (result.Count == arrSize);
-			} catch (WebSocketException e) {
-				Console.WriteLine(e.ToString());
-				await Task.Delay(500);
-				continue;
+			int arrSize = 1024;
+			byte[] buffer = new byte[arrSize];
+
+			Timer timer = new (_ => {
+				if (_webSocket.State != WebSocketState.Open)
+					ReinitializeWebsocket().Wait();
+			}, null, 0, 5000);
+
+			while (true) {
+				List<byte> bytes = [];
+				WebSocketReceiveResult result;
+				try {
+					if (!_isWebsocketInitialized)
+						throw new WebSocketException();
+
+					do {
+						result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
+						bytes.AddRange(buffer[..result.Count]);
+					} while (result.Count == arrSize);
+				} catch (WebSocketException e) {
+					Console.WriteLine(e.ToString());
+					await Task.Delay(500);
+					continue;
+				}
+
+				Dictionary<string, Action<JsonObject>> actions = new () {
+					["add"] = message => {
+						Sounds.Notification.Play();
+						AddMessage(message);
+					},
+					["delete"] = DeleteMessage
+				};
+
+				JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
+				actions[messageJson["action"]!.GetValue<string>()](messageJson);
 			}
-
-			Dictionary<string, Action<JsonObject>> actions = new () {
-				["add"] = message => {
-					Sounds.Notification.Play();
-					AddMessage(message);
-				},
-				["delete"] = DeleteMessage
-			};
-			
-			JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
-			actions[messageJson["action"]!.GetValue<string>()](messageJson);
+		} catch (Exception e) {
+			Console.WriteLine(e);
 		}
 	}
 

@@ -16,7 +16,7 @@ public class Sound {
 	private readonly byte[] _data;
 
 	public Sound(string filename) {
-		using BinaryReader reader = new(File.Open("sounds/" + filename, FileMode.Open));
+		using BinaryReader reader = new (File.Open("sounds/" + filename, FileMode.Open));
 		reader.ReadBytes(4);
 		reader.ReadInt32();
 		reader.ReadBytes(4);
