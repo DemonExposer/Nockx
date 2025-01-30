@@ -91,15 +91,17 @@ public partial class MainWindow : Window {
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
-		if (_model.ContainsChat(name))
+		if (_model.ContainsChat(publicKey.Modulus.ToString(16))) {
+			_model.UpdateName(publicKey.Modulus.ToString(16), name);
 			return;
-
+		}
+		
 		Button chatButton = new () {
 			Content = name.Crop(20)
 		};
 		chatButton.Classes.Add("chat_selector");
 
-		_model.AddChat(new Chat(chatButton, name));
+		_model.AddChat(new Chat(chatButton, name, publicKey.Modulus.ToString(16)));
 		
 		if (doAutoFocus) {
 			SetUiPanel(ChatPanel);
