@@ -28,7 +28,6 @@ public class Message {
 			};
 		} catch (Exception e) { // TODO: make this better. currently this is just easy for identifying issues between client and server
 			Console.WriteLine(e.Message);
-			Console.WriteLine("asjdhjbasjsabdasjhd");
 			
 			if (jsonMessage["id"] == null)
 				Console.WriteLine("id null");

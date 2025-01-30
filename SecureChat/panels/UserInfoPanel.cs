@@ -42,4 +42,8 @@ public class UserInfoPanel : StackPanel {
 			exponentBox!.Text = _controller.PublicKey.Exponent.ToString(16);
 		});
 	}
+	
+	public void SetMainWindowModel(MainWindowModel mainWindowModel) {
+		_controller.SetMainWindowModel(mainWindowModel);
+	}
 }

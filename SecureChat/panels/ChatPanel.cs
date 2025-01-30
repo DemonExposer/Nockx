@@ -43,9 +43,10 @@ public class ChatPanel : DockPanel {
 							if (args.Key == Key.Enter) {
 								if (textBox.Text == null)
 									return;
-
+								if (_mainWindowModel == null)
+									throw new InvalidOperationException("Cannot add message before _mainWindowModel is set, using SetMainWindowModel");
 								long id = _controller.SendMessage(textBox.Text);
-								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.Modulus.ToString(16), Nickname = ""});
+								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.Modulus.ToString(16), Nickname = _mainWindowModel.Nickname});
 								textBox.Text = null;
 							}
 						};
@@ -84,6 +85,7 @@ public class ChatPanel : DockPanel {
 			return;
 		
 		_mainWindowModel = mainWindowModel;
+		_controller.SetMainWindowModel(mainWindowModel);
 	}
 	
 	private void AddMessage(DecryptedMessage message) {
@@ -159,6 +161,11 @@ public class ChatPanel : DockPanel {
 		_isResized = true;
 		_messageScrollView!.Offset = _messageScrollView.Offset.WithY(_messageScrollView.ScrollBarMaximum.Y - _distanceScrolledFromBottom);
 	}
+
+	public void ChangeNickname() {
+		if (_controller.ForeignNickname != null)
+			_headerUsernameTextBlock!.Text = _controller.ForeignNickname.Crop(30);
+	}
 	
 	public void Show(RsaKeyParameters publicKey, MainWindow context) {
 		if (_mainWindowModel == null)
@@ -173,7 +180,7 @@ public class ChatPanel : DockPanel {
 		}
 		
 		_controller.ForeignPublicKey = publicKey;
-		_headerUsernameTextBlock!.Text = _controller.ForeignPublicKey.Modulus.ToString(16).Crop(30);
+		ChangeNickname();
 
 		// If chat is unread, make it read
 		if (!_mainWindowModel.GetChatReadStatus(publicKey.Modulus.ToString(16))) {

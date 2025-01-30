@@ -44,6 +44,7 @@ public partial class MainWindow : Window {
 		ChatPanel = (ChatPanel) Resources["ChatPanel"]!;
 		ChatPanel.SetMainWindowModel(_model);
 		UserInfoPanel userInfoPanel = (UserInfoPanel) Resources["UserInfoPanel"]!;
+		userInfoPanel.SetMainWindowModel(_model);
 
 		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
 

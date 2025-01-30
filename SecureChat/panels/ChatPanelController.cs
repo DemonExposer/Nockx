@@ -19,6 +19,7 @@ namespace SecureChat.panels;
 
 public class ChatPanelController {
 	public RsaKeyParameters ForeignPublicKey;
+	public string ForeignNickname = "";
 
 	public readonly RsaKeyParameters PersonalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
@@ -26,6 +27,8 @@ public class ChatPanelController {
 	private readonly Settings _settings = Settings.GetInstance();
 	
 	private readonly ChatPanel _context;
+	
+	private MainWindowModel? _mainWindowModel;
 
 	public ChatPanelController(ChatPanel context) {
 		_context = context;
@@ -39,6 +42,13 @@ public class ChatPanelController {
 			PemReader pemReader = new (reader);
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
 		}
+	}
+	
+	public void SetMainWindowModel(MainWindowModel mainWindowModel) {
+		if (_mainWindowModel != null)
+			return;
+		
+		_mainWindowModel = mainWindowModel;
 	}
 
 	public void AddListenersToContextMenu(MessageTextBlock messageTextBlock, IBrush originalBackground, ContextMenu contextMenu) {
@@ -94,6 +104,14 @@ public class ChatPanelController {
 			return true;
 		}
 
+		if (!isOwnMessage && ForeignNickname != message.SenderNickname) {
+			ForeignNickname = message.SenderNickname;
+			_context.ChangeNickname();
+		} else if (isOwnMessage && ForeignNickname != message.ReceiverNickname) {
+			ForeignNickname = message.ReceiverNickname;
+			_context.ChangeNickname();
+		}
+
 		decryptedMessage = null;
 		return false;
 	}
@@ -108,7 +126,13 @@ public class ChatPanelController {
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
 			if (!Decrypt(message, isOwnMessage, out DecryptedMessage? decryptedMessage))
 				continue; // Just don't add the message if it is not legitimate
-			
+			if (!isOwnMessage && ForeignNickname != message.SenderNickname) {
+				ForeignNickname = message.SenderNickname;
+				_context.ChangeNickname();
+			} else if (isOwnMessage && ForeignNickname != message.ReceiverNickname) {
+				ForeignNickname = message.ReceiverNickname;
+				_context.ChangeNickname();
+			}
 			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16), Nickname = message.SenderNickname});
 		}
 
@@ -116,15 +140,19 @@ public class ChatPanelController {
 	}
 	
 	public long SendMessage(string message) {
+		if (_mainWindowModel == null)
+			throw new InvalidOperationException("SendMessage may not be called before _mainWindowModel is set, using SetMainWindowModel");
 		Message encryptedMessage = Cryptography.Encrypt(message, PersonalPublicKey, ForeignPublicKey, _privateKey);
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
 				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
-				["exponent"] = PersonalPublicKey.Exponent.ToString(16)
+				["exponent"] = PersonalPublicKey.Exponent.ToString(16),
+				["nickname"] = _mainWindowModel.Nickname
 			},
 			["receiver"] = new JsonObject {
 				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
-				["exponent"] = ForeignPublicKey.Exponent.ToString(16)
+				["exponent"] = ForeignPublicKey.Exponent.ToString(16),
+				["nickname"] = ForeignNickname
 			},
 			["text"] = encryptedMessage.Body,
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
@@ -151,11 +179,13 @@ public class ChatPanelController {
 		JsonObject body = new () {
 			["receiver"] = new JsonObject {
 				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
-				["exponent"] = PersonalPublicKey.Exponent.ToString(16)
+				["exponent"] = PersonalPublicKey.Exponent.ToString(16),
+				["nickname"] = ""
 			},
 			["sender"] = new JsonObject {
 				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
-				["exponent"] = ForeignPublicKey.Exponent.ToString(16)
+				["exponent"] = ForeignPublicKey.Exponent.ToString(16),
+				["nickname"] = ""
 			},
 			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};

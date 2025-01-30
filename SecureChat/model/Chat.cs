@@ -12,4 +12,9 @@ public class Chat {
 		Name = name;
 		Modulus = modulus;
 	}
+
+	public void UpdateName(string name) {
+		Name = name;
+		ChatButton.Content = Name;
+	}
 }

@@ -166,8 +166,8 @@ public class MainWindowController {
 		// Add new chat if receiver does not yet have a chat with sender
 		if (!Chats.ChatExists(message.Sender)) {
 			Chats.Add(message.Sender);
-			_context.AddUser(message.Sender, message.Sender.Modulus.ToString(16), false);
 		}
+		_context.AddUser(message.Sender, message.SenderNickname, false);
 
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender)) {
