@@ -93,11 +93,11 @@ public class CallPopupWindowController {
 			["personalModulus"] = _context.PersonalKey.Modulus.ToString(16),
 			["foreignModulus"] = _context.ForeignKey.Modulus.ToString(16),
 			["personalEncryptedKeyBase64"] = Convert.ToBase64String(personalEncryptedAesKey),
-			["foreignEncryptedKeyBase64"] = Convert.ToBase64String(foreignEncryptedAesKey)
+			["foreignEncryptedKeyBase64"] = Convert.ToBase64String(foreignEncryptedAesKey),
+			["port"] = port
 		};
 		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat?timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", JsonSerializer.Serialize(body));
 		// TODO: add verification for the encrypted key, so that the server can't spoof its users
-		Console.WriteLine(response.Body);
-		Console.WriteLine(Convert.ToBase64String(Cryptography.DecryptAesKey(Convert.FromBase64String(response.Body), _privateKey)));
+		_network.SetKey(Cryptography.DecryptAesKey(Convert.FromBase64String(response.Body), _privateKey));
 	}
 }
