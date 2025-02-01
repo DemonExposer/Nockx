@@ -46,6 +46,8 @@ public partial class CallPopupWindow : PopupWindow {
 		slider.PointerEntered += _controller.OnMousePointerEnteredSlider;
 		slider.PointerExited += _controller.OnMousePointerExitedSlider;
 		slider.PointerMoved += _controller.OnMousePointerMovedInSlider;
+
+		Closing += _controller.OnWindowClosing;
 	}
 
 	private void InputSelector_OnSelectionChanged(object? sender, SelectionChangedEventArgs e) {

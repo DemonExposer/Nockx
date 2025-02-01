@@ -9,14 +9,14 @@ namespace SecureChat.audio;
 
 public class Sender {
 	public IEnumerable<string> Devices;
-	public ALCaptureDevice _captureDevice;
 	
 	private const int Frequency = 44100;
 	private const ALFormat Format = ALFormat.Mono16;
 	private const int BufferSize = 44100; // 1 second of audio
 
-	private bool _doChangeDevice;
+	private bool _doChangeDevice, _isVoiceChatClosed;
 	private int _newDeviceIndex = -1;
+	private ALCaptureDevice _captureDevice;
 	
 	public Sender() {
 		Devices = ALC.GetString(ALDevice.Null, AlcGetStringList.CaptureDeviceSpecifier);
@@ -39,8 +39,7 @@ public class Sender {
 					Console.WriteLine("Recording...");
 
 					// Wait for the capture buffer to be filled
-					int samplesAvailable = 0;
-					ALC.GetInteger(new ALDevice(_captureDevice), AlcGetInteger.CaptureSamples, out samplesAvailable);
+					ALC.GetInteger(new ALDevice(_captureDevice), AlcGetInteger.CaptureSamples, out int samplesAvailable);
 
 					while (samplesAvailable * sizeof(short) < 2048) {
 						ALC.GetInteger(new ALDevice(_captureDevice), AlcGetInteger.CaptureSamples, out samplesAvailable);
@@ -54,11 +53,7 @@ public class Sender {
 					byte[] byteArray = new byte[buffer.Length * sizeof(short)];
 					Buffer.BlockCopy(buffer, 0, byteArray, 0, byteArray.Length);
 
-					// Save the captured audio to a WAV file
-					//	SaveToWav(buffer, samplesAvailable, 44100);
 					network.Send(byteArray, samplesAvailable * sizeof(short));
-					//	PlayAudio(buffer);
-					//	Console.WriteLine("Recording saved as recordedAudio.wav");
 
 					if (_doChangeDevice) {
 						_doChangeDevice = false;
@@ -68,6 +63,12 @@ public class Sender {
 						_captureDevice = ALC.CaptureOpenDevice(Devices.ToArray()[_newDeviceIndex], Frequency, Format, BufferSize);
 						_newDeviceIndex = -1;
 						break;
+					}
+					
+					if (_isVoiceChatClosed) {
+						ALC.CaptureStop(_captureDevice);
+						ALC.CaptureCloseDevice(_captureDevice);
+						return;
 					}
 				}
 			} catch (Exception e) {
@@ -80,4 +81,6 @@ public class Sender {
 		_newDeviceIndex = index;
 		_doChangeDevice = true;
 	}
+
+	public void Close() => _isVoiceChatClosed = true;
 }

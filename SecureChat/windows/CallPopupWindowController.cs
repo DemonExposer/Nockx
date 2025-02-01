@@ -84,6 +84,8 @@ public class CallPopupWindowController {
 		_receiver.SetVolume((float) e.NewValue / 100);
 	}
 
+	public void OnWindowClosing(object? sender, WindowClosingEventArgs e) => _sender.Close();
+
 	private void RegisterVoiceChat(int port) {
 		Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Registering voice chat...");
 		byte[] aesKey = Cryptography.GenerateAesKey();
