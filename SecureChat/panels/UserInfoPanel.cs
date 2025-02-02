@@ -24,14 +24,14 @@ public class UserInfoPanel : StackPanel {
 						case "ExponentBox":
 							exponentBox = textBox;
 							break;
-						case "NicknameBox":
-							textBox.Text = _controller.Nickname;
+						case "DisplayNameBox":
+							textBox.Text = _controller.DisplayName;
 							textBox.KeyDown += (_, args) => {
 								if (args.Key == Key.Enter) {
 									if (textBox.Text == null)
 										return;
-									if(!_controller.SetNickname(textBox.Text))
-										textBox.Text = _controller.Nickname;
+									if(!_controller.SetDisplayName(textBox.Text))
+										textBox.Text = _controller.DisplayName;
 								}
 							};
 							break;

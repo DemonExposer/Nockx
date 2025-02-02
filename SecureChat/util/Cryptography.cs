@@ -105,8 +105,8 @@ public static class Cryptography {
 			Signature = Sign(inputText, privateKey),
 			Receiver = foreignPublicKey,
 			Sender = personalPublicKey,
-			SenderNickname = "",
-			ReceiverNickname = ""
+			SenderDisplayName = "",
+			ReceiverDisplayName = ""
 		};
 	}
 
@@ -120,6 +120,6 @@ public static class Cryptography {
 		(byte[] plainBytes, int length) = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
 
 		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
-		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), Nickname = message.SenderNickname, DateTime = DateTime.MinValue};
+		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), DisplayName = message.SenderDisplayName, DateTime = DateTime.MinValue};
 	}
 }

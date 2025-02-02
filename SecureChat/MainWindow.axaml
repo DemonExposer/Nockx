@@ -30,7 +30,7 @@
 		</panels:ChatPanel>
 		<panels:UserInfoPanel x:Key="UserInfoPanel">
 			<TextBlock Margin="0, 20, 0, 0">Display name:</TextBlock>
-			<TextBox MaxLength="255" Name="NicknameBox"></TextBox>
+			<TextBox MaxLength="255" Name="DisplayNameBox"></TextBox>
 			<TextBlock Margin="0,20,0,0">Modulus:</TextBlock>
 			<TextBox IsReadOnly="True" Name="ModulusBox"/>
 			<TextBlock>Exponent:</TextBlock>

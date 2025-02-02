@@ -19,5 +19,5 @@ public class MainWindowModel {
 	
 	public bool GetChatReadStatus(string modulus) => (string) GetChat(modulus)!.ChatButton.Tag! == "";
 
-	public string Nickname = "";
+	public string DisplayName = "";
 }
