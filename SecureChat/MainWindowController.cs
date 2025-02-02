@@ -119,7 +119,7 @@ public class MainWindowController {
 			while (!_isWebsocketInitialized)
 				await Task.Delay(1000);
 
-			int arrSize = 1024;
+			const int arrSize = 1024;
 			byte[] buffer = new byte[arrSize];
 
 			Timer timer = new (_ => {
@@ -149,7 +149,10 @@ public class MainWindowController {
 						Sounds.Notification.Play();
 						AddMessage(message);
 					},
-					["delete"] = DeleteMessage
+					["delete"] = DeleteMessage,
+					["callStart"] = message => {
+						Sounds.Ringtone.Repeat();
+					}
 				};
 
 				JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
