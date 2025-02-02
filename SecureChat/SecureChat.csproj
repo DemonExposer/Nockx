@@ -47,5 +47,35 @@
         <None Include="sounds\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+		<None Include="LICENSE">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="README">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     </ItemGroup>
+
+	<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+		<None Include="lib\win\soft_oal.dll">
+			<Link>OpenAL32.dll</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<!--TODO: possibly add transitive licenses, and mention all the libraries in the README-->
+	<Target Name="CopyAndRenameLicenses" AfterTargets="Build">
+		<ItemGroup>
+			<LicenseFiles Include="lib\licenses\**\*"/>
+		</ItemGroup>
+
+		<Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(OutputPath)LICENSES\"/>
+	</Target>
+
+	<Target Name="CopyAndRenameLicensesWin" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+		<ItemGroup>
+			<LicenseFilesWin Include="lib\win\licenses\**\*"/>
+		</ItemGroup>
+
+		<Copy SourceFiles="@(LicenseFilesWin)" DestinationFolder="$(OutputPath)LICENSES\"/>
+	</Target>
 </Project>
