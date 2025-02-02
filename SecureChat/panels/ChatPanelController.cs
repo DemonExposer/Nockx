@@ -19,7 +19,7 @@ namespace SecureChat.panels;
 
 public class ChatPanelController {
 	public RsaKeyParameters ForeignPublicKey;
-	public string ForeignNickname = "";
+	public string ForeignDisplayName = "";
 
 	public readonly RsaKeyParameters PersonalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
@@ -104,12 +104,12 @@ public class ChatPanelController {
 			return true;
 		}
 
-		if (!isOwnMessage && ForeignNickname != message.SenderNickname) {
-			ForeignNickname = message.SenderNickname;
-			_context.ChangeNickname();
-		} else if (isOwnMessage && ForeignNickname != message.ReceiverNickname) {
-			ForeignNickname = message.ReceiverNickname;
-			_context.ChangeNickname();
+		if (!isOwnMessage && ForeignDisplayName != message.SenderDisplayName) {
+			ForeignDisplayName = message.SenderDisplayName;
+			_context.ChangeDisplayName();
+		} else if (isOwnMessage && ForeignDisplayName != message.ReceiverDisplayName) {
+			ForeignDisplayName = message.ReceiverDisplayName;
+			_context.ChangeDisplayName();
 		}
 
 		decryptedMessage = null;
@@ -126,14 +126,14 @@ public class ChatPanelController {
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
 			if (!Decrypt(message, isOwnMessage, out DecryptedMessage? decryptedMessage))
 				continue; // Just don't add the message if it is not legitimate
-			if (!isOwnMessage && ForeignNickname != message.SenderNickname) {
-				ForeignNickname = message.SenderNickname;
-				_context.ChangeNickname();
-			} else if (isOwnMessage && ForeignNickname != message.ReceiverNickname) {
-				ForeignNickname = message.ReceiverNickname;
-				_context.ChangeNickname();
+			if (!isOwnMessage && ForeignDisplayName != message.SenderDisplayName) {
+				ForeignDisplayName = message.SenderDisplayName;
+				_context.ChangeDisplayName();
+			} else if (isOwnMessage && ForeignDisplayName != message.ReceiverDisplayName) {
+				ForeignDisplayName = message.ReceiverDisplayName;
+				_context.ChangeDisplayName();
 			}
-			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16), Nickname = message.SenderNickname});
+			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16), DisplayName = message.SenderDisplayName});
 		}
 
 		return res.ToArray();
@@ -147,12 +147,12 @@ public class ChatPanelController {
 			["sender"] = new JsonObject {
 				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
 				["exponent"] = PersonalPublicKey.Exponent.ToString(16),
-				["nickname"] = _mainWindowModel.Nickname
+				["displayName"] = _mainWindowModel.DisplayName
 			},
 			["receiver"] = new JsonObject {
 				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
 				["exponent"] = ForeignPublicKey.Exponent.ToString(16),
-				["nickname"] = ForeignNickname
+				["displayName"] = ForeignDisplayName
 			},
 			["text"] = encryptedMessage.Body,
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
@@ -180,12 +180,12 @@ public class ChatPanelController {
 			["receiver"] = new JsonObject {
 				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
 				["exponent"] = PersonalPublicKey.Exponent.ToString(16),
-				["nickname"] = ""
+				["displayName"] = ""
 			},
 			["sender"] = new JsonObject {
 				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
 				["exponent"] = ForeignPublicKey.Exponent.ToString(16),
-				["nickname"] = ""
+				["displayName"] = ""
 			},
 			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
