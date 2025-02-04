@@ -152,6 +152,7 @@ public class MainWindowController {
 					["delete"] = DeleteMessage,
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
+						ShowCallPrompt(new RsaKeyParameters(false, new BigInteger(message["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(message["sender"]!["exponent"]!.GetValue<string>(), 16)));
 					}
 				};
 
@@ -195,5 +196,9 @@ public class MainWindowController {
 			return;
 
 		_context.ChatPanel.RemoveMessage(messageJson["id"]!.GetValue<long>());
+	}
+
+	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey) {
+		new CallPopupWindow(_publicKey, foreignPublicKey).Show(_context);
 	}
 }
