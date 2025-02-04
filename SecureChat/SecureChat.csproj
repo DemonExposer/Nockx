@@ -63,19 +63,19 @@
 	</ItemGroup>
 
 	<!--TODO: possibly add transitive licenses, and mention all the libraries in the README-->
-	<Target Name="CopyAndRenameLicenses" AfterTargets="Build">
+	<Target Name="CopyAndRenameLicenses" AfterTargets="Publish">
 		<ItemGroup>
 			<LicenseFiles Include="lib\licenses\**\*"/>
 		</ItemGroup>
 
-		<Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(OutputPath)LICENSES\"/>
+		<Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(PublishDir)LICENSES\"/>
 	</Target>
 
-	<Target Name="CopyAndRenameLicensesWin" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+	<Target Name="CopyAndRenameLicensesWin" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
 		<ItemGroup>
 			<LicenseFilesWin Include="lib\win\licenses\**\*"/>
 		</ItemGroup>
 
-		<Copy SourceFiles="@(LicenseFilesWin)" DestinationFolder="$(OutputPath)LICENSES\"/>
+		<Copy SourceFiles="@(LicenseFilesWin)" DestinationFolder="$(PublishDir)LICENSES\"/>
 	</Target>
 </Project>
