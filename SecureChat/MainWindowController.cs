@@ -199,6 +199,6 @@ public class MainWindowController {
 	}
 
 	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey) {
-		new CallPopupWindow(_publicKey, foreignPublicKey).Show(_context);
+		new CallRequestPopupWindow(_publicKey, foreignPublicKey).Show(_context);
 	}
 }
