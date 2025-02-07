@@ -9,7 +9,7 @@
         Height="150">
 	<Grid Margin="10" RowDefinitions="*,*" ColumnDefinitions="*,*">
 		<TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Name="CallerName"/>
-		<Button Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch" Background="#00C000" HorizontalContentAlignment="Center" Foreground="White">Accept</Button>
-		<Button Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" Background="Red" HorizontalContentAlignment="Center" Foreground="White">Reject</Button>
+		<Button Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch" Background="#00C000" HorizontalContentAlignment="Center" Foreground="White" Click="AcceptButton_OnClick">Accept</Button>
+		<Button Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" Background="Red" HorizontalContentAlignment="Center" Foreground="White" Click="RejectButton_OnClick">Reject</Button>
 	</Grid>
 </Window>
