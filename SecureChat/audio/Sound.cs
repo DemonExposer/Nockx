@@ -16,6 +16,7 @@ public class Sound {
 	private readonly byte[] _data;
 
 	private bool _doStopRepeat;
+	private int _source;
 
 	public Sound(string filename) {
 		using BinaryReader reader = new (File.Open("sounds/" + filename, FileMode.Open));
@@ -84,21 +85,21 @@ public class Sound {
 				ALC.MakeContextCurrent(context);
 
 				int buffer = AL.GenBuffer();
-				int source = AL.GenSource();
+				_source = AL.GenSource();
 
 				fixed (void* dataPointer = _data)
 					AL.BufferData(buffer, _format, dataPointer, _data.Length, _sampleRate);
 
-				AL.Source(source, ALSourcei.Buffer, buffer);
+				AL.Source(_source, ALSourcei.Buffer, buffer);
 
 				while (!_doStopRepeat) {
-					AL.SourceRewind(source);
-					AL.SourcePlay(source);
+					AL.SourceRewind(_source);
+					AL.SourcePlay(_source);
 
 					Thread.Sleep((int) ((long) _data.Length * 1000 / _sampleRate));
 				}
 
-				AL.DeleteSource(source);
+				AL.DeleteSource(_source);
 				AL.DeleteBuffer(buffer);
 			} catch (Exception e) {
 				Console.WriteLine(e);
@@ -106,5 +107,8 @@ public class Sound {
 		});
 	}
 
-	public void StopRepeat() => _doStopRepeat = true;
+	public void StopRepeat() {
+		_doStopRepeat = true;
+		AL.SourceStop(_source);
+	}
 }
