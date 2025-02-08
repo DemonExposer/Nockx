@@ -5,7 +5,7 @@ using OpenTK.Audio.OpenAL;
 
 namespace SecureChat.audio;
 
-public static class GlobalDevice {
+public static class GlobalPlaybackDevice {
 	public static void Initialize() {
 		IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
 		ALDevice device = ALC.OpenDevice(devices.FirstOrDefault());

@@ -42,7 +42,7 @@ public partial class App : Application {
 			}
 		}
 		
-		GlobalDevice.Initialize();
+		GlobalPlaybackDevice.Initialize();
 		
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
