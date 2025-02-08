@@ -48,12 +48,6 @@ public class Sound {
 	public unsafe void Play() {
 		Task.Run(() => {
 			try {
-				IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
-				ALDevice device = ALC.OpenDevice(devices.FirstOrDefault());
-
-				ALContext context = ALC.CreateContext(device, new ALContextAttributes(44100, _numChannels == 1 ? 1 : 0, _numChannels == 2 ? 1 : 0, 200, false));
-				ALC.MakeContextCurrent(context);
-
 				int buffer = AL.GenBuffer();
 				int source = AL.GenSource();
 
@@ -78,12 +72,6 @@ public class Sound {
 		_doStopRepeat = false;
 		Task.Run(() => {
 			try {
-				IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
-				ALDevice device = ALC.OpenDevice(devices.FirstOrDefault());
-
-				ALContext context = ALC.CreateContext(device, new ALContextAttributes(44100, _numChannels == 1 ? 1 : 0, _numChannels == 2 ? 1 : 0, 200, false));
-				ALC.MakeContextCurrent(context);
-
 				int buffer = AL.GenBuffer();
 				_source = AL.GenSource();
 
