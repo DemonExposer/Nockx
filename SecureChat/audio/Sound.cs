@@ -1,10 +1,8 @@
 ﻿using OpenTK.Audio.OpenAL;
-using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace SecureChat.audio;
 
