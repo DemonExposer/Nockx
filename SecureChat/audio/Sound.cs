@@ -51,7 +51,7 @@ public class Sound {
 				int buffer = AL.GenBuffer();
 				int source = AL.GenSource();
 
-				fixed (void* dataPointer = _data)
+				fixed (void *dataPointer = _data)
 					AL.BufferData(buffer, _format, dataPointer, _data.Length, _sampleRate);
 
 				AL.Source(source, ALSourcei.Buffer, buffer);
@@ -75,7 +75,7 @@ public class Sound {
 				int buffer = AL.GenBuffer();
 				_source = AL.GenSource();
 
-				fixed (void* dataPointer = _data)
+				fixed (void *dataPointer = _data)
 					AL.BufferData(buffer, _format, dataPointer, _data.Length, _sampleRate);
 
 				AL.Source(_source, ALSourcei.Buffer, buffer);
