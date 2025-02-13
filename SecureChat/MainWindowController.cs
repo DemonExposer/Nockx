@@ -11,10 +11,10 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
-using SecureChat.audio;
+using SecureChat.Audio;
 using SecureChat.ClassExtensions;
-using SecureChat.util;
-using SecureChat.windows;
+using SecureChat.Util;
+using SecureChat.Windows;
 
 namespace SecureChat;
 

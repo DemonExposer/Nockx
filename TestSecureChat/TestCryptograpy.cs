@@ -3,8 +3,8 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
-using SecureChat.model;
-using SecureChat.util;
+using SecureChat.Model;
+using SecureChat.Util;
 
 namespace TestSecureChat;
 

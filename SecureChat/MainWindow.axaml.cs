@@ -4,10 +4,10 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.ClassExtensions;
-using SecureChat.model;
-using SecureChat.panels;
-using SecureChat.util;
-using SecureChat.windows;
+using SecureChat.Model;
+using SecureChat.Panels;
+using SecureChat.Util;
+using SecureChat.Windows;
 
 namespace SecureChat;
 
@@ -90,7 +90,7 @@ public partial class MainWindow : Window {
 		_mainPanel.Children.Add(panel);
 	}
 
-	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
+	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not Panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
 		if (_model.ContainsChat(publicKey.ToBase64String())) {

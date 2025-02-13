@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using SecureChat.model;
+using SecureChat.Model;
 
 namespace SecureChat;
 

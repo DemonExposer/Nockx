@@ -9,9 +9,9 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
-using SecureChat.audio;
-using SecureChat.util;
-using SecureChat.windows;
+using SecureChat.Audio;
+using SecureChat.Util;
+using SecureChat.Windows;
 
 namespace SecureChat;
 
