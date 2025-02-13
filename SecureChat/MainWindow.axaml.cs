@@ -59,6 +59,24 @@ public partial class MainWindow : Window {
 			SetUiPanel(addUserPanel);
 		};
 		
+		AddFriendPanel addFriendPanel = (AddFriendPanel) Resources["AddFriendPanel"]!;
+		addFriendPanel.SetOnEnter(OnAddFriend);
+
+		Button addFriendButton = this.FindControl<Button>("AddFriendButton")!;
+		addFriendButton.Click += (_, _) => {
+			SetPressedButton(addFriendButton);
+			SetUiPanel(addFriendPanel);
+		};
+		
+		FriendsPanel friendsPanel = (FriendsPanel) Resources["FriendsPanel"]!;
+		
+		Button friendsButton = this.FindControl<Button>("FriendsButton")!;
+		friendsButton.Click += (_, _) => {
+			SetPressedButton(friendsButton);
+			SetUiPanel(friendsPanel);
+			friendsPanel.Show();
+		};
+
 		Button userInfoButton = this.FindControl<Button>("UserInfoButton")!;
 		userInfoButton.Click += (_, _) => {
 			SetPressedButton(userInfoButton);
@@ -82,6 +100,8 @@ public partial class MainWindow : Window {
 		if (_uiPanel != null) {
 			if (_uiPanel is ChatPanel chatPanel)
 				chatPanel.Unshow(this);
+			if (_uiPanel is FriendsPanel friendsPanel)
+				friendsPanel.Unshow();
 			_mainPanel.Children.Remove(_uiPanel);
 		}
 
@@ -124,6 +144,10 @@ public partial class MainWindow : Window {
 	private void OnAddUser(RsaKeyParameters publicKey, string name) {
 		Chats.Add(publicKey);
 		AddUser(publicKey, name, true);
+	}
+
+	private void OnAddFriend(RsaKeyParameters publicKey) {
+		_controller.SendFriendRequest(publicKey);
 	}
 	
 	private void OnRendered(object? sender, PixelPointEventArgs e) {

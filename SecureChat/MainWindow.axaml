@@ -12,10 +12,36 @@
 		Height="600"
 		WindowState="Maximized">
 	<Window.Resources>
+		<panels:FriendsPanel x:Key="FriendsPanel">
+			<DockPanel DockPanel.Dock="Top" Background="#202020">
+				<TextBlock VerticalAlignment="Center" FontSize="15" Margin="10">Friends</TextBlock>
+			</DockPanel>
+			<ScrollViewer Name="FriendsScrollView" VerticalScrollBarVisibility="Auto">
+				<StackPanel Name="FriendsStackPanel">
+					<DockPanel>
+						<Button DockPanel.Dock="Right" Classes="accept" Margin="10" Content="Accept"/>
+						<SelectableTextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Stretch" Width="NaN">Incoming friend request</SelectableTextBlock>
+					</DockPanel>
+					<DockPanel>
+						<Button DockPanel.Dock="Right" Classes="cancel" Margin="10" Content="Cancel"/>
+						<SelectableTextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Stretch" Width="NaN">Outgoing friend request</SelectableTextBlock>
+					</DockPanel>
+					<DockPanel>
+						<Button DockPanel.Dock="Right" Classes="reject" Margin="10" Content="Remove"/>
+						<SelectableTextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Stretch" Width="NaN">Existing friend</SelectableTextBlock>
+					</DockPanel>
+				</StackPanel>
+			</ScrollViewer>
+		</panels:FriendsPanel>
 		<panels:AddUserPanel x:Key="AddUserPanel">
 			<TextBox Name="ModulusTextBox" Watermark="Modulus"/>
 			<TextBox Name="ExponentTextBox" Watermark="Exponent"/>
 		</panels:AddUserPanel>
+		<panels:AddFriendPanel x:Key="AddFriendPanel">
+			<TextBlock FontSize="15" Margin="10">Add Friend</TextBlock>
+			<TextBox Name="FriendModulusTextBox" Watermark="Modulus"/>
+			<TextBox Name="FriendExponentTextBox" Watermark="Exponent"/>
+		</panels:AddFriendPanel>
 		<panels:ChatPanel x:Key="ChatPanel">
 			<DockPanel DockPanel.Dock="Top" Background="#202020">
 				<Button DockPanel.Dock="Right" Name="CallButton" Content="Call"/>
@@ -45,7 +71,9 @@
 				<Button Name="SettingsButton" Content="Settings" Classes="settings"/>
 			</StackPanel>
 			<StackPanel Name="ChatListPanel" Width="200">
+				<Button Name="FriendsButton" Content="Friends" Classes="chat_selector"/>
 				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
+				<Button Name="AddFriendButton" Content="New Friend" Classes="chat_selector"/>
 			</StackPanel>
 		</DockPanel>
 		<DockPanel Name="MainPanel">
