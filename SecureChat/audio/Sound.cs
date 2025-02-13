@@ -1,10 +1,8 @@
 ﻿using OpenTK.Audio.OpenAL;
-using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace SecureChat.audio;
 
@@ -16,6 +14,7 @@ public class Sound {
 	private readonly byte[] _data;
 
 	private bool _doStopRepeat;
+	private int _source;
 
 	public Sound(string filename) {
 		using BinaryReader reader = new (File.Open("sounds/" + filename, FileMode.Open));
@@ -47,16 +46,10 @@ public class Sound {
 	public unsafe void Play() {
 		Task.Run(() => {
 			try {
-				IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
-				ALDevice device = ALC.OpenDevice(devices.FirstOrDefault());
-
-				ALContext context = ALC.CreateContext(device, new ALContextAttributes(44100, _numChannels == 1 ? 1 : 0, _numChannels == 2 ? 1 : 0, 200, false));
-				ALC.MakeContextCurrent(context);
-
 				int buffer = AL.GenBuffer();
 				int source = AL.GenSource();
 
-				fixed (void* dataPointer = _data)
+				fixed (void *dataPointer = _data)
 					AL.BufferData(buffer, _format, dataPointer, _data.Length, _sampleRate);
 
 				AL.Source(source, ALSourcei.Buffer, buffer);
@@ -77,28 +70,22 @@ public class Sound {
 		_doStopRepeat = false;
 		Task.Run(() => {
 			try {
-				IEnumerable<string> devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
-				ALDevice device = ALC.OpenDevice(devices.FirstOrDefault());
-
-				ALContext context = ALC.CreateContext(device, new ALContextAttributes(44100, _numChannels == 1 ? 1 : 0, _numChannels == 2 ? 1 : 0, 200, false));
-				ALC.MakeContextCurrent(context);
-
 				int buffer = AL.GenBuffer();
-				int source = AL.GenSource();
+				_source = AL.GenSource();
 
-				fixed (void* dataPointer = _data)
+				fixed (void *dataPointer = _data)
 					AL.BufferData(buffer, _format, dataPointer, _data.Length, _sampleRate);
 
-				AL.Source(source, ALSourcei.Buffer, buffer);
+				AL.Source(_source, ALSourcei.Buffer, buffer);
 
 				while (!_doStopRepeat) {
-					AL.SourceRewind(source);
-					AL.SourcePlay(source);
+					AL.SourceRewind(_source);
+					AL.SourcePlay(_source);
 
 					Thread.Sleep((int) ((long) _data.Length * 1000 / _sampleRate));
 				}
 
-				AL.DeleteSource(source);
+				AL.DeleteSource(_source);
 				AL.DeleteBuffer(buffer);
 			} catch (Exception e) {
 				Console.WriteLine(e);
@@ -106,5 +93,8 @@ public class Sound {
 		});
 	}
 
-	public void StopRepeat() => _doStopRepeat = true;
+	public void StopRepeat() {
+		_doStopRepeat = true;
+		AL.SourceStop(_source);
+	}
 }

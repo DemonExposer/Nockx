@@ -83,6 +83,21 @@
 			<Setter Property="Foreground" Value="White"/>
 		</Style>
 		
+		<Style Selector="Button.reject">
+			<Setter Property="Background" Value="Red"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
+		<Style Selector="Button.reject:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#FF5050"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
+		<Style Selector="Button.reject:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="DarkRed"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
 		<Style Selector="Button.settings">
 			<Setter Property="Background" Value="Transparent"/>
 			<Setter Property="Width" Value="200"/>

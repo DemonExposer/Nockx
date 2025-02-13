@@ -19,13 +19,16 @@ using SecureChat.windows;
 namespace SecureChat;
 
 public class MainWindowController {
+	public CallPopupWindow? CallWindow;
+	
 	private readonly RsaKeyParameters _publicKey, _privateKey;
 
 	private readonly MainWindow _context;
 	private readonly MainWindowModel _model;
 	private ClientWebSocket _webSocket;
 
-	private bool _isWebsocketInitialized = false;
+	private bool _isWebsocketInitialized;
+	private Timer _keepAliveTimer;
 
 	public MainWindowController(MainWindow context, MainWindowModel model) {
 		_context = context;
@@ -87,6 +90,11 @@ public class MainWindowController {
 
 			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(_publicKey.Modulus.ToString(16));
 			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
+
+			_keepAliveTimer = new Timer(_ => {
+				_webSocket.SendAsync(Encoding.UTF8.GetBytes("KEEP_ALIVE"), WebSocketMessageType.Text, true, CancellationToken.None);
+			}, null, 0, 60000);
+			
 			_isWebsocketInitialized = true;
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 			if (!isCalledFromUI)
@@ -104,6 +112,7 @@ public class MainWindowController {
 	private async Task ReinitializeWebsocket() { // TODO: retrieve all messages after reinitialization, so that missed messages are loaded
 		if (_isWebsocketInitialized) {
 			_isWebsocketInitialized = false;
+			await _keepAliveTimer.DisposeAsync();
 			_webSocket.Abort();
 			_webSocket.Dispose();
 		} else {
@@ -154,6 +163,12 @@ public class MainWindowController {
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
 						ShowCallPrompt(new RsaKeyParameters(false, new BigInteger(message["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(message["sender"]!["exponent"]!.GetValue<string>(), 16)));
+					},
+					["callClose"] = message => {
+						if (CallWindow == null)
+							return;
+						
+						
 					}
 				};
 
@@ -200,7 +215,7 @@ public class MainWindowController {
 	}
 
 	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey) {
-		new CallPopupWindow(_publicKey, foreignPublicKey).Show(_context);
+		new CallRequestPopupWindow(_publicKey, foreignPublicKey).Show(_context);
 	}
 
 	public void SendFriendRequest(RsaKeyParameters publicKey) {
