@@ -19,8 +19,6 @@ using SecureChat.windows;
 namespace SecureChat;
 
 public class MainWindowController {
-	public CallPopupWindow? CallWindow;
-	
 	private readonly RsaKeyParameters _publicKey, _privateKey;
 
 	private readonly MainWindow _context;
@@ -163,12 +161,6 @@ public class MainWindowController {
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
 						ShowCallPrompt(new RsaKeyParameters(false, new BigInteger(message["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(message["sender"]!["exponent"]!.GetValue<string>(), 16)));
-					},
-					["callClose"] = message => {
-						if (CallWindow == null)
-							return;
-						
-						
 					}
 				};
 
