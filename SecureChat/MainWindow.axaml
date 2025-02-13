@@ -18,18 +18,7 @@
 			</DockPanel>
 			<ScrollViewer Name="FriendsScrollView" VerticalScrollBarVisibility="Auto">
 				<StackPanel Name="FriendsStackPanel">
-					<DockPanel>
-						<Button DockPanel.Dock="Right" Classes="accept" Margin="10" Content="Accept"/>
-						<SelectableTextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Stretch" Width="NaN">Incoming friend request</SelectableTextBlock>
-					</DockPanel>
-					<DockPanel>
-						<Button DockPanel.Dock="Right" Classes="cancel" Margin="10" Content="Cancel"/>
-						<SelectableTextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Stretch" Width="NaN">Outgoing friend request</SelectableTextBlock>
-					</DockPanel>
-					<DockPanel>
-						<Button DockPanel.Dock="Right" Classes="reject" Margin="10" Content="Remove"/>
-						<SelectableTextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Stretch" Width="NaN">Existing friend</SelectableTextBlock>
-					</DockPanel>
+					
 				</StackPanel>
 			</ScrollViewer>
 		</panels:FriendsPanel>

@@ -38,7 +38,6 @@ public class FriendsPanelController {
 		//TODO: error popup when friends could not be retrieved
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.StatusCode);
-			// Console.WriteLine("Failed to get Friends");
 			return;
 		}
 		
@@ -46,6 +45,26 @@ public class FriendsPanelController {
 		foreach (JsonNode? jsonNode in friends) {
 			JsonObject friendObject = jsonNode!.AsObject();
 			_context.AddFriend(FriendRequest.Parse(friendObject));
+		}
+	}
+
+	public void AcceptFriendRequest(FriendRequest friendRequest) {
+		string body = FriendRequest.Serialize(friendRequest);
+		Console.WriteLine(PersonalPublicKey.Modulus.ToString(16));
+		Console.WriteLine(PersonalPublicKey.Exponent.ToString(16));
+		Console.WriteLine(Cryptography.Verify(body, Cryptography.Sign(body, _privateKey), PersonalPublicKey, null, true));
+		Response response = Http.Put($"http://{_settings.IpAddress}:5000/friends", body, [new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
+		if (!response.IsSuccessful) {
+			Console.WriteLine(response.StatusCode);
+		}
+	}
+
+	public void DeleteFriendRequest(FriendRequest friendRequest) {
+		string body = FriendRequest.Serialize(friendRequest);
+		Response response = Http.Delete($"http://{_settings.IpAddress}:5000/friends?modulus={_privateKey.Modulus.ToString(16)}", body, [new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
+		if (!response.IsSuccessful) {
+			Console.WriteLine(response.StatusCode);
+			Console.WriteLine(response.Body);
 		}
 	}
 }

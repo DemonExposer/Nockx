@@ -68,13 +68,16 @@ public class FriendsPanel : DockPanel {
 		if (friendRequest.Accepted) {
 			button.Content = "Remove";
 			button.Classes.Add("reject");
+			button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(); };
 		} else {
 			if (amISender) {
 				button.Content = "Cancel";
 				button.Classes.Add("cancel");
+				button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(); };
 			} else {
 				button.Content = "Accept";
 				button.Classes.Add("accept");
+				button.Click += (_, _) => { _controller.AcceptFriendRequest(friendRequest); Unshow(); Show(); };
 			}
 		}
 

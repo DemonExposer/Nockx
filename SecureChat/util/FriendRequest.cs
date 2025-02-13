@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace SecureChat.util;
@@ -24,5 +25,22 @@ public class FriendRequest {
 			friendRequest = new FriendRequest();
 		}
 		return friendRequest;
+	}
+
+	public static string Serialize(FriendRequest friendRequest) {
+		JsonObject friendRequestObj = new () {
+			["sender"] = new JsonObject {
+				["modulus"] = friendRequest.SenderModulus,
+				["exponent"] = friendRequest.SenderExponent,
+				["displayName"] = friendRequest.SenderName
+			},
+			["receiver"] = new JsonObject {
+				["modulus"] = friendRequest.ReceiverModulus,
+				["exponent"] = friendRequest.ReceiverExponent,
+				["displayName"] = friendRequest.ReceiverName
+			},
+			["accepted"] = friendRequest.Accepted
+		};
+		return JsonSerializer.Serialize(friendRequestObj);
 	}
 }
