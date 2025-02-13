@@ -132,6 +132,8 @@ public partial class MainWindow : Window {
 		PositionChanged -= OnRendered;
 	}
 
+	public void SetCallWindow(CallPopupWindow window) => _controller.CallWindow = window;
+
 	public void ShowPopupWindowOnTop(PopupWindow popupWindow) {
 		if (_isRendered)
 			popupWindow.Show(this);

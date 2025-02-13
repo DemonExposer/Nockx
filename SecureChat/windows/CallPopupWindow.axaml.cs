@@ -17,6 +17,8 @@ public partial class CallPopupWindow : PopupWindow {
 	public CallPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey) {
 		PersonalKey = personalKey;
 		ForeignKey = foreignKey;
+		
+		MainWindow.Instance.SetCallWindow(this);
 
 		InitializeComponent();
 	}
