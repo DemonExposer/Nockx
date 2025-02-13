@@ -9,6 +9,7 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
+using SecureChat.audio;
 using SecureChat.util;
 using SecureChat.windows;
 
@@ -40,6 +41,8 @@ public partial class App : Application {
 				}
 			}
 		}
+		
+		GlobalPlaybackDevice.Initialize();
 		
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
@@ -79,6 +82,8 @@ public partial class App : Application {
 
 	public override void OnFrameworkInitializationCompleted() {
 		if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
+			desktop.Exit += (_, _) => GlobalPlaybackDevice.Close();
+			
 			if (!_isKeyLoadedSuccessfully) {
 				// TODO: add option to generate public key from private key if only the private key is available or the option to regenerate both
 				desktop.MainWindow = new ErrorPopupWindow("one key file found, zero or two expected");

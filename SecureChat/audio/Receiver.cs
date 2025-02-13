@@ -11,16 +11,9 @@ namespace SecureChat.audio;
 public class Receiver {
 	private int _sourceId;
 
-	public IEnumerable<string> Devices;
-	public ALDevice _device;
 	private readonly List<int> _buffers = [];
 
 	private bool _doneOnce;
-	
-	public Receiver() {
-		Devices = ALC.GetString(AlcGetStringList.DeviceSpecifier);
-		_device = ALC.OpenDevice(Devices.FirstOrDefault());
-	}
 	
 	public void OnReceive(IPEndPoint endPoint, byte[] data) {
 		try {
@@ -67,9 +60,6 @@ public class Receiver {
 
 	private unsafe void PlayAudio(short[] buffer, int lengthInBytes) {
 		try {
-			ALContext context = ALC.CreateContext(_device, new ALContextAttributes(44100,1,0,200,false));
-			ALC.MakeContextCurrent(context);
-		
 			int bufferId = AL.GenBuffer();
 			_sourceId = AL.GenSource();
 		
@@ -94,27 +84,18 @@ public class Receiver {
         
 			// Start playback
 			AL.SourcePlay(_sourceId);
-			Console.WriteLine("Playing recorded audio...");
 
 			error = AL.GetError();
 			if (error != ALError.NoError)
 				Console.WriteLine($"{error}");
 		
 			// Wait for the playback to finish
-			ALSourceState state;
 			ManualResetEvent manualResetEvent = new (false);
 			manualResetEvent.WaitOne();
-			//	do {
-			//		state = (ALSourceState) AL.GetSource(sourceId, ALGetSourcei.SourceState);
-			//	} while (true);
-        
-			Console.WriteLine("Playback finished.");
         
 			// Cleanup
 			AL.DeleteSource(_sourceId);
 			AL.DeleteBuffer(bufferId);
-
-			ALC.CloseDevice(_device);
 		} catch (Exception e) {
 			Console.WriteLine(e);
 		}
