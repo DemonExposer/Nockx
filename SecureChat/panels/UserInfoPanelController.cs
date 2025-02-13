@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
+using SecureChat.ClassExtensions;
 
 namespace SecureChat.panels;
 
@@ -29,7 +30,7 @@ public class UserInfoPanelController {
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
 		}
 
-		DisplayName = PublicKey.Modulus.ToString(16);
+		DisplayName = PublicKey.ToBase64String();
 	}
 	
 	public void SetMainWindowModel(MainWindowModel mainWindowModel) {
@@ -43,7 +44,7 @@ public class UserInfoPanelController {
 	private void GetDisplayName() {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("GetDisplayName may not be called before _mainWindowModel is set, using SetMainWindowModel");
-		string getVariables = $"modulus={PublicKey.Modulus.ToString(16)}&exponent={PublicKey.Exponent.ToString(16)}";
+		string getVariables = $"key={PublicKey.ToBase64String()}";
 		DisplayName = Http.Get($"http://{_settings.IpAddress}:5000/displayname?" + getVariables).Body;
 		_mainWindowModel.DisplayName = DisplayName;
 	}
@@ -52,8 +53,7 @@ public class UserInfoPanelController {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("SetDisplayName may not be called before _mainWindowModel is set, using SetMainWindowModel");
 		JsonObject body = new() {
-			["modulus"] = PublicKey.Modulus.ToString(16),
-			["exponent"] = PublicKey.Exponent.ToString(16),
+			["key"] = PublicKey.ToBase64String(),
 			["displayName"] = displayName
 		};
 		string bodyString = JsonSerializer.Serialize(body);

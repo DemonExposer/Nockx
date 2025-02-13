@@ -9,6 +9,7 @@ using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Security;
+using SecureChat.ClassExtensions;
 using SecureChat.model;
 
 namespace SecureChat.util;
@@ -120,6 +121,6 @@ public static class Cryptography {
 		(byte[] plainBytes, int length) = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
 
 		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
-		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.Modulus.ToString(16), DisplayName = message.SenderDisplayName, DateTime = DateTime.MinValue};
+		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.ToBase64String(), DisplayName = message.SenderDisplayName, DateTime = DateTime.MinValue};
 	}
 }

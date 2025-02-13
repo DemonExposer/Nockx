@@ -9,15 +9,15 @@ public class MainWindowModel {
 
 	public void AddChat(Chat chat) => _chats.Add(chat);
 
-	public bool ContainsChat(string modulus) => _chats.Any(chat => chat.Modulus == modulus);
+	public bool ContainsChat(string key) => _chats.Any(chat => chat.Key == key);
 	
-	public void UpdateName(string modulus, string name) => _chats.First(chat => chat.Modulus == modulus).UpdateName(name);
+	public void UpdateName(string key, string name) => _chats.First(chat => chat.Key == key).UpdateName(name);
 
-	public Chat? GetChat(string modulus) => _chats.Find(chat => chat.Modulus == modulus);
+	public Chat? GetChat(string key) => _chats.Find(chat => chat.Key == key);
 	
-	public void SetChatReadStatus(string modulus, bool isRead) => GetChat(modulus)!.ChatButton.Tag = isRead ? "" : "\u25cf";
+	public void SetChatReadStatus(string key, bool isRead) => GetChat(key)!.ChatButton.Tag = isRead ? "" : "\u25cf";
 	
-	public bool GetChatReadStatus(string modulus) => (string) GetChat(modulus)!.ChatButton.Tag! == "";
+	public bool GetChatReadStatus(string key) => (string) GetChat(key)!.ChatButton.Tag! == "";
 
 	public string DisplayName = "";
 }

@@ -3,6 +3,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using System.Collections.Generic;
 using Avalonia.Input;
+using SecureChat.ClassExtensions;
 
 namespace SecureChat.panels;
 
@@ -11,18 +12,15 @@ public class UserInfoPanel : StackPanel {
 
 	public UserInfoPanel() {
 		Dispatcher.UIThread.InvokeAsync(() => {
-			TextBox? modulusBox = null, exponentBox = null;
+			TextBox? keyBox = null;
 
 			using IEnumerator<ILogical> enumerator = this.GetLogicalChildren().GetEnumerator();
 			while (enumerator.MoveNext()) {
 				if (enumerator.Current.GetType() == typeof(TextBox)) {
 					TextBox textBox = (TextBox) enumerator.Current;
 					switch (textBox.Name) {
-						case "ModulusBox":
-							modulusBox = textBox;
-							break;
-						case "ExponentBox":
-							exponentBox = textBox;
+						case "KeyBox":
+							keyBox = textBox;
 							break;
 						case "DisplayNameBox":
 							textBox.Text = _controller.DisplayName;
@@ -38,8 +36,7 @@ public class UserInfoPanel : StackPanel {
 					}
 				}
 			}
-			modulusBox!.Text = _controller.PublicKey.Modulus.ToString(16);
-			exponentBox!.Text = _controller.PublicKey.Exponent.ToString(16);
+			keyBox!.Text = _controller.PublicKey.ToBase64String();
 		});
 	}
 	

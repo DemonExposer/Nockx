@@ -2,6 +2,7 @@ using System;
 using System.Text.Json.Nodes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
+using SecureChat.ClassExtensions;
 
 namespace SecureChat.util;
 
@@ -20,8 +21,8 @@ public class Message {
 				ReceiverEncryptedKey = jsonMessage["receiverEncryptedKey"]!.GetValue<string>(),
 				SenderEncryptedKey = jsonMessage["senderEncryptedKey"]?.GetValue<string>(),
 				Signature = jsonMessage["signature"]!.GetValue<string>(),
-				Sender = new RsaKeyParameters(false, new BigInteger(jsonMessage["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(jsonMessage["sender"]!["exponent"]!.GetValue<string>(), 16)),
-				Receiver = jsonMessage["receiver"] == null ? null : new RsaKeyParameters(false, new BigInteger(jsonMessage["receiver"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(jsonMessage["receiver"]!["exponent"]!.GetValue<string>(), 16)),
+				Sender = RsaKeyParametersExtension.FromBase64String(jsonMessage["sender"]!["key"]!.GetValue<string>()),
+				Receiver = jsonMessage["receiver"] == null ? null : RsaKeyParametersExtension.FromBase64String(jsonMessage["receiver"]!["key"]!.GetValue<string>()),
 				SenderDisplayName = jsonMessage["sender"]!["displayName"]!.GetValue<string>(),
 				ReceiverDisplayName = jsonMessage["receiver"]!["displayName"]!.GetValue<string>(),
 				IsRead = jsonMessage["isRead"]!.GetValue<bool>()

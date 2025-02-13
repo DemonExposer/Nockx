@@ -10,6 +10,7 @@ using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
+using SecureChat.ClassExtensions;
 using SecureChat.extended_controls;
 using SecureChat.model;
 using SecureChat.util;
@@ -81,7 +82,7 @@ public class ChatPanelController {
 			end = messageTextBlock.TextBlock.SelectionEnd;
 			
 			copyMenuItem.IsVisible = messageTextBlock.TextBlock.SelectedText != "";
-			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.Modulus.ToString(16);
+			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.ToBase64String();
 			contextMenu.Open((Control) args.Source!);
 		};
 		
@@ -92,7 +93,7 @@ public class ChatPanelController {
 				return;
 
 			copyMenuItem.IsVisible = false;
-			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.Modulus.ToString(16);
+			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.ToBase64String();
 			contextMenu.Open((Control) args.Source!);
 		};
 	}
@@ -119,7 +120,7 @@ public class ChatPanelController {
 	public DecryptedMessage[] GetPastMessages() { // TODO: Add signature to this request
 		List<DecryptedMessage> res = [];
 		
-		string getVariables = $"requestingUserModulus={PersonalPublicKey.Modulus.ToString(16)}&requestingUserExponent={PersonalPublicKey.Exponent.ToString(16)}&requestedUserModulus={ForeignPublicKey.Modulus.ToString(16)}&requestedUserExponent={ForeignPublicKey.Exponent.ToString(16)}";
+		string getVariables = $"requestingUser={PersonalPublicKey.ToBase64String()}&requestedUser={ForeignPublicKey.ToBase64String()}";
 		JsonArray messages = JsonNode.Parse(Http.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
@@ -133,7 +134,7 @@ public class ChatPanelController {
 				ForeignDisplayName = message.ReceiverDisplayName;
 				_context.ChangeDisplayName();
 			}
-			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.Modulus.ToString(16), DisplayName = message.SenderDisplayName});
+			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.ToBase64String(), DisplayName = message.SenderDisplayName});
 		}
 
 		return res.ToArray();
@@ -145,13 +146,11 @@ public class ChatPanelController {
 		Message encryptedMessage = Cryptography.Encrypt(message, PersonalPublicKey, ForeignPublicKey, _privateKey);
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
-				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
-				["exponent"] = PersonalPublicKey.Exponent.ToString(16),
+				["key"] = PersonalPublicKey.ToBase64String(),
 				["displayName"] = _mainWindowModel.DisplayName
 			},
 			["receiver"] = new JsonObject {
-				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
-				["exponent"] = ForeignPublicKey.Exponent.ToString(16),
+				["key"] = ForeignPublicKey.ToBase64String(),
 				["displayName"] = ForeignDisplayName
 			},
 			["text"] = encryptedMessage.Body,
@@ -178,13 +177,11 @@ public class ChatPanelController {
 	public void SetChatRead() {
 		JsonObject body = new () {
 			["receiver"] = new JsonObject {
-				["modulus"] = PersonalPublicKey.Modulus.ToString(16),
-				["exponent"] = PersonalPublicKey.Exponent.ToString(16),
+				["key"] = PersonalPublicKey.ToBase64String(),
 				["displayName"] = ""
 			},
 			["sender"] = new JsonObject {
-				["modulus"] = ForeignPublicKey.Modulus.ToString(16),
-				["exponent"] = ForeignPublicKey.Exponent.ToString(16),
+				["key"] = ForeignPublicKey.ToBase64String(),
 				["displayName"] = ""
 			},
 			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()

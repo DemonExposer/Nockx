@@ -5,12 +5,12 @@ namespace SecureChat.model;
 public class Chat {
 	public Button ChatButton;
 	public string Name;
-	public string Modulus;
+	public string Key;
 
-	public Chat(Button chatButton, string name, string modulus) {
+	public Chat(Button chatButton, string name, string key) {
 		ChatButton = chatButton;
 		Name = name;
-		Modulus = modulus;
+		Key = key;
 	}
 
 	public void UpdateName(string name) {

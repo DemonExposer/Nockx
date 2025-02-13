@@ -16,6 +16,7 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.audio;
+using SecureChat.ClassExtensions;
 using SecureChat.util;
 
 namespace SecureChat.windows;
@@ -51,7 +52,7 @@ public class CallPopupWindowController {
 		comboBoxItems.ToList().ForEach(item => _context.InputSelectorComboBox.Items.Add(item));
 		_context.InputSelectorComboBox.SelectedIndex = 0;
 
-		string initializationMessage = $"{_context.PersonalKey.Modulus.ToString(16)}-{_context.ForeignKey.Modulus.ToString(16)}";
+		string initializationMessage = $"{_context.PersonalKey.ToBase64String()}-{_context.ForeignKey.ToBase64String()}";
 		_network.Send(Encoding.UTF8.GetBytes(initializationMessage), initializationMessage.Length);
 		_sender.Run(_network);
 	}
@@ -92,8 +93,8 @@ public class CallPopupWindowController {
 		byte[] foreignEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.ForeignKey);
 		byte[] personalEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.PersonalKey);
 		JsonObject body = new () {
-			["personalModulus"] = _context.PersonalKey.Modulus.ToString(16),
-			["foreignModulus"] = _context.ForeignKey.Modulus.ToString(16),
+			["personalKey"] = _context.PersonalKey.ToBase64String(),
+			["foreignKey"] = _context.ForeignKey.ToBase64String(),
 			["personalEncryptedKeyBase64"] = Convert.ToBase64String(personalEncryptedAesKey),
 			["foreignEncryptedKeyBase64"] = Convert.ToBase64String(foreignEncryptedAesKey),
 			["port"] = port

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media;
 using Avalonia.Threading;
+using SecureChat.ClassExtensions;
 using SecureChat.extended_controls;
 using SecureChat.model;
 using SecureChat.util;
@@ -46,7 +47,7 @@ public class ChatPanel : DockPanel {
 								if (_mainWindowModel == null)
 									throw new InvalidOperationException("Cannot add message before _mainWindowModel is set, using SetMainWindowModel");
 								long id = _controller.SendMessage(textBox.Text);
-								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.Modulus.ToString(16), DisplayName = _mainWindowModel.DisplayName});
+								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName});
 								textBox.Text = null;
 							}
 						};
@@ -183,8 +184,8 @@ public class ChatPanel : DockPanel {
 		ChangeDisplayName();
 
 		// If chat is unread, make it read
-		if (!_mainWindowModel.GetChatReadStatus(publicKey.Modulus.ToString(16))) {
-			_mainWindowModel.SetChatReadStatus(publicKey.Modulus.ToString(16), true);
+		if (!_mainWindowModel.GetChatReadStatus(publicKey.ToBase64String())) {
+			_mainWindowModel.SetChatReadStatus(publicKey.ToBase64String(), true);
 			_controller.SetChatRead();
 		}
 		

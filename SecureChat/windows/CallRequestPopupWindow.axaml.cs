@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.audio;
+using SecureChat.ClassExtensions;
 
 namespace SecureChat.windows;
 
@@ -19,7 +20,7 @@ public partial class CallRequestPopupWindow : PopupWindow {
 	public void InitializeComponent() {
 		AvaloniaXamlLoader.Load(this);
 		TextBlock nameTextBlock = this.FindControl<TextBlock>("CallerName")!;
-		nameTextBlock.Text = _foreignKey.Modulus.ToString(16); // TODO: change to display name
+		nameTextBlock.Text = _foreignKey.ToBase64String(); // TODO: change to display name
 	}
 
 	public void AcceptButton_OnClick(object? sender, RoutedEventArgs e) {

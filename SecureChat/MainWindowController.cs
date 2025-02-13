@@ -12,6 +12,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.audio;
+using SecureChat.ClassExtensions;
 using SecureChat.util;
 using SecureChat.windows;
 
@@ -54,7 +55,7 @@ public class MainWindowController {
 	}
 
 	private void CheckForNewChats() {
-		string getVariables = $"modulus={_publicKey.Modulus.ToString(16)}&exponent={_publicKey.Exponent.ToString(16)}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+		string getVariables = $"key={_publicKey.ToBase64String()}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}]);
 		if (!response.IsSuccessful) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
@@ -64,20 +65,12 @@ public class MainWindowController {
 		JsonArray chats = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? jsonNode in chats) {
 			JsonObject chatObject = jsonNode!.AsObject();
-			if (chatObject["user1"]!["modulus"]!.GetValue<string>() != _publicKey.Modulus.ToString(16)) {
-				_context.AddUser(new RsaKeyParameters(
-					false,
-					new BigInteger(chatObject["user1"]!["modulus"]!.GetValue<string>(), 16),
-					new BigInteger(chatObject["user1"]!["exponent"]!.GetValue<string>(), 16)
-				), chatObject["user1"]!["displayName"]!.GetValue<string>(), false);
-				_model.SetChatReadStatus(chatObject["user1"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+			if (chatObject["user1"]!["key"]!.GetValue<string>() != _publicKey.ToBase64String()) {
+				_context.AddUser(RsaKeyParametersExtension.FromBase64String(chatObject["user1"]!["key"]!.GetValue<string>()), chatObject["user1"]!["displayName"]!.GetValue<string>(), false);
+				_model.SetChatReadStatus(chatObject["user1"]!["key"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
 			} else {
-				_context.AddUser(new RsaKeyParameters(
-					false,
-					new BigInteger(chatObject["user2"]!["modulus"]!.GetValue<string>(), 16),
-					new BigInteger(chatObject["user2"]!["exponent"]!.GetValue<string>(), 16)
-				), chatObject["user2"]!["displayName"]!.GetValue<string>(), false);
-				_model.SetChatReadStatus(chatObject["user2"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+				_context.AddUser(RsaKeyParametersExtension.FromBase64String(chatObject["user2"]!["key"]!.GetValue<string>()), chatObject["user2"]!["displayName"]!.GetValue<string>(), false);
+				_model.SetChatReadStatus(chatObject["user2"]!["key"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
 			}
 		}
 	}
@@ -87,8 +80,8 @@ public class MainWindowController {
 		try {
 			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
 
-			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(_publicKey.Modulus.ToString(16));
-			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
+			byte[] keyBytes = Convert.FromBase64String(_publicKey.ToBase64String());
+			await _webSocket.SendAsync(keyBytes, WebSocketMessageType.Text, true, CancellationToken.None);
 
 			_keepAliveTimer = new Timer(_ => {
 				_webSocket.SendAsync(Encoding.UTF8.GetBytes("KEEP_ALIVE"), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -161,7 +154,7 @@ public class MainWindowController {
 					["delete"] = DeleteMessage,
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
-						ShowCallPrompt(new RsaKeyParameters(false, new BigInteger(message["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(message["sender"]!["exponent"]!.GetValue<string>(), 16)));
+						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(message["sender"]!["key"]!.GetValue<string>()));
 					},
 					["callClose"] = message => {
 						if (CallWindow == null)
@@ -191,7 +184,7 @@ public class MainWindowController {
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender)) {
 			if (!message.IsRead)
-				_model.SetChatReadStatus(message.Sender.Modulus.ToString(16), false);
+				_model.SetChatReadStatus(message.Sender.ToBase64String(), false);
 			
 			return;
 		}
@@ -200,11 +193,7 @@ public class MainWindowController {
 	}
 
 	private void DeleteMessage(JsonObject messageJson) {
-		RsaKeyParameters sender = new (
-			false,
-			new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16),
-			new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)
-		);
+		RsaKeyParameters sender = RsaKeyParametersExtension.FromBase64String(messageJson["sender"]!["key"]!.GetValue<string>());
 		
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(sender))

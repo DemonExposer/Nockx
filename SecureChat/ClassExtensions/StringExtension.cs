@@ -1,6 +1,6 @@
 using System;
 
-namespace SecureChat.util;
+namespace SecureChat.ClassExtensions;
 
 public static class StringExtension {
 	public static string Crop(this string str, int length) {
