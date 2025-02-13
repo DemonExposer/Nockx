@@ -7,6 +7,8 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
 using SecureChat.extended_controls;
 using SecureChat.util;
 
@@ -17,6 +19,9 @@ public class FriendsPanel : DockPanel {
 	private readonly List<FriendDockPanel> _friends = [];
 	private StackPanel? _friendsPanel;
 	private bool _isShowCalled;
+
+	public delegate void DataCallback(RsaKeyParameters publicKey, string name, bool doAutoFocus);
+
 	public FriendsPanel() {
 		_controller = new FriendsPanelController(this);
 		
@@ -30,8 +35,11 @@ public class FriendsPanel : DockPanel {
 		});
 	}
 
-	public void Show() {
-		_controller.GetFriends();
+	public void Show(MainWindow window) {
+		List<FriendRequest> friends = _controller.GetFriends();
+		foreach (FriendRequest friend in friends) {
+			AddFriend(friend, window);
+		}
 		_isShowCalled = true;
 	}
 
@@ -42,7 +50,7 @@ public class FriendsPanel : DockPanel {
 		_friends.Clear();
 	}
 
-	public void AddFriend(FriendRequest friendRequest) {
+	private void AddFriend(FriendRequest friendRequest, MainWindow window) {
 		if (_friendsPanel == null) {
 			Console.WriteLine("AddFriend: FriendsPanel is not initialized");
 			return;
@@ -68,23 +76,41 @@ public class FriendsPanel : DockPanel {
 		if (friendRequest.Accepted) {
 			button.Content = "Remove";
 			button.Classes.Add("reject");
-			button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(); };
+			button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(window); };
 		} else {
 			if (amISender) {
 				button.Content = "Cancel";
 				button.Classes.Add("cancel");
-				button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(); };
+				button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(window); };
 			} else {
 				button.Content = "Accept";
 				button.Classes.Add("accept");
-				button.Click += (_, _) => { _controller.AcceptFriendRequest(friendRequest); Unshow(); Show(); };
+				button.Click += (_, _) => { _controller.AcceptFriendRequest(friendRequest); Unshow(); Show(window); };
 			}
 		}
 
+		Button chatButton = new () {
+			Margin = new Thickness(5),
+			Content = "Chat"
+		};
+		SetDock(chatButton, Dock.Left);
+		string mod = friendRequest.SenderModulus;
+		string exp = friendRequest.SenderExponent;
+		string name = friendRequest.SenderName;
+		if (amISender) {
+			mod = friendRequest.ReceiverModulus;
+			exp = friendRequest.ReceiverExponent;
+			name = friendRequest.ReceiverName;
+		}
+		RsaKeyParameters publicKey = new (false, new BigInteger(mod, 16), new BigInteger(exp, 16));
+		chatButton.Click += (_, _) => { window.AddUser(publicKey, name, true); };
+
 		DockPanel dockPanel = new();
 		dockPanel.Children.Add(button);
+		if (friendRequest.Accepted)
+			dockPanel.Children.Add(chatButton);
 		dockPanel.Children.Add(textBlock);
-		
+
 		FriendDockPanel friendDockPanel = new() {
 			DockPanel = dockPanel,
 			Border = border,

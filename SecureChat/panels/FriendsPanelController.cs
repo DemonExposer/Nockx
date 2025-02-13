@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -30,7 +31,7 @@ public class FriendsPanelController {
 		}
 	}
 
-	public void GetFriends() {
+	public List<FriendRequest> GetFriends() {
 		string getVariables =
 			$"modulus={PersonalPublicKey.Modulus.ToString(16)}&exponent={PersonalPublicKey.Exponent.ToString(16)}";
 		Response response = Http.Get($"http://{_settings.IpAddress}:5000/friends?{getVariables}",
@@ -38,14 +39,16 @@ public class FriendsPanelController {
 		//TODO: error popup when friends could not be retrieved
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.StatusCode);
-			return;
+			return [];
 		}
-		
+
+		List<FriendRequest> res = [];
 		JsonArray friends = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? jsonNode in friends) {
 			JsonObject friendObject = jsonNode!.AsObject();
-			_context.AddFriend(FriendRequest.Parse(friendObject));
+			res.Add(FriendRequest.Parse(friendObject));
 		}
+		return res;
 	}
 
 	public void AcceptFriendRequest(FriendRequest friendRequest) {

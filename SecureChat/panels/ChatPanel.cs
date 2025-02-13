@@ -166,6 +166,11 @@ public class ChatPanel : DockPanel {
 		if (_controller.ForeignDisplayName != null)
 			_headerUsernameTextBlock!.Text = _controller.ForeignDisplayName.Crop(30);
 	}
+
+	public void UpdateDisplayName(string name) {
+		_controller.ForeignDisplayName = name;
+		ChangeDisplayName();
+	}
 	
 	public void Show(RsaKeyParameters publicKey, MainWindow context) {
 		if (_mainWindowModel == null)

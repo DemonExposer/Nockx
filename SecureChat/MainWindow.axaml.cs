@@ -74,7 +74,7 @@ public partial class MainWindow : Window {
 		friendsButton.Click += (_, _) => {
 			SetPressedButton(friendsButton);
 			SetUiPanel(friendsPanel);
-			friendsPanel.Show();
+			friendsPanel.Show(this);
 		};
 
 		Button userInfoButton = this.FindControl<Button>("UserInfoButton")!;
@@ -112,8 +112,14 @@ public partial class MainWindow : Window {
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
+		ChatPanel.UpdateDisplayName(name);
 		if (_model.ContainsChat(publicKey.Modulus.ToString(16))) {
 			_model.UpdateName(publicKey.Modulus.ToString(16), name);
+			if (doAutoFocus) {
+				SetUiPanel(ChatPanel);
+				ChatPanel.Show(publicKey, this);
+				SetPressedButton(_model.GetChat(publicKey.Modulus.ToString(16))!.ChatButton);
+			}
 			return;
 		}
 		
@@ -127,10 +133,8 @@ public partial class MainWindow : Window {
 		if (doAutoFocus) {
 			SetUiPanel(ChatPanel);
 			ChatPanel.Show(publicKey, this);
-		}
-		
-		if (doAutoFocus)
 			SetPressedButton(chatButton);
+		}
 		
 		chatButton.Click += (_, _) => {
 			SetPressedButton(chatButton);
