@@ -3,9 +3,9 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.Util;
 using System.IO;
-using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Web;
 using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using SecureChat.ClassExtensions;
@@ -44,7 +44,7 @@ public class UserInfoPanelController {
 	private void GetDisplayName() {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("GetDisplayName may not be called before _mainWindowModel is set, using SetMainWindowModel");
-		string getVariables = $"key={PublicKey.ToBase64String()}";
+		string getVariables = $"key={HttpUtility.UrlEncode(PublicKey.ToBase64String())}";
 		DisplayName = Http.Get($"http://{_settings.IpAddress}:5000/displayname?" + getVariables).Body;
 		_mainWindowModel.DisplayName = DisplayName;
 	}

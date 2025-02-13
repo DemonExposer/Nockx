@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Web;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -120,7 +121,7 @@ public class ChatPanelController {
 	public DecryptedMessage[] GetPastMessages() { // TODO: Add signature to this request
 		List<DecryptedMessage> res = [];
 		
-		string getVariables = $"requestingUser={PersonalPublicKey.ToBase64String()}&requestedUser={ForeignPublicKey.ToBase64String()}";
+		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(ForeignPublicKey.ToBase64String())}";
 		JsonArray messages = JsonNode.Parse(Http.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
