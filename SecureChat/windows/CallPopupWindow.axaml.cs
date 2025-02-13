@@ -14,7 +14,6 @@ public partial class CallPopupWindow : PopupWindow {
 
 	public readonly RsaKeyParameters PersonalKey, ForeignKey;
 	
-	// TODO: be able to select a panel according to whether it's an actual call or if you're just being called
 	public CallPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey) {
 		PersonalKey = personalKey;
 		ForeignKey = foreignKey;
