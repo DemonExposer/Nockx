@@ -6,10 +6,10 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.Audio;
 using SecureChat.ClassExtensions;
@@ -55,7 +55,7 @@ public class MainWindowController {
 	}
 
 	private void CheckForNewChats() {
-		string getVariables = $"key={_publicKey.ToBase64String()}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+		string getVariables = $"key={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}]);
 		if (!response.IsSuccessful) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
@@ -81,7 +81,7 @@ public class MainWindowController {
 			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
 
 			byte[] keyBytes = Convert.FromBase64String(_publicKey.ToBase64String());
-			await _webSocket.SendAsync(keyBytes, WebSocketMessageType.Text, true, CancellationToken.None);
+			await _webSocket.SendAsync(keyBytes, WebSocketMessageType.Binary, true, CancellationToken.None);
 
 			_keepAliveTimer = new Timer(_ => {
 				_webSocket.SendAsync(Encoding.UTF8.GetBytes("KEEP_ALIVE"), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -164,6 +164,7 @@ public class MainWindowController {
 					}
 				};
 
+				Console.WriteLine(Encoding.UTF8.GetString(bytes.ToArray()));
 				JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
 				actions[messageJson["action"]!.GetValue<string>()](messageJson);
 			}
