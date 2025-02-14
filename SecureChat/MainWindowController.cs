@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -205,5 +206,26 @@ public class MainWindowController {
 
 	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey) {
 		new CallRequestPopupWindow(_publicKey, foreignPublicKey).Show(_context);
+	}
+
+	public void SendFriendRequest(RsaKeyParameters publicKey) {
+		JsonObject body = new () {
+			["sender"] = new JsonObject {
+				["key"] = _publicKey.ToBase64String(),
+				["displayName"] = _model.DisplayName
+			},
+			["receiver"] = new JsonObject {
+				["key"] = publicKey.ToBase64String(),
+				["displayName"] = ""
+			},
+			["accepted"] = false
+		};
+		string json = JsonSerializer.Serialize(body);
+		Response response = Http.Post($"http://{Settings.GetInstance().IpAddress}:5000/friends", json, [new Header {Name = "Signature", Value = Cryptography.Sign(json, _privateKey)}]);
+		if (!response.IsSuccessful) {
+			Console.WriteLine(response.Body);
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not add friend on server ({Settings.GetInstance().IpAddress})"));
+			return;
+		}
 	}
 }

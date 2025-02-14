@@ -41,6 +41,9 @@
         <Compile Update="windows\CallPopupWindowController.cs">
           <DependentUpon>CallPopupWindow.axaml.cs</DependentUpon>
         </Compile>
+        <Compile Update="panels\FriendsPanelController.cs">
+          <DependentUpon>FriendsPanel.cs</DependentUpon>
+        </Compile>
 	</ItemGroup>
     
     <ItemGroup>

@@ -53,6 +53,21 @@
 			</Setter>
 		</Style>
 		
+		<Style Selector="Button.cancel">
+			<Setter Property="Background" Value="Orange"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
+		<Style Selector="Button.cancel:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#FFCC00"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
+		<Style Selector="Button.cancel:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="#996100"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
 		<Style Selector="Button.reject">
 			<Setter Property="Background" Value="Red"/>
 			<Setter Property="Foreground" Value="White"/>

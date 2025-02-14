@@ -6,7 +6,6 @@ using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.ClassExtensions;
 using SecureChat.Model;
 using SecureChat.Panels;
-using SecureChat.Util;
 using SecureChat.Windows;
 
 namespace SecureChat;
@@ -60,6 +59,24 @@ public partial class MainWindow : Window {
 			SetUiPanel(addUserPanel);
 		};
 		
+		AddFriendPanel addFriendPanel = (AddFriendPanel) Resources["AddFriendPanel"]!;
+		addFriendPanel.SetOnEnter(OnAddFriend);
+
+		Button addFriendButton = this.FindControl<Button>("AddFriendButton")!;
+		addFriendButton.Click += (_, _) => {
+			SetPressedButton(addFriendButton);
+			SetUiPanel(addFriendPanel);
+		};
+		
+		FriendsPanel friendsPanel = (FriendsPanel) Resources["FriendsPanel"]!;
+		
+		Button friendsButton = this.FindControl<Button>("FriendsButton")!;
+		friendsButton.Click += (_, _) => {
+			SetPressedButton(friendsButton);
+			SetUiPanel(friendsPanel);
+			friendsPanel.Show(this);
+		};
+
 		Button userInfoButton = this.FindControl<Button>("UserInfoButton")!;
 		userInfoButton.Click += (_, _) => {
 			SetPressedButton(userInfoButton);
@@ -83,6 +100,8 @@ public partial class MainWindow : Window {
 		if (_uiPanel != null) {
 			if (_uiPanel is ChatPanel chatPanel)
 				chatPanel.Unshow(this);
+			if (_uiPanel is FriendsPanel friendsPanel)
+				friendsPanel.Unshow();
 			_mainPanel.Children.Remove(_uiPanel);
 		}
 
@@ -93,8 +112,14 @@ public partial class MainWindow : Window {
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not Panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
+		ChatPanel.UpdateDisplayName(name);
 		if (_model.ContainsChat(publicKey.ToBase64String())) {
 			_model.UpdateName(publicKey.ToBase64String(), name);
+			if (doAutoFocus) {
+				SetUiPanel(ChatPanel);
+				ChatPanel.Show(publicKey, this);
+				SetPressedButton(_model.GetChat(publicKey.ToBase64String())!.ChatButton);
+			}
 			return;
 		}
 		
@@ -108,10 +133,8 @@ public partial class MainWindow : Window {
 		if (doAutoFocus) {
 			SetUiPanel(ChatPanel);
 			ChatPanel.Show(publicKey, this);
-		}
-		
-		if (doAutoFocus)
 			SetPressedButton(chatButton);
+		}
 		
 		chatButton.Click += (_, _) => {
 			SetPressedButton(chatButton);
@@ -125,6 +148,10 @@ public partial class MainWindow : Window {
 	private void OnAddUser(RsaKeyParameters publicKey, string name) {
 		Chats.Add(publicKey);
 		AddUser(publicKey, name, true);
+	}
+
+	private void OnAddFriend(RsaKeyParameters publicKey) {
+		_controller.SendFriendRequest(publicKey);
 	}
 	
 	private void OnRendered(object? sender, PixelPointEventArgs e) {

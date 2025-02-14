@@ -12,9 +12,23 @@
 		Height="600"
 		WindowState="Maximized">
 	<Window.Resources>
+		<panels:FriendsPanel x:Key="FriendsPanel">
+			<DockPanel DockPanel.Dock="Top" Background="#202020">
+				<TextBlock VerticalAlignment="Center" FontSize="15" Margin="10">Friends</TextBlock>
+			</DockPanel>
+			<ScrollViewer Name="FriendsScrollView" VerticalScrollBarVisibility="Auto">
+				<StackPanel Name="FriendsStackPanel">
+					
+				</StackPanel>
+			</ScrollViewer>
+		</panels:FriendsPanel>
 		<panels:AddUserPanel x:Key="AddUserPanel">
 			<TextBox Name="KeyTextBox" Watermark="Key"/>
 		</panels:AddUserPanel>
+		<panels:AddFriendPanel x:Key="AddFriendPanel">
+			<TextBlock FontSize="15" Margin="10">Add Friend</TextBlock>
+			<TextBox Name="FriendKeyTextBox" Watermark="Key"/>
+		</panels:AddFriendPanel>
 		<panels:ChatPanel x:Key="ChatPanel">
 			<DockPanel DockPanel.Dock="Top" Background="#202020">
 				<Button DockPanel.Dock="Right" Name="CallButton" Content="Call"/>
@@ -42,7 +56,9 @@
 				<Button Name="SettingsButton" Content="Settings" Classes="settings"/>
 			</StackPanel>
 			<StackPanel Name="ChatListPanel" Width="200">
+				<Button Name="FriendsButton" Content="Friends" Classes="chat_selector"/>
 				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
+				<Button Name="AddFriendButton" Content="New Friend" Classes="chat_selector"/>
 			</StackPanel>
 		</DockPanel>
 		<DockPanel Name="MainPanel">
