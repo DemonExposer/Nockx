@@ -14,7 +14,6 @@ public partial class CallPopupWindow : PopupWindow {
 
 	public readonly RsaKeyParameters PersonalKey, ForeignKey;
 	
-	// TODO: be able to select a panel according to whether it's an actual call or if you're just being called
 	public CallPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey) {
 		PersonalKey = personalKey;
 		ForeignKey = foreignKey;
@@ -33,7 +32,7 @@ public partial class CallPopupWindow : PopupWindow {
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Thumb>()) {
 			Setters = {
 				new Setter(MaxHeightProperty, 15D),
-				new Setter(MaxWidthProperty, 15D),
+				new Setter(MaxWidthProperty, 15D)
 			}
 		});
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Track>()) {
@@ -48,6 +47,7 @@ public partial class CallPopupWindow : PopupWindow {
 		slider.PointerExited += _controller.OnMousePointerExitedSlider;
 		slider.PointerMoved += _controller.OnMousePointerMovedInSlider;
 
+		Opened += _controller.OnWindowOpened;
 		Closing += _controller.OnWindowClosing;
 	}
 

@@ -85,7 +85,23 @@ public class CallPopupWindowController {
 		_receiver.SetVolume((float) e.NewValue / 100);
 	}
 
-	public void OnWindowClosing(object? sender, WindowClosingEventArgs e) => _sender.Close();
+	public void OnWindowClosing(object? sender, WindowClosingEventArgs e) {
+		_sender.Close();
+		JsonObject body = new () {
+			["key"] = _context.PersonalKey.ToBase64String()
+		};
+		Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", JsonSerializer.Serialize(body));
+		
+		if (_context.Owner is MainWindow mainWindow)
+			mainWindow.SetCallWindow(null);
+	}
+
+	public void OnWindowOpened(object? sender, EventArgs e) {
+		if (_context.Owner is not MainWindow mainWindow)
+			return;
+		
+		mainWindow.SetCallWindow(_context);
+	}
 
 	private void RegisterVoiceChat(int port) {
 		Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Registering voice chat...");

@@ -161,11 +161,11 @@ public class MainWindowController {
 						if (CallWindow == null)
 							return;
 						
-						
+						if (message["sender"]!.GetValue<string>() == CallWindow.ForeignKey.ToBase64String())
+							CallWindow.Close();
 					}
 				};
 
-				Console.WriteLine(Encoding.UTF8.GetString(bytes.ToArray()));
 				JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
 				actions[messageJson["action"]!.GetValue<string>()](messageJson);
 			}
