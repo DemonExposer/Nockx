@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
 using LessAnnoyingHttp;
@@ -35,8 +34,6 @@ public class FriendsPanelController {
 	public List<FriendRequest> GetFriends() {
 		string getVariables =
 			$"key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}";
-		Console.WriteLine(getVariables);
-		Console.WriteLine(Cryptography.Sign(getVariables, _privateKey));
 		Response response = Http.Get($"http://{_settings.IpAddress}:5000/friends?{getVariables}",
 			[new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
 		//TODO: error popup when friends could not be retrieved

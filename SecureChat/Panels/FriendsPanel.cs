@@ -72,6 +72,13 @@ public class FriendsPanel : DockPanel {
 			Width = double.NaN,
 			Text = amISender ? friendRequest.ReceiverName : friendRequest.SenderName
 		};
+		Button rejectButton = new() {
+			Margin = new Thickness(5),
+			Content = "Reject",
+			Classes = { "reject" }
+		};
+		SetDock(rejectButton, Dock.Right);
+		rejectButton.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(window); };
 		if (friendRequest.Accepted) {
 			button.Content = "Remove";
 			button.Classes.Add("reject");
@@ -102,6 +109,8 @@ public class FriendsPanel : DockPanel {
 		chatButton.Click += (_, _) => { window.AddUser(RsaKeyParametersExtension.FromBase64String(key), name, true); };
 
 		DockPanel dockPanel = new();
+		if (!friendRequest.Accepted && !amISender)
+			dockPanel.Children.Add(rejectButton);
 		dockPanel.Children.Add(button);
 		if (friendRequest.Accepted)
 			dockPanel.Children.Add(chatButton);
