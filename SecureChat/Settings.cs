@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using SecureChat.windows;
+using SecureChat.Windows;
 
 namespace SecureChat;
 
