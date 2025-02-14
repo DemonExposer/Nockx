@@ -2,7 +2,7 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:panels="clr-namespace:SecureChat.panels"
+		xmlns:panels="clr-namespace:SecureChat.Panels"
 		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		x:Class="SecureChat.MainWindow"
 		Title="Nockx"
@@ -23,13 +23,11 @@
 			</ScrollViewer>
 		</panels:FriendsPanel>
 		<panels:AddUserPanel x:Key="AddUserPanel">
-			<TextBox Name="ModulusTextBox" Watermark="Modulus"/>
-			<TextBox Name="ExponentTextBox" Watermark="Exponent"/>
+			<TextBox Name="KeyTextBox" Watermark="Key"/>
 		</panels:AddUserPanel>
 		<panels:AddFriendPanel x:Key="AddFriendPanel">
 			<TextBlock FontSize="15" Margin="10">Add Friend</TextBlock>
-			<TextBox Name="FriendModulusTextBox" Watermark="Modulus"/>
-			<TextBox Name="FriendExponentTextBox" Watermark="Exponent"/>
+			<TextBox Name="FriendKeyTextBox" Watermark="Key"/>
 		</panels:AddFriendPanel>
 		<panels:ChatPanel x:Key="ChatPanel">
 			<DockPanel DockPanel.Dock="Top" Background="#202020">
@@ -46,10 +44,8 @@
 		<panels:UserInfoPanel x:Key="UserInfoPanel">
 			<TextBlock Margin="0, 20, 0, 0">Display name:</TextBlock>
 			<TextBox MaxLength="255" Name="DisplayNameBox"></TextBox>
-			<TextBlock Margin="0,20,0,0">Modulus:</TextBlock>
-			<TextBox IsReadOnly="True" Name="ModulusBox"/>
-			<TextBlock>Exponent:</TextBlock>
-			<TextBox IsReadOnly="True" Name="ExponentBox"/>
+			<TextBlock Margin="0,20,0,0">Key:</TextBlock>
+			<TextBox IsReadOnly="True" Name="KeyBox"/>
 		</panels:UserInfoPanel>
 	</Window.Resources>
 	

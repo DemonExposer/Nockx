@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
+using SecureChat.ClassExtensions;
 
 namespace SecureChat;
 
@@ -51,24 +52,15 @@ public class Chats {
 	
 	public static void Load(string filename) {
 		JsonArray chatsArray = JsonNode.Parse(File.ReadAllText(filename))!.AsArray();
-		_instance = new Chats(filename, chatsArray.ToArray().Select(node => 
-			new RsaKeyParameters(
-				false,
-				new BigInteger(node!["publicKey"]!["modulus"]!.GetValue<string>(), 16),
-				new BigInteger(node["publicKey"]!["exponent"]!.GetValue<string>(), 16)
-			)
-		));
+		_instance = new Chats(filename, chatsArray.ToArray().Select(node => RsaKeyParametersExtension.FromBase64String(node!["publicKey"]!.GetValue<string>())));
 	}
 
 	private static void Save() {
-		JsonArray chats = new ();
+		JsonArray chats = [];
 		foreach (RsaKeyParameters pubKey in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be saved"))._pubKeys)
 			chats.Add(new JsonObject {
-				["publicKey"] = new JsonObject {
-					["modulus"] = pubKey.Modulus.ToString(16),
-					["exponent"] = pubKey.Exponent.ToString(16)
-				},
-				["name"] = pubKey.Modulus.ToString(16)
+				["publicKey"] = pubKey.ToBase64String(),
+				["name"] = pubKey.ToBase64String()
 			});
 		
 		File.WriteAllText(_instance._file, JsonSerializer.Serialize(chats, new JsonSerializerOptions { WriteIndented = true }));
@@ -76,7 +68,7 @@ public class Chats {
 
 	public static void Show(MainWindow window) {
 		foreach (RsaKeyParameters key in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be shown"))._pubKeys) {
-			string name = key.Modulus.ToString(16);
+			string name = key.ToBase64String();
 			window.AddUser(key, name, false);
 		}
 	}

@@ -7,18 +7,21 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
-using SecureChat.audio;
-using SecureChat.util;
-using SecureChat.windows;
+using SecureChat.Audio;
+using SecureChat.ClassExtensions;
+using SecureChat.Util;
+using SecureChat.Windows;
 
 namespace SecureChat;
 
 public class MainWindowController {
+	public CallPopupWindow? CallWindow;
+	
 	private readonly RsaKeyParameters _publicKey, _privateKey;
 
 	private readonly MainWindow _context;
@@ -53,7 +56,7 @@ public class MainWindowController {
 	}
 
 	private void CheckForNewChats() {
-		string getVariables = $"modulus={_publicKey.Modulus.ToString(16)}&exponent={_publicKey.Exponent.ToString(16)}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+		string getVariables = $"key={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}]);
 		if (!response.IsSuccessful) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
@@ -63,20 +66,12 @@ public class MainWindowController {
 		JsonArray chats = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? jsonNode in chats) {
 			JsonObject chatObject = jsonNode!.AsObject();
-			if (chatObject["user1"]!["modulus"]!.GetValue<string>() != _publicKey.Modulus.ToString(16)) {
-				_context.AddUser(new RsaKeyParameters(
-					false,
-					new BigInteger(chatObject["user1"]!["modulus"]!.GetValue<string>(), 16),
-					new BigInteger(chatObject["user1"]!["exponent"]!.GetValue<string>(), 16)
-				), chatObject["user1"]!["displayName"]!.GetValue<string>(), false);
-				_model.SetChatReadStatus(chatObject["user1"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+			if (chatObject["user1"]!["key"]!.GetValue<string>() != _publicKey.ToBase64String()) {
+				_context.AddUser(RsaKeyParametersExtension.FromBase64String(chatObject["user1"]!["key"]!.GetValue<string>()), chatObject["user1"]!["displayName"]!.GetValue<string>(), false);
+				_model.SetChatReadStatus(chatObject["user1"]!["key"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
 			} else {
-				_context.AddUser(new RsaKeyParameters(
-					false,
-					new BigInteger(chatObject["user2"]!["modulus"]!.GetValue<string>(), 16),
-					new BigInteger(chatObject["user2"]!["exponent"]!.GetValue<string>(), 16)
-				), chatObject["user2"]!["displayName"]!.GetValue<string>(), false);
-				_model.SetChatReadStatus(chatObject["user2"]!["modulus"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+				_context.AddUser(RsaKeyParametersExtension.FromBase64String(chatObject["user2"]!["key"]!.GetValue<string>()), chatObject["user2"]!["displayName"]!.GetValue<string>(), false);
+				_model.SetChatReadStatus(chatObject["user2"]!["key"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
 			}
 		}
 	}
@@ -86,8 +81,8 @@ public class MainWindowController {
 		try {
 			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
 
-			byte[] modulusStrBytes = Encoding.UTF8.GetBytes(_publicKey.Modulus.ToString(16));
-			await _webSocket.SendAsync(modulusStrBytes, WebSocketMessageType.Text, true, CancellationToken.None);
+			byte[] keyBytes = Convert.FromBase64String(_publicKey.ToBase64String());
+			await _webSocket.SendAsync(keyBytes, WebSocketMessageType.Binary, true, CancellationToken.None);
 
 			_keepAliveTimer = new Timer(_ => {
 				_webSocket.SendAsync(Encoding.UTF8.GetBytes("KEEP_ALIVE"), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -160,10 +155,17 @@ public class MainWindowController {
 					["delete"] = DeleteMessage,
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
-						ShowCallPrompt(new RsaKeyParameters(false, new BigInteger(message["sender"]!["modulus"]!.GetValue<string>(), 16), new BigInteger(message["sender"]!["exponent"]!.GetValue<string>(), 16)));
+						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(message["sender"]!.GetValue<string>()));
+					},
+					["callClose"] = message => {
+						if (CallWindow == null)
+							return;
+						
+						
 					}
 				};
 
+				Console.WriteLine(Encoding.UTF8.GetString(bytes.ToArray()));
 				JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
 				actions[messageJson["action"]!.GetValue<string>()](messageJson);
 			}
@@ -184,7 +186,7 @@ public class MainWindowController {
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender)) {
 			if (!message.IsRead)
-				_model.SetChatReadStatus(message.Sender.Modulus.ToString(16), false);
+				_model.SetChatReadStatus(message.Sender.ToBase64String(), false);
 			
 			return;
 		}
@@ -193,11 +195,7 @@ public class MainWindowController {
 	}
 
 	private void DeleteMessage(JsonObject messageJson) {
-		RsaKeyParameters sender = new (
-			false,
-			new BigInteger(messageJson["sender"]!["modulus"]!.GetValue<string>(), 16),
-			new BigInteger(messageJson["sender"]!["exponent"]!.GetValue<string>(), 16)
-		);
+		RsaKeyParameters sender = RsaKeyParametersExtension.FromBase64String(messageJson["sender"]!["key"]!.GetValue<string>());
 		
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(sender))
@@ -213,13 +211,11 @@ public class MainWindowController {
 	public void SendFriendRequest(RsaKeyParameters publicKey) {
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
-				["modulus"] = _publicKey.Modulus.ToString(16),
-				["exponent"] = _publicKey.Exponent.ToString(16),
+				["key"] = _publicKey.ToBase64String(),
 				["displayName"] = _model.DisplayName
 			},
 			["receiver"] = new JsonObject {
-				["modulus"] = publicKey.Modulus.ToString(16),
-				["exponent"] = publicKey.Exponent.ToString(16),
+				["key"] = publicKey.ToBase64String(),
 				["displayName"] = ""
 			},
 			["accepted"] = false
@@ -227,6 +223,7 @@ public class MainWindowController {
 		string json = JsonSerializer.Serialize(body);
 		Response response = Http.Post($"http://{Settings.GetInstance().IpAddress}:5000/friends", json, [new Header {Name = "Signature", Value = Cryptography.Sign(json, _privateKey)}]);
 		if (!response.IsSuccessful) {
+			Console.WriteLine(response.Body);
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not add friend on server ({Settings.GetInstance().IpAddress})"));
 			return;
 		}
