@@ -59,6 +59,8 @@ public class FriendsPanel : DockPanel {
 		Border border = new() {
 			Background = originalBackground
 		};
+		border.PointerEntered += (_, _) => border.Background = new SolidColorBrush(Color.Parse("#252525"));
+		border.PointerExited += (_, _) => border.Background = originalBackground;
 
 		Button button = new () {
 			Margin = new Thickness(5)
