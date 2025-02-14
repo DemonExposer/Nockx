@@ -154,7 +154,7 @@ public class MainWindowController {
 					["delete"] = DeleteMessage,
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
-						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(message["sender"]!["key"]!.GetValue<string>()));
+						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(message["sender"]!.GetValue<string>()));
 					},
 					["callClose"] = message => {
 						if (CallWindow == null)
