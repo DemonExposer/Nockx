@@ -11,15 +11,15 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.1.0-beta2" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.1.0-beta2" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.0-beta2" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.0-beta2" />
+        <PackageReference Include="Avalonia" Version="11.2.4" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.2.4" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.4" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.4" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.0-beta2" />
-        <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.1" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.4" />
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
         <PackageReference Include="LessAnnoyingHttp" Version="1.0.0" />
-        <PackageReference Include="OpenTK" Version="4.8.2" />
+        <PackageReference Include="OpenTK" Version="4.9.3" />
     </ItemGroup>
 
 	<ItemGroup>
@@ -68,17 +68,17 @@
 	<!--TODO: possibly add transitive licenses, and mention all the libraries in the README-->
 	<Target Name="CopyAndRenameLicenses" AfterTargets="Publish">
 		<ItemGroup>
-			<LicenseFiles Include="lib\licenses\**\*"/>
+			<LicenseFiles Include="lib\licenses\**\*" />
 		</ItemGroup>
 
-		<Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(PublishDir)LICENSES\"/>
+		<Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(PublishDir)LICENSES\" />
 	</Target>
 
 	<Target Name="CopyAndRenameLicensesWin" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
 		<ItemGroup>
-			<LicenseFilesWin Include="lib\win\licenses\**\*"/>
+			<LicenseFilesWin Include="lib\win\licenses\**\*" />
 		</ItemGroup>
 
-		<Copy SourceFiles="@(LicenseFilesWin)" DestinationFolder="$(PublishDir)LICENSES\"/>
+		<Copy SourceFiles="@(LicenseFilesWin)" DestinationFolder="$(PublishDir)LICENSES\" />
 	</Target>
 </Project>
