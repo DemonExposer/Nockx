@@ -88,9 +88,12 @@ public class CallPopupWindowController {
 	public void OnWindowClosing(object? sender, WindowClosingEventArgs e) {
 		_sender.Close();
 		JsonObject body = new () {
-			["key"] = _context.PersonalKey.ToBase64String()
+			["key"] = _context.PersonalKey.ToBase64String(),
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
-		Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", JsonSerializer.Serialize(body));
+
+		string bodyString = JsonSerializer.Serialize(body);
+		Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		
 		if (_context.Owner is MainWindow mainWindow)
 			mainWindow.SetCallWindow(null);
@@ -113,9 +116,12 @@ public class CallPopupWindowController {
 			["foreignKey"] = _context.ForeignKey.ToBase64String(),
 			["personalEncryptedKeyBase64"] = Convert.ToBase64String(personalEncryptedAesKey),
 			["foreignEncryptedKeyBase64"] = Convert.ToBase64String(foreignEncryptedAesKey),
-			["port"] = port
+			["port"] = port,
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
-		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat?timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", JsonSerializer.Serialize(body));
+
+		string bodyString = JsonSerializer.Serialize(body);
+		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		// TODO: add verification for the encrypted key, so that the server can't spoof its users
 		_network.SetKey(Cryptography.DecryptAesKey(Convert.FromBase64String(response.Body), _privateKey));
 	}

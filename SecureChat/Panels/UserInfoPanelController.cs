@@ -52,12 +52,15 @@ public class UserInfoPanelController {
 	public bool SetDisplayName(string displayName) {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("SetDisplayName may not be called before _mainWindowModel is set, using SetMainWindowModel");
-		JsonObject body = new() {
-			["key"] = PublicKey.ToBase64String(),
-			["displayName"] = displayName
+		JsonObject body = new () {
+			["user"] = new JsonObject {
+				["key"] = PublicKey.ToBase64String(),
+				["displayName"] = displayName
+			},
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
 		string bodyString = JsonSerializer.Serialize(body);
-		Response response = Http.Put($"http://{_settings.IpAddress}:5000/displayname", bodyString, [new Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]);
+		Response response = Http.Put($"http://{_settings.IpAddress}:5000/displayname", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		if (response.IsSuccessful) {
 			DisplayName = displayName;
 			_mainWindowModel.DisplayName = displayName;

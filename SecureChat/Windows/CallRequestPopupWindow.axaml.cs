@@ -2,20 +2,29 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using LessAnnoyingHttp;
+using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.OpenSsl;
 using SecureChat.Audio;
 using SecureChat.ClassExtensions;
+using SecureChat.Util;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace SecureChat.Windows;
 
 public partial class CallRequestPopupWindow : PopupWindow {
-	private readonly RsaKeyParameters _personalKey, _foreignKey;
+	private readonly RsaKeyParameters _personalKey, _foreignKey, _privateKey;
 
 	private bool _isAccepted;
 	
 	public CallRequestPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey) {
+		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
+			PemReader pemReader = new (reader);
+			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
+		}
+
 		_personalKey = personalKey;
 		_foreignKey = foreignKey;
 		
@@ -43,11 +52,11 @@ public partial class CallRequestPopupWindow : PopupWindow {
 				["personalKey"] = _personalKey.ToBase64String(),
 				["foreignKey"] = _foreignKey.ToBase64String()
 			};
-			Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", JsonSerializer.Serialize(body));
+
+			string bodyString = JsonSerializer.Serialize(body);
+			Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		}
 	}
 
-	public void RejectButton_OnClick(object? sender, RoutedEventArgs e) {
-		Close();
-	}
+	public void RejectButton_OnClick(object? sender, RoutedEventArgs e) => Close();
 }
