@@ -81,8 +81,14 @@ public class MainWindowController {
 		try {
 			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
 
-			byte[] keyBytes = Convert.FromBase64String(_publicKey.ToBase64String());
-			await _webSocket.SendAsync(keyBytes, WebSocketMessageType.Binary, true, CancellationToken.None);
+			string keyBase64 = _publicKey.ToBase64String();
+			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+			JsonObject message = new () {
+				["key"] = keyBase64,
+				["timestamp"] = timestamp,
+				["signature"] = Cryptography.Sign(keyBase64 + timestamp, _privateKey)
+			};
+			await _webSocket.SendAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message)), WebSocketMessageType.Text, true, CancellationToken.None);
 
 			_keepAliveTimer = new Timer(_ => {
 				_webSocket.SendAsync(Encoding.UTF8.GetBytes("KEEP_ALIVE"), WebSocketMessageType.Text, true, CancellationToken.None);
