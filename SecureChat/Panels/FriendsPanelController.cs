@@ -16,10 +16,8 @@ namespace SecureChat.Panels;
 public class FriendsPanelController {
 	public readonly RsaKeyParameters PersonalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
-	private readonly Settings _settings = Settings.GetInstance();
 
 	public FriendsPanelController() {
-		
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
 			PersonalPublicKey = (RsaKeyParameters) pemReader.ReadObject();
@@ -34,7 +32,7 @@ public class FriendsPanelController {
 	public List<FriendRequest> GetFriends() {
 		string getVariables =
 			$"key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}";
-		Response response = Http.Get($"http://{_settings.IpAddress}:5000/friends?{getVariables}",
+		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/friends?{getVariables}",
 			[new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
 		//TODO: error popup when friends could not be retrieved
 		if (!response.IsSuccessful) {
@@ -53,7 +51,7 @@ public class FriendsPanelController {
 
 	public void AcceptFriendRequest(FriendRequest friendRequest) {
 		string body = FriendRequest.Serialize(friendRequest);
-		Response response = Http.Put($"http://{_settings.IpAddress}:5000/friends", body,
+		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/friends", body,
 			[new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.StatusCode);
@@ -64,7 +62,7 @@ public class FriendsPanelController {
 		string body = FriendRequest.Serialize(friendRequest);
 		Response response =
 			Http.Delete(
-				$"http://{_settings.IpAddress}:5000/friends?key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}",
+				$"http://{Settings.GetInstance().IpAddress}:5000/friends?key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}",
 				body, [new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.StatusCode);
