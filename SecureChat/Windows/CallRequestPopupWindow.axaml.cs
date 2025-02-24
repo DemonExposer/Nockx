@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -7,16 +9,24 @@ using SecureChat.Audio;
 using SecureChat.ClassExtensions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.OpenSsl;
+using SecureChat.Util;
 
 namespace SecureChat.Windows;
 
 public partial class CallRequestPopupWindow : PopupWindow {
-	private readonly RsaKeyParameters _personalKey, _foreignKey;
+	private readonly RsaKeyParameters _personalKey, _foreignKey, _privateKey;
 	private readonly long _timestamp;
 
 	private bool _isAccepted;
 	
 	public CallRequestPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey, long timestamp) {
+		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
+			PemReader pemReader = new (reader);
+			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
+		}
+		
 		_personalKey = personalKey;
 		_foreignKey = foreignKey;
 		_timestamp = timestamp;
@@ -41,11 +51,15 @@ public partial class CallRequestPopupWindow : PopupWindow {
 	private void OnClosing(object? sender, WindowClosingEventArgs e) {
 		Sounds.Ringtone.StopRepeat();
 		if (!_isAccepted) {
+			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 			JsonObject body = new () {
 				["personalKey"] = _personalKey.ToBase64String(),
-				["foreignKey"] = _foreignKey.ToBase64String()
+				["foreignKey"] = _foreignKey.ToBase64String(),
+				["timestamp"] = timestamp
 			};
-			Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", JsonSerializer.Serialize(body));
+			
+			string bodyString = JsonSerializer.Serialize(body);
+			Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(_personalKey.ToBase64String() + timestamp, _privateKey)}]);
 		}
 	}
 
