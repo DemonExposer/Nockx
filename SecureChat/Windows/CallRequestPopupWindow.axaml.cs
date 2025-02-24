@@ -51,7 +51,7 @@ public partial class CallRequestPopupWindow : PopupWindow {
 	private void OnClosing(object? sender, WindowClosingEventArgs e) {
 		Sounds.Ringtone.StopRepeat();
 		if (!_isAccepted) {
-			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 			JsonObject body = new () {
 				["personalKey"] = _personalKey.ToBase64String(),
 				["foreignKey"] = _foreignKey.ToBase64String(),
@@ -59,7 +59,7 @@ public partial class CallRequestPopupWindow : PopupWindow {
 			};
 
 			string bodyString = JsonSerializer.Serialize(body);
-			Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+			Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		}
 	}
 

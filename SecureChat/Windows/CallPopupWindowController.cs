@@ -111,7 +111,7 @@ public class CallPopupWindowController {
 		byte[] aesKey = Cryptography.GenerateAesKey();
 		byte[] foreignEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.ForeignKey);
 		byte[] personalEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.PersonalKey);
-		long timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		JsonObject body = new () {
 			["personalKey"] = _context.PersonalKey.ToBase64String(),
 			["foreignKey"] = _context.ForeignKey.ToBase64String(),
