@@ -99,11 +99,13 @@ public static class Cryptography {
 		
 		byte[] foreignEncryptedKey = EncryptAesKey(aesKey, foreignPublicKey);
 
+		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		return new Message {
 			Body = Convert.ToBase64String(cipherBytes),
 			SenderEncryptedKey = Convert.ToBase64String(personalEncryptedKey),
 			ReceiverEncryptedKey = Convert.ToBase64String(foreignEncryptedKey),
-			Signature = Sign(inputText, privateKey),
+			Timestamp = timestamp,
+			Signature = Sign(inputText + timestamp, privateKey),
 			Receiver = foreignPublicKey,
 			Sender = personalPublicKey,
 			SenderDisplayName = "",
@@ -121,6 +123,6 @@ public static class Cryptography {
 		(byte[] plainBytes, int length) = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
 
 		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
-		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.ToBase64String(), DisplayName = message.SenderDisplayName, DateTime = DateTime.MinValue};
+		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.ToBase64String(), DisplayName = message.SenderDisplayName, Timestamp = message.Timestamp};
 	}
 }

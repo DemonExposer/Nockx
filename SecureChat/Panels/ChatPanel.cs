@@ -47,7 +47,7 @@ public class ChatPanel : DockPanel {
 								if (_mainWindowModel == null)
 									throw new InvalidOperationException("Cannot add message before _mainWindowModel is set, using SetMainWindowModel");
 								long id = _controller.SendMessage(textBox.Text);
-								AddMessage(new DecryptedMessage { Body = textBox.Text, DateTime = DateTime.MinValue, Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName});
+								AddMessage(new DecryptedMessage { Body = textBox.Text, Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName});
 								textBox.Text = null;
 							}
 						};

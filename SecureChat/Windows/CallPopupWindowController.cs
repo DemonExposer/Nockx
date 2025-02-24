@@ -108,15 +108,31 @@ public class CallPopupWindowController {
 		byte[] aesKey = Cryptography.GenerateAesKey();
 		byte[] foreignEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.ForeignKey);
 		byte[] personalEncryptedAesKey = Cryptography.EncryptAesKey(aesKey, _context.PersonalKey);
+		long timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 		JsonObject body = new () {
 			["personalKey"] = _context.PersonalKey.ToBase64String(),
 			["foreignKey"] = _context.ForeignKey.ToBase64String(),
 			["personalEncryptedKeyBase64"] = Convert.ToBase64String(personalEncryptedAesKey),
 			["foreignEncryptedKeyBase64"] = Convert.ToBase64String(foreignEncryptedAesKey),
-			["port"] = port
+			["port"] = port,
+			["timestamp"] = timestamp,
+			["signature"] = Cryptography.Sign(Convert.ToBase64String(aesKey) + timestamp, _privateKey),
+			["signatureWebSocket"] = Cryptography.Sign(_context.PersonalKey.ToBase64String() + timestamp, _privateKey)
 		};
-		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat?timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", JsonSerializer.Serialize(body));
-		// TODO: add verification for the encrypted key, so that the server can't spoof its users
-		_network.SetKey(Cryptography.DecryptAesKey(Convert.FromBase64String(response.Body), _privateKey));
+		
+		string bodyString = JsonSerializer.Serialize(body);
+		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+		JsonObject responseObj = JsonNode.Parse(response.Body)!.AsObject();
+		
+		long receivedTimestamp = responseObj["timestamp"]!.GetValue<long>();
+		if (_context.Timestamp != null && receivedTimestamp != _context.Timestamp.Value) // Check timestamp the server sent vs the timestamp that was sent with the call request (if timestamp is null, this user is the initiator of the call)
+			return; // TODO: inform user that they are under attack
+		
+		byte[] receivedAesKey = Cryptography.DecryptAesKey(Convert.FromBase64String(responseObj["encryptedSymmetricKey"]!.GetValue<string>()), _privateKey);
+		if ((_context.Timestamp == null && receivedAesKey.SequenceEqual(aesKey)) || (_context.Timestamp != null && Cryptography.Verify(Convert.ToBase64String(receivedAesKey) + receivedTimestamp, responseObj["signature"]!.GetValue<string>(), null, _context.ForeignKey, false))) {
+			_network.SetKey(receivedAesKey);
+		} else {
+			// TODO: inform user that they are under attack
+		}
 	}
 }

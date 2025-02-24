@@ -13,10 +13,19 @@ public partial class CallPopupWindow : PopupWindow {
 	public TextBlock TooltipTextBlock = null!, ConnectionStatusTextBlock = null!;
 
 	public readonly RsaKeyParameters PersonalKey, ForeignKey;
+	public readonly long? Timestamp;
 	
 	public CallPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey) {
 		PersonalKey = personalKey;
 		ForeignKey = foreignKey;
+
+		InitializeComponent();
+	}
+	
+	public CallPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey, long timestamp) {
+		PersonalKey = personalKey;
+		ForeignKey = foreignKey;
+		Timestamp = timestamp;
 
 		InitializeComponent();
 	}

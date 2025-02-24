@@ -161,7 +161,19 @@ public class MainWindowController {
 					["delete"] = DeleteMessage,
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
-						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(message["sender"]!.GetValue<string>()));
+
+						string senderKeyBase64 = message["sender"]!.GetValue<string>();
+						long timestamp = message["timestamp"]!.GetValue<long>();
+						string signature = message["signature"]!.GetValue<string>();
+
+						if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestamp > 10000) // Unable to verify authenticity, because of possible replay attack
+							return;
+						
+						// TODO: check whether caller is a friend
+						if (!Cryptography.Verify(senderKeyBase64 + timestamp, signature, null, RsaKeyParametersExtension.FromBase64String(senderKeyBase64), false))
+							return;
+						
+						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(senderKeyBase64), timestamp);
 					},
 					["callClose"] = message => {
 						if (CallWindow == null)
@@ -184,9 +196,9 @@ public class MainWindowController {
 		Message message = Message.Parse(messageJson);
 		
 		// Add new chat if receiver does not yet have a chat with sender
-		if (!Chats.ChatExists(message.Sender)) {
+		if (!Chats.ChatExists(message.Sender))
 			Chats.Add(message.Sender);
-		}
+		
 		_context.AddUser(message.Sender, message.SenderDisplayName, false);
 
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
@@ -210,8 +222,8 @@ public class MainWindowController {
 		_context.ChatPanel.RemoveMessage(messageJson["id"]!.GetValue<long>());
 	}
 
-	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey) {
-		new CallRequestPopupWindow(_publicKey, foreignPublicKey).Show(_context);
+	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey, long timestamp) {
+		new CallRequestPopupWindow(_publicKey, foreignPublicKey, timestamp).Show(_context);
 	}
 
 	public void SendFriendRequest(RsaKeyParameters publicKey) {

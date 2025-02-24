@@ -101,7 +101,7 @@ public class ChatPanelController {
 
 	public bool Decrypt(Message message, bool isOwnMessage, out DecryptedMessage? decryptedMessage) {
 		DecryptedMessage uncheckedMessage = Cryptography.Decrypt(message, _privateKey, isOwnMessage);
-		if (Cryptography.Verify(uncheckedMessage.Body, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage)) {
+		if (Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage)) {
 			decryptedMessage = uncheckedMessage;
 			return true;
 		}
@@ -118,7 +118,7 @@ public class ChatPanelController {
 		return false;
 	}
 
-	public DecryptedMessage[] GetPastMessages() { // TODO: Add signature to this request
+	public DecryptedMessage[] GetPastMessages() {
 		List<DecryptedMessage> res = [];
 		
 		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(ForeignPublicKey.ToBase64String())}";
@@ -135,7 +135,7 @@ public class ChatPanelController {
 				ForeignDisplayName = message.ReceiverDisplayName;
 				_context.ChangeDisplayName();
 			}
-			res.Add(new DecryptedMessage { Id = message.Id, Body = decryptedMessage!.Body, DateTime = DateTime.MinValue, Sender = message.Sender.ToBase64String(), DisplayName = message.SenderDisplayName});
+			res.Add(decryptedMessage!);
 		}
 
 		return res.ToArray();
@@ -158,7 +158,7 @@ public class ChatPanelController {
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
 			["receiverEncryptedKey"] = encryptedMessage.ReceiverEncryptedKey,
 			["signature"] = encryptedMessage.Signature,
-			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+			["timestamp"] = encryptedMessage.Timestamp
 		};
 		
 		string bodyString = JsonSerializer.Serialize(body);

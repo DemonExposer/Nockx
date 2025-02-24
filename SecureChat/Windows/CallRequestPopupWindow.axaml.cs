@@ -12,12 +12,14 @@ namespace SecureChat.Windows;
 
 public partial class CallRequestPopupWindow : PopupWindow {
 	private readonly RsaKeyParameters _personalKey, _foreignKey;
+	private readonly long _timestamp;
 
 	private bool _isAccepted;
 	
-	public CallRequestPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey) {
+	public CallRequestPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey, long timestamp) {
 		_personalKey = personalKey;
 		_foreignKey = foreignKey;
+		_timestamp = timestamp;
 		
 		InitializeComponent();
 	}
@@ -32,7 +34,7 @@ public partial class CallRequestPopupWindow : PopupWindow {
 
 	public void AcceptButton_OnClick(object? sender, RoutedEventArgs e) {
 		_isAccepted = true;
-		new CallPopupWindow(_personalKey, _foreignKey).Show(MainWindow.Instance);
+		new CallPopupWindow(_personalKey, _foreignKey, _timestamp).Show(MainWindow.Instance);
 		Close();
 	}
 

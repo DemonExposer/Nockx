@@ -1,13 +1,12 @@
 using System;
 using System.Text.Json.Nodes;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
 using SecureChat.ClassExtensions;
 
 namespace SecureChat.Util;
 
 public class Message {
-	public long Id;
+	public long Id, Timestamp;
 	public string Body, ReceiverEncryptedKey, SenderEncryptedKey, Signature, SenderDisplayName, ReceiverDisplayName;
 	public RsaKeyParameters Sender, Receiver;
 	public bool IsRead;
@@ -20,6 +19,7 @@ public class Message {
 				Body = jsonMessage["text"]!.GetValue<string>(),
 				ReceiverEncryptedKey = jsonMessage["receiverEncryptedKey"]!.GetValue<string>(),
 				SenderEncryptedKey = jsonMessage["senderEncryptedKey"]?.GetValue<string>(),
+				Timestamp = jsonMessage["timestamp"]!.GetValue<long>(),
 				Signature = jsonMessage["signature"]!.GetValue<string>(),
 				Sender = RsaKeyParametersExtension.FromBase64String(jsonMessage["sender"]!["key"]!.GetValue<string>()),
 				Receiver = jsonMessage["receiver"] == null ? null : RsaKeyParametersExtension.FromBase64String(jsonMessage["receiver"]!["key"]!.GetValue<string>()),
@@ -38,6 +38,8 @@ public class Message {
 				Console.WriteLine("receiverEncryptedKey null");
 			if (jsonMessage["senderEncryptedKey"] == null)
 				Console.WriteLine("senderEncryptedKey null");
+			if (jsonMessage["timestamp"] == null)
+				Console.WriteLine("timestmap null");
 			if (jsonMessage["signature"] == null)
 				Console.WriteLine("signature null");
 			if (jsonMessage["sender"] == null)
