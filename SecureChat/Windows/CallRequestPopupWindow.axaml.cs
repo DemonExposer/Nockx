@@ -57,13 +57,11 @@ public partial class CallRequestPopupWindow : PopupWindow {
 				["foreignKey"] = _foreignKey.ToBase64String(),
 				["timestamp"] = timestamp
 			};
-			
+
 			string bodyString = JsonSerializer.Serialize(body);
-			Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(_personalKey.ToBase64String() + timestamp, _privateKey)}]);
+			Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		}
 	}
 
-	public void RejectButton_OnClick(object? sender, RoutedEventArgs e) {
-		Close();
-	}
+	public void RejectButton_OnClick(object? sender, RoutedEventArgs e) => Close();
 }

@@ -121,8 +121,9 @@ public class ChatPanelController {
 	public DecryptedMessage[] GetPastMessages() {
 		List<DecryptedMessage> res = [];
 		
-		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(ForeignPublicKey.ToBase64String())}";
-		JsonArray messages = JsonNode.Parse(Http.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables).Body)!.AsArray();
+		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(ForeignPublicKey.ToBase64String())}&timestamp={timestamp}";
+		JsonArray messages = JsonNode.Parse(Http.Get($"http://{_settings.IpAddress}:5000/messages?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
@@ -162,17 +163,18 @@ public class ChatPanelController {
 		};
 		
 		string bodyString = JsonSerializer.Serialize(body);
-		string response = Http.Post($"http://{_settings.IpAddress}:5000/messages", bodyString, [new Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]).Body;
+		string response = Http.Post($"http://{_settings.IpAddress}:5000/messages", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]).Body;
 		return long.Parse(response);
 	}
 
 	public void DeleteMessage(long id) {
 		JsonObject body = new () {
 			["id"] = id,
-			["signature"] = Cryptography.Sign(id.ToString(), _privateKey)
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
 		_context.RemoveMessage(id);
-		Http.Delete($"http://{_settings.IpAddress}:5000/messages", JsonSerializer.Serialize(body));
+		string bodyString = JsonSerializer.Serialize(body);
+		Http.Delete($"http://{_settings.IpAddress}:5000/messages", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 	}
 
 	public void SetChatRead() {
@@ -189,7 +191,7 @@ public class ChatPanelController {
 		};
 		
 		string bodyString = JsonSerializer.Serialize(body);
-		Http.Post($"http://{_settings.IpAddress}:5000/makeChatRead", bodyString, [new Header {Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey)}]);
+		Http.Post($"http://{_settings.IpAddress}:5000/makeChatRead", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 	}
 
 	public void OnCallButtonClicked(object? sender, EventArgs e) => StartCall();

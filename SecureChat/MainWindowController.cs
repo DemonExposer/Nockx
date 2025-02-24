@@ -57,7 +57,7 @@ public class MainWindowController {
 
 	private void CheckForNewChats() {
 		string getVariables = $"key={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Header {Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey)}]);
+		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
 		if (!response.IsSuccessful) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
 			return;
@@ -239,7 +239,7 @@ public class MainWindowController {
 			["accepted"] = false
 		};
 		string json = JsonSerializer.Serialize(body);
-		Response response = Http.Post($"http://{Settings.GetInstance().IpAddress}:5000/friends", json, [new Header {Name = "Signature", Value = Cryptography.Sign(json, _privateKey)}]);
+		Response response = Http.Post($"http://{Settings.GetInstance().IpAddress}:5000/friends", json, [new Header { Name = "Signature", Value = Cryptography.Sign(json, _privateKey) }]);
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.Body);
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not add friend on server ({Settings.GetInstance().IpAddress})"));

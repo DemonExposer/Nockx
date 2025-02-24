@@ -88,9 +88,12 @@ public class CallPopupWindowController {
 	public void OnWindowClosing(object? sender, WindowClosingEventArgs e) {
 		_sender.Close();
 		JsonObject body = new () {
-			["key"] = _context.PersonalKey.ToBase64String()
+			["key"] = _context.PersonalKey.ToBase64String(),
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
-		Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", JsonSerializer.Serialize(body));
+
+		string bodyString = JsonSerializer.Serialize(body);
+		Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		
 		if (_context.Owner is MainWindow mainWindow)
 			mainWindow.SetCallWindow(null);
