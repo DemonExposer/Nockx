@@ -125,6 +125,7 @@ public class CallPopupWindowController {
 		
 		string bodyString = JsonSerializer.Serialize(body);
 		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+		Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Verifying...");
 		JsonObject responseObj = JsonNode.Parse(response.Body)!.AsObject();
 		
 		long receivedTimestamp = responseObj["timestamp"]!.GetValue<long>();
@@ -134,8 +135,9 @@ public class CallPopupWindowController {
 		byte[] receivedAesKey = Cryptography.DecryptAesKey(Convert.FromBase64String(responseObj["encryptedSymmetricKey"]!.GetValue<string>()), _privateKey);
 		if ((_context.Timestamp == null && receivedAesKey.SequenceEqual(aesKey)) || (_context.Timestamp != null && Cryptography.Verify(Convert.ToBase64String(receivedAesKey) + receivedTimestamp, responseObj["signature"]!.GetValue<string>(), null, _context.ForeignKey, false))) {
 			_network.SetKey(receivedAesKey);
+			Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Connected");
 		} else {
-			// TODO: inform user that they are under attack
+			Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Unable to verify. Possible man-in-the-middle attack");
 		}
 	}
 }
