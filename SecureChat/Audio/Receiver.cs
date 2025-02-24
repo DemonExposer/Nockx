@@ -10,6 +10,7 @@ namespace SecureChat.Audio;
 
 public class Receiver {
 	private int _sourceId;
+	private float _volumeFactor = 1F;
 
 	private readonly List<int> _buffers = [];
 
@@ -35,6 +36,11 @@ public class Receiver {
 	}
 
 	private unsafe void AddBuffer(short[] buffer, int lengthInBytes) {
+		for (int i = 0; i < lengthInBytes; i += 2) {
+			int amplified = (int) (buffer[i/2] * _volumeFactor);
+			buffer[i/2] = (short) Math.Max(short.MinValue, Math.Min(short.MaxValue, amplified));
+		}
+
 		AL.GetSource(_sourceId, ALGetSourcei.BuffersProcessed, out int amount);
 		if (amount > 0) {
 			AL.SourceUnqueueBuffers(_sourceId, amount, _buffers.ToArray());
@@ -101,5 +107,8 @@ public class Receiver {
 		}
 	}
 
-	public void SetVolume(float volume) => AL.Source(_sourceId, ALSourcef.Gain, volume);
+	public void SetVolume(float volume) {
+		AL.Source(_sourceId, ALSourcef.Gain, Math.Min(1F, volume));
+		_volumeFactor = Math.Max(1F, volume);
+	}
 }
