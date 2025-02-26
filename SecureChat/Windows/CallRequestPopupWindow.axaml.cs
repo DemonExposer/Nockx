@@ -59,7 +59,7 @@ public partial class CallRequestPopupWindow : PopupWindow {
 			};
 
 			string bodyString = JsonSerializer.Serialize(body);
-			Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+			Response response = Http.Delete($"https://{Settings.GetInstance().Hostname}:5000/voiceChat/reject", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		}
 	}
 

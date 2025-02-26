@@ -15,7 +15,6 @@ namespace SecureChat.Panels;
 public class UserInfoPanelController {
 	public readonly RsaKeyParameters PublicKey;
 	private readonly RsaKeyParameters _privateKey;
-	private readonly Settings _settings = Settings.GetInstance();
 	public string DisplayName = "";
 	private MainWindowModel? _mainWindowModel;
 
@@ -45,7 +44,8 @@ public class UserInfoPanelController {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("GetDisplayName may not be called before _mainWindowModel is set, using SetMainWindowModel");
 		string getVariables = $"key={HttpUtility.UrlEncode(PublicKey.ToBase64String())}";
-		DisplayName = Http.Get($"http://{_settings.IpAddress}:5000/displayname?" + getVariables).Body;
+		
+		DisplayName = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/displayname?" + getVariables).Body;
 		_mainWindowModel.DisplayName = DisplayName;
 	}
 
@@ -60,7 +60,7 @@ public class UserInfoPanelController {
 			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
 		string bodyString = JsonSerializer.Serialize(body);
-		Response response = Http.Put($"http://{_settings.IpAddress}:5000/displayname", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+		Response response = Http.Put($"https://{Settings.GetInstance().Hostname}:5000/displayname", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		if (response.IsSuccessful) {
 			DisplayName = displayName;
 			_mainWindowModel.DisplayName = displayName;

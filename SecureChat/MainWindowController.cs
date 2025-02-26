@@ -57,9 +57,9 @@ public class MainWindowController {
 
 	private void CheckForNewChats() {
 		string getVariables = $"key={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-		Response response = Http.Get($"http://{Settings.GetInstance().IpAddress}:5000/chats?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
+		Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/chats?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
 		if (!response.IsSuccessful) {
-			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().IpAddress})"));
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().Hostname})"));
 			return;
 		}
 
@@ -79,7 +79,7 @@ public class MainWindowController {
 	private async Task InitializeWebsocket(bool isCalledFromUI) {
 		using CancellationTokenSource cts = new (5000);
 		try {
-			await _webSocket.ConnectAsync(new Uri($"ws://{Settings.GetInstance().IpAddress}:5000/ws"), cts.Token);
+			await _webSocket.ConnectAsync(new Uri($"wss://{Settings.GetInstance().Hostname}:5000/ws"), cts.Token);
 
 			string keyBase64 = _publicKey.ToBase64String();
 			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -98,11 +98,11 @@ public class MainWindowController {
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 			if (!isCalledFromUI)
 				return;
-			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket timeout ({Settings.GetInstance().IpAddress})"));
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket timeout ({Settings.GetInstance().Hostname})"));
 		} catch (WebSocketException) {
 			if (!isCalledFromUI)
 				return;
-			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket could not be connected ({Settings.GetInstance().IpAddress})"));
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket could not be connected ({Settings.GetInstance().Hostname})"));
 		} catch (Exception e) {
 			Console.WriteLine(e.ToString());
 		}
@@ -132,7 +132,7 @@ public class MainWindowController {
 			byte[] buffer = new byte[arrSize];
 
 			Timer timer = new (_ => {
-				if (_webSocket.State != WebSocketState.Open)
+				if (_webSocket.State != WebSocketState.Open) // TODO: this is not good enough to check whether the connection is open. a ping is needed
 					ReinitializeWebsocket().Wait();
 			}, null, 0, 5000);
 
@@ -239,10 +239,10 @@ public class MainWindowController {
 			["accepted"] = false
 		};
 		string json = JsonSerializer.Serialize(body);
-		Response response = Http.Post($"http://{Settings.GetInstance().IpAddress}:5000/friends", json, [new Header { Name = "Signature", Value = Cryptography.Sign(json, _privateKey) }]);
+		Response response = Http.Post($"https://{Settings.GetInstance().Hostname}:5000/friends", json, [new Header { Name = "Signature", Value = Cryptography.Sign(json, _privateKey) }]);
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.Body);
-			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not add friend on server ({Settings.GetInstance().IpAddress})"));
+			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not add friend on server ({Settings.GetInstance().Hostname})"));
 			return;
 		}
 	}

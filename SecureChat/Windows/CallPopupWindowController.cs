@@ -93,7 +93,7 @@ public class CallPopupWindowController {
 		};
 
 		string bodyString = JsonSerializer.Serialize(body);
-		Response response = Http.Delete($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+		Response response = Http.Delete($"https://{Settings.GetInstance().Hostname}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		
 		if (_context.Owner is MainWindow mainWindow)
 			mainWindow.SetCallWindow(null);
@@ -124,7 +124,7 @@ public class CallPopupWindowController {
 		};
 		
 		string bodyString = JsonSerializer.Serialize(body);
-		Response response = Http.Put($"http://{Settings.GetInstance().IpAddress}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+		Response response = Http.Put($"https://{Settings.GetInstance().Hostname}:5000/voiceChat", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
 		Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Verifying...");
 		JsonObject responseObj = JsonNode.Parse(response.Body)!.AsObject();
 		
