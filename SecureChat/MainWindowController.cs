@@ -90,9 +90,13 @@ public class MainWindowController {
 			};
 			await _webSocket.SendAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message)), WebSocketMessageType.Text, true, CancellationToken.None);
 
-			_keepAliveTimer = new Timer(_ => {
-				_webSocket.SendAsync(Encoding.UTF8.GetBytes("KEEP_ALIVE"), WebSocketMessageType.Text, true, CancellationToken.None);
-			}, null, 0, 60000);
+			_keepAliveTimer = new Timer(_ => { // Send ping
+				try {
+					_webSocket.SendAsync((byte[]) [0x05], WebSocketMessageType.Binary, true, CancellationToken.None).Wait();
+				} catch (Exception) {
+					// ignored
+				}
+			}, null, 0, 5000);
 			
 			_isWebsocketInitialized = true;
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
@@ -132,11 +136,24 @@ public class MainWindowController {
 			byte[] buffer = new byte[arrSize];
 
 			Timer timer = new (_ => {
-				if (_webSocket.State != WebSocketState.Open) // TODO: this is not good enough to check whether the connection is open. a ping is needed
+				if (_webSocket.State != WebSocketState.Open)
 					ReinitializeWebsocket().Wait();
 			}, null, 0, 5000);
 
+			CancellationTokenSource websocketAutoCloseTokenSource = new ();
+			Task.Run(async () => {
+				while (true) try {
+					await Task.Delay(10000, websocketAutoCloseTokenSource.Token);
+					if (_webSocket.State == WebSocketState.Open)
+						await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "timeout", CancellationToken.None);
+				} catch (Exception) {
+					websocketAutoCloseTokenSource.Dispose();
+					websocketAutoCloseTokenSource = new CancellationTokenSource();
+				}
+			});
+			
 			while (true) {
+				bool doContinue = false;
 				List<byte> bytes = [];
 				WebSocketReceiveResult result;
 				try {
@@ -145,13 +162,22 @@ public class MainWindowController {
 
 					do {
 						result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
+
+						if (result is { MessageType: WebSocketMessageType.Binary, Count: 1 } && buffer[0] == 0x06) {
+							await websocketAutoCloseTokenSource.CancelAsync();
+							doContinue = true;
+							break;
+						}
 						bytes.AddRange(buffer[..result.Count]);
 					} while (result.Count == arrSize);
-				} catch (WebSocketException e) {
+				} catch (Exception e) {
 					Console.WriteLine(e.ToString());
 					await Task.Delay(500);
 					continue;
 				}
+				
+				if (doContinue)
+					continue;
 
 				Dictionary<string, Action<JsonObject>> actions = new () {
 					["add"] = message => {
