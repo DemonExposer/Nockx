@@ -123,9 +123,7 @@ public partial class MainWindow : Window {
 			return;
 		}
 		
-		Button chatButton = new () {
-			Content = name.Crop(20)
-		};
+		Button chatButton = new ();
 		chatButton.Classes.Add("chat_selector");
 
 		_model.AddChat(new Chat(chatButton, name, publicKey.ToBase64String()));

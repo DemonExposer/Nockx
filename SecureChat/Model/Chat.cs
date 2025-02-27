@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using SecureChat.ClassExtensions;
 
 namespace SecureChat.Model;
 
@@ -15,6 +16,6 @@ public class Chat {
 
 	public void UpdateName(string name) {
 		Name = name;
-		ChatButton.Content = Name;
+		ChatButton.Content = Name.Crop(20);
 	}
 }

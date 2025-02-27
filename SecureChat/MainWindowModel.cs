@@ -7,7 +7,10 @@ namespace SecureChat;
 public class MainWindowModel {
 	private readonly List<Chat> _chats = [];
 
-	public void AddChat(Chat chat) => _chats.Add(chat);
+	public void AddChat(Chat chat) {
+		_chats.Add(chat);
+		chat.UpdateName(chat.Name);
+	}
 
 	public bool ContainsChat(string key) => _chats.Any(chat => chat.Key == key);
 	
