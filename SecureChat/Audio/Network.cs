@@ -19,7 +19,9 @@ public class Network(Network.DataReceivedCallback dataReceivedCallback, IPEndPoi
 		Task.Run(() => {
 			try {
 				_socket.Send(Encoding.UTF8.GetBytes("PING"), 4, endpoint);
-				pingCallback(((IPEndPoint) _socket.Client.LocalEndPoint!).Port);
+				IPEndPoint endPoint = new (IPAddress.Any, 0);
+				byte[] data = _socket.Receive(ref endPoint);
+				pingCallback(int.Parse(Encoding.UTF8.GetString(data)));
 			} catch (Exception e) {
 				Console.WriteLine(e);
 			}
