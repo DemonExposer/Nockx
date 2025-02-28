@@ -21,7 +21,7 @@ public class Network(Network.DataReceivedCallback dataReceivedCallback, IPEndPoi
 				_socket.Send(Encoding.UTF8.GetBytes("PING"), 4, endpoint);
 				IPEndPoint endPoint = new (IPAddress.Any, 0);
 				byte[] data = _socket.Receive(ref endPoint);
-				pingCallback(int.Parse(Encoding.UTF8.GetString(data)));
+				pingCallback(int.Parse(Encoding.UTF8.GetString(data))); // TODO: this is not reliable, since it's UDP. possibly check it against a hash.
 			} catch (Exception e) {
 				Console.WriteLine(e);
 			}
@@ -29,9 +29,6 @@ public class Network(Network.DataReceivedCallback dataReceivedCallback, IPEndPoi
 			while (true) try {
 				IPEndPoint endPoint = new (IPAddress.Any, 0);
 				byte[] data = _socket.Receive(ref endPoint);
-
-				if (data.Length == 4 && data.SequenceEqual(Encoding.UTF8.GetBytes("PONG")))
-					continue;
 
 				if (_key == null)
 					continue;
