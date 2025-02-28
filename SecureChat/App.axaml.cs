@@ -16,7 +16,7 @@ using SecureChat.Windows;
 namespace SecureChat;
 
 public partial class App : Application {
-	public const string Version = "v1.0-beta";
+	public const string Version = "v2.0-beta";
 	
 	private bool _isKeyLoadedSuccessfully;
 	private bool _doUpdate;
