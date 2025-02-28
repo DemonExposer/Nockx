@@ -7,8 +7,6 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
 using SecureChat.ClassExtensions;
 using SecureChat.extended_controls;
 using SecureChat.util;
