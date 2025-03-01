@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Threading;
 using OpenTK.Audio.OpenAL;
 
 namespace SecureChat.Audio;
@@ -17,8 +19,12 @@ public class Sender {
 	private bool _doChangeDevice, _isVoiceChatClosed;
 	private int _newDeviceIndex = -1;
 	private ALCaptureDevice _captureDevice;
+
+	private readonly ProgressBar _volumeBar;
 	
-	public Sender() {
+	public Sender(ProgressBar volumeBar) {
+		_volumeBar = volumeBar;
+
 		Devices = ALC.GetString(ALDevice.Null, AlcGetStringList.CaptureDeviceSpecifier);
 		_captureDevice = ALC.CaptureOpenDevice(Devices.FirstOrDefault(), Frequency, Format, BufferSize);
 	}
@@ -52,6 +58,16 @@ public class Sender {
 
 					byte[] byteArray = new byte[buffer.Length * sizeof(short)];
 					Buffer.BlockCopy(buffer, 0, byteArray, 0, byteArray.Length);
+					
+					long average = 0;
+					for (int i = 0; i < samplesAvailable; i++)
+						average += Math.Abs(Math.Max(buffer[i], (short) -32767));
+
+					average /= samplesAvailable;
+					average = (long) (average * Math.Sqrt(2)); // Convert from RMS to peak-to-center
+					
+					byte volumePercent = Math.Min((byte) 100, (byte) (average*100 / 32767)); // Clamp it between 0 and 100 because of possible averaging errors
+					Dispatcher.UIThread.InvokeAsync(() => _volumeBar.Value = volumePercent);
 
 					network.Send(byteArray, samplesAvailable * sizeof(short));
 

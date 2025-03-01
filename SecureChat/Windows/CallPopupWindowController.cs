@@ -39,7 +39,7 @@ public class CallPopupWindowController {
 		}
 		
 		_context = context;
-		_sender = new Sender();
+		_sender = new Sender(context.VolumeProgressBar);
 		_receiver = new Receiver();
 		_network = new Network(_receiver.OnReceive, new IPEndPoint(Settings.GetInstance().IpAddress, 5001), RegisterVoiceChat);
 		_context.ConnectionStatusTextBlock.Text = "Pinging server...";

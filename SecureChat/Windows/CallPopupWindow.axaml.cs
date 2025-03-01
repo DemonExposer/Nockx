@@ -11,6 +11,7 @@ public partial class CallPopupWindow : PopupWindow {
 
 	public ComboBox InputSelectorComboBox = null!;
 	public TextBlock TooltipTextBlock = null!, ConnectionStatusTextBlock = null!;
+	public ProgressBar VolumeProgressBar = null!;
 
 	public readonly RsaKeyParameters PersonalKey, ForeignKey;
 	public readonly long? Timestamp;
@@ -36,8 +37,8 @@ public partial class CallPopupWindow : PopupWindow {
 		InputSelectorComboBox = this.FindControl<ComboBox>("InputSelector")!;
 		TooltipTextBlock = this.FindControl<TextBlock>("TooltipText")!;
 		ConnectionStatusTextBlock = this.FindControl<TextBlock>("ConnectionStatus")!;
-		slider.Value = 100;
-		TooltipTextBlock.Text = (int) slider.Value + "%";
+		VolumeProgressBar = this.FindControl<ProgressBar>("VolumeBar")!;
+
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Thumb>()) {
 			Setters = {
 				new Setter(MaxHeightProperty, 15D),
@@ -49,7 +50,10 @@ public partial class CallPopupWindow : PopupWindow {
 				new Setter(MaxHeightProperty, 3D)
 			}
 		});
-		
+		slider.Value = 100;
+
+		TooltipTextBlock.Text = (int) slider.Value + "%";
+
 		_controller = new CallPopupWindowController(this);
 
 		slider.PointerEntered += _controller.OnMousePointerEnteredSlider;
