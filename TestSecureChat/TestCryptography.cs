@@ -8,7 +8,7 @@ using SecureChat.Util;
 
 namespace TestSecureChat;
 
-public class Tests {
+public class TestCryptography {
 	private RsaKeyParameters _publicKey;
 	private RsaKeyParameters _privateKey;
 	private byte[] _aesKey;
