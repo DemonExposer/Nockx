@@ -58,6 +58,7 @@
 		</None>
     </ItemGroup>
 
+    <!--TODO: make this only happen when running on windows or publishing TO windows. currently it only does it when on windows, no matter what is being targeted-->
 	<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
 		<None Include="lib\win\soft_oal.dll">
 			<Link>OpenAL32.dll</Link>
