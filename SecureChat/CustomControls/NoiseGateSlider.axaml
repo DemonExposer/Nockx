@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SecureChat.CustomControls.NoiseGateSlider">
+
+	<UserControl.Resources>
+		<ControlTheme x:Key="NoiseGateSliderThumbTheme" TargetType="Thumb">
+			<Setter Property="Template">
+				<ControlTemplate>
+					<Border
+						Background="{TemplateBinding Background}"
+						BorderBrush="{TemplateBinding BorderBrush}"
+						BorderThickness="{TemplateBinding BorderThickness}"
+						CornerRadius="{DynamicResource SliderThumbCornerRadius}" />
+				</ControlTemplate>
+			</Setter>
+		</ControlTheme>
+	</UserControl.Resources>
+	
+	<Grid>
+		<ProgressBar/>
+		<Track
+			Name="PART_Track"
+			Minimum="0"
+			Maximum="100"
+			Value="0"
+			IsDirectionReversed="False"
+			Orientation="Horizontal">
+			<Thumb Width="15" Height="15"
+			       Theme="{StaticResource NoiseGateSliderThumbTheme}"
+			       Background="Blue" />
+		</Track>
+	</Grid>
+</UserControl>

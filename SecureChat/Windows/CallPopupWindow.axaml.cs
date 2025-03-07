@@ -1,8 +1,11 @@
+using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Org.BouncyCastle.Crypto.Parameters;
+using SecureChat.CustomControls;
 
 namespace SecureChat.Windows;
 
@@ -38,6 +41,7 @@ public partial class CallPopupWindow : PopupWindow {
 		TooltipTextBlock = this.FindControl<TextBlock>("TooltipText")!;
 		ConnectionStatusTextBlock = this.FindControl<TextBlock>("ConnectionStatus")!;
 		VolumeProgressBar = this.FindControl<ProgressBar>("VolumeBar")!;
+		NoiseGateSlider noiseGateThresholdSlider = this.FindControl<NoiseGateSlider>("NoiseGateThresholdSetter")!;
 
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Thumb>()) {
 			Setters = {
@@ -59,6 +63,8 @@ public partial class CallPopupWindow : PopupWindow {
 		slider.PointerEntered += _controller.OnMousePointerEnteredSlider;
 		slider.PointerExited += _controller.OnMousePointerExitedSlider;
 		slider.PointerMoved += _controller.OnMousePointerMovedInSlider;
+		
+		noiseGateThresholdSlider.ValueChanged += (sender, args) => Console.WriteLine("{0} {1}", args.OldValue, args.NewValue); 
 
 		Opened += _controller.OnWindowOpened;
 		Closing += _controller.OnWindowClosing;
