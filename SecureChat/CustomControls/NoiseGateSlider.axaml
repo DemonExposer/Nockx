@@ -17,7 +17,7 @@
 	</UserControl.Resources>
 	
 	<Grid>
-		<ProgressBar/>
+		<ProgressBar Name="VolumeBar" Minimum="0"/>
 		<Track
 			Name="PART_Track"
 			Minimum="0"
