@@ -68,10 +68,11 @@ public class Sender {
 					average /= samplesAvailable;
 					average = (long) (average * Math.Sqrt(2)); // Convert from RMS to peak-to-center
 					
-					byte volumePercent = Math.Min((byte) 100, (byte) (average*100 / 32767)); // Clamp it between 0 and 100 because of possible averaging errors
-					Dispatcher.UIThread.InvokeAsync(() => _volumeBar.VolumePercent = volumePercent);
+					byte volumePercentLinear = Math.Min((byte) 100, (byte) (average*100 / 32767)); // Clamp it between 0 and 100 because of possible averaging errors
+					byte volumePercentLogarithmic = (byte) (Math.Log10(volumePercentLinear) * 50);
+					Dispatcher.UIThread.InvokeAsync(() => _volumeBar.VolumePercent = volumePercentLogarithmic);
 
-					if (volumePercent >= NoiseGateThresholdPercent)
+					if (volumePercentLogarithmic >= NoiseGateThresholdPercent)
 						noiseGateDecay = 20;
 
 					if (noiseGateDecay > 0) {
