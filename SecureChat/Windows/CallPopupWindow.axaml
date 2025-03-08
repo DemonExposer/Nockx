@@ -9,7 +9,7 @@
 		Width="450"
 		Height="150"
 		CanResize="False">
-	<Grid Margin="10" RowDefinitions="*,*,*,*" ColumnDefinitions="*,*">
+	<Grid Margin="10" RowDefinitions="*,*,*" ColumnDefinitions="*,*">
 		<StackPanel Grid.Row="0" Grid.Column="0">
 			<Slider Name="VolumeSlider" Maximum="200" Margin="0,0,5,0" HorizontalAlignment="Stretch" ValueChanged="VolumeSlider_OnValueChanged" VerticalAlignment="Center"/>
 			<Popup Name="MovableTooltip" IsLightDismissEnabled="False" Placement="TopEdgeAlignedLeft">
@@ -18,7 +18,6 @@
 		</StackPanel>
 		<ComboBox Grid.Row="0" Grid.Column="1" Name="InputSelector" Margin="5,0,0,0" HorizontalAlignment="Stretch" SelectionChanged="InputSelector_OnSelectionChanged"/>
 		<TextBlock Grid.Row="1" Grid.Column="0" Name="ConnectionStatus"/>
-		<ProgressBar Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Name="VolumeBar" Minimum="0"/>
-		<customControls:NoiseGateSlider Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Name="NoiseGateThresholdSetter"/>
+		<customControls:NoiseGateSlider Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Name="NoiseGateThresholdSetter"/>
 	</Grid>
 </Window>

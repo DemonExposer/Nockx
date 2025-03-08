@@ -17,6 +17,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.Audio;
 using SecureChat.ClassExtensions;
+using SecureChat.CustomControls;
 using SecureChat.Util;
 
 namespace SecureChat.Windows;
@@ -39,7 +40,7 @@ public class CallPopupWindowController {
 		}
 		
 		_context = context;
-		_sender = new Sender(context.VolumeProgressBar);
+		_sender = new Sender(context.NoiseGateThresholdSlider);
 		_receiver = new Receiver();
 		_network = new Network(_receiver.OnReceive, new IPEndPoint(Settings.GetInstance().IpAddress, 5001), RegisterVoiceChat);
 		_context.ConnectionStatusTextBlock.Text = "Pinging server...";
@@ -78,6 +79,13 @@ public class CallPopupWindowController {
 		Point position = e.GetPosition(_context);
 		_volumeSliderTooltip.HorizontalOffset = position.X;
 		_volumeSliderTooltip.VerticalOffset = position.Y;
+	}
+
+	public void OnNoiseGateThresholdValueChanged(object? sender, RangeBaseValueChangedEventArgs e) {
+		if (e.Source is not NoiseGateSlider)
+			return;
+		
+		_sender.NoiseGateThresholdPercent = e.NewValue;
 	}
 
 	public void OnVolumeSliderValueChanged(object? sender, RangeBaseValueChangedEventArgs e) {
