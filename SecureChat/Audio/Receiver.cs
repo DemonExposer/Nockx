@@ -14,6 +14,8 @@ public class Receiver {
 	private readonly List<int> _buffers = [];
 
 	private bool _doneOnce;
+
+	private short _lastSample = 0;
 	
 	public void OnReceive(IPEndPoint endPoint, byte[] data) {
 		try {
@@ -40,6 +42,24 @@ public class Receiver {
 			buffer[i/2] = (short) Math.Max(short.MinValue, Math.Min(short.MaxValue, amplified));
 		}
 
+		// TODO: possibly do post-buffer smoothing as well by always adding data as an extra buffer to the end, and remove it when a new buffer gets added and the audio is still playing
+
+		if ((ALSourceState) AL.GetSource(_sourceId, ALGetSourcei.SourceState) != ALSourceState.Playing)
+			_lastSample = 0;
+
+		// Smooth from last played sample to next sample in case they are too far apart
+		short sampleDistance = (short) (buffer[0] - _lastSample);
+		short amountSmoothingSamples = (short) (Math.Abs(sampleDistance) / 3276); // if the distance is less than 3276, nothing will be done because the for loop will go from 0 to 0
+		short smoothingStep = (short) (sampleDistance / (amountSmoothingSamples + 1));
+		short[] smoothedBuffer = new short[amountSmoothingSamples + lengthInBytes/2];
+		for (int i = 0; i < amountSmoothingSamples; i++)
+			smoothedBuffer[i] = (short) (_lastSample + (i+1) * smoothingStep);
+
+		Buffer.BlockCopy(buffer, 0, smoothedBuffer, amountSmoothingSamples*2, lengthInBytes);
+		lengthInBytes += amountSmoothingSamples * 2;
+
+		_lastSample = buffer[lengthInBytes/2 - 1];
+
 		AL.GetSource(_sourceId, ALGetSourcei.BuffersProcessed, out int amount);
 		if (amount > 0) {
 			AL.SourceUnqueueBuffers(_sourceId, amount, _buffers.ToArray());
@@ -49,7 +69,7 @@ public class Receiver {
 		
 		int bufferId = AL.GenBuffer();
 		
-		fixed (short *bufferPointer = buffer)
+		fixed (short *bufferPointer = smoothedBuffer)
 			AL.BufferData(bufferId, ALFormat.Mono16, bufferPointer, lengthInBytes, 44100);
 		
 		AL.SourceQueueBuffer(_sourceId, bufferId);

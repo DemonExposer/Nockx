@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Threading;
 using OpenTK.Audio.OpenAL;
+using SecureChat.CustomControls;
 
 namespace SecureChat.Audio;
 
 public class Sender {
 	public IEnumerable<string> Devices;
+	public double NoiseGateThresholdPercent;
 	
 	private const int Frequency = 44100;
 	private const ALFormat Format = ALFormat.Mono16;
@@ -20,9 +21,9 @@ public class Sender {
 	private int _newDeviceIndex = -1;
 	private ALCaptureDevice _captureDevice;
 
-	private readonly ProgressBar _volumeBar;
+	private readonly NoiseGateSlider _volumeBar;
 	
-	public Sender(ProgressBar volumeBar) {
+	public Sender(NoiseGateSlider volumeBar) {
 		_volumeBar = volumeBar;
 
 		Devices = ALC.GetString(ALDevice.Null, AlcGetStringList.CaptureDeviceSpecifier);
@@ -41,6 +42,7 @@ public class Sender {
 
 				ALC.CaptureStart(_captureDevice);
 
+				int noiseGateDecay = 0;
 				while (true) {
 					Console.WriteLine("Recording...");
 
@@ -66,10 +68,17 @@ public class Sender {
 					average /= samplesAvailable;
 					average = (long) (average * Math.Sqrt(2)); // Convert from RMS to peak-to-center
 					
-					byte volumePercent = Math.Min((byte) 100, (byte) (average*100 / 32767)); // Clamp it between 0 and 100 because of possible averaging errors
-					Dispatcher.UIThread.InvokeAsync(() => _volumeBar.Value = volumePercent);
+					byte volumePercentLinear = Math.Min((byte) 100, (byte) (average*100 / 32767)); // Clamp it between 0 and 100 because of possible averaging errors
+					byte volumePercentLogarithmic = (byte) (Math.Log10(volumePercentLinear) * 50);
+					Dispatcher.UIThread.InvokeAsync(() => _volumeBar.VolumePercent = volumePercentLogarithmic);
 
-					network.Send(byteArray, samplesAvailable * sizeof(short));
+					if (volumePercentLogarithmic >= NoiseGateThresholdPercent)
+						noiseGateDecay = 20;
+
+					if (noiseGateDecay > 0) {
+						network.Send(byteArray, samplesAvailable * sizeof(short));
+						noiseGateDecay--;
+					}
 
 					if (_doChangeDevice) {
 						_doChangeDevice = false;

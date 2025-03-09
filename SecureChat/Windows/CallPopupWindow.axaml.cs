@@ -3,6 +3,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Org.BouncyCastle.Crypto.Parameters;
+using SecureChat.CustomControls;
 
 namespace SecureChat.Windows;
 
@@ -11,7 +12,7 @@ public partial class CallPopupWindow : PopupWindow {
 
 	public ComboBox InputSelectorComboBox = null!;
 	public TextBlock TooltipTextBlock = null!, ConnectionStatusTextBlock = null!;
-	public ProgressBar VolumeProgressBar = null!;
+	public NoiseGateSlider NoiseGateThresholdSlider = null!;
 
 	public readonly RsaKeyParameters PersonalKey, ForeignKey;
 	public readonly long? Timestamp;
@@ -37,7 +38,7 @@ public partial class CallPopupWindow : PopupWindow {
 		InputSelectorComboBox = this.FindControl<ComboBox>("InputSelector")!;
 		TooltipTextBlock = this.FindControl<TextBlock>("TooltipText")!;
 		ConnectionStatusTextBlock = this.FindControl<TextBlock>("ConnectionStatus")!;
-		VolumeProgressBar = this.FindControl<ProgressBar>("VolumeBar")!;
+		NoiseGateThresholdSlider = this.FindControl<NoiseGateSlider>("NoiseGateThresholdSetter")!;
 
 		slider.Styles.Add(new Style(x => x.OfType<Slider>().Descendant().OfType<Thumb>()) {
 			Setters = {
@@ -59,6 +60,8 @@ public partial class CallPopupWindow : PopupWindow {
 		slider.PointerEntered += _controller.OnMousePointerEnteredSlider;
 		slider.PointerExited += _controller.OnMousePointerExitedSlider;
 		slider.PointerMoved += _controller.OnMousePointerMovedInSlider;
+		
+		NoiseGateThresholdSlider.ValueChanged += _controller.OnNoiseGateThresholdValueChanged; 
 
 		Opened += _controller.OnWindowOpened;
 		Closing += _controller.OnWindowClosing;
