@@ -44,6 +44,8 @@ public class Receiver {
 			buffer[i/2] = (short) Math.Max(short.MinValue, Math.Min(short.MaxValue, amplified));
 		}
 
+		// TODO: possibly do post-buffer smoothing as well by always adding data as an extra buffer to the end, and remove it when a new buffer gets added and the audio is still playing
+
 		if ((ALSourceState) AL.GetSource(_sourceId, ALGetSourcei.SourceState) != ALSourceState.Playing)
 			_lastSample = 0;
 
