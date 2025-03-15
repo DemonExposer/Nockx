@@ -4,15 +4,11 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
-using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Media;
 using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.ClassExtensions;
-using SecureChat.ExtendedControls;
 using SecureChat.Model;
 using SecureChat.Util;
 using SecureChat.Windows;
@@ -49,41 +45,6 @@ public class ChatPanelController {
 			return;
 		
 		_mainWindowModel = mainWindowModel;
-	}
-
-	public void AddListenersToContextMenu(MessageTextBlock messageTextBlock, IBrush originalBackground, ContextMenu contextMenu) {
-		int start = 0, end = 0;
-
-		MenuItem? copyMenuItem = null, deleteMenuItem = null;
-		foreach (MenuItem? contextMenuItem in contextMenu.Items) {
-			switch (contextMenuItem!.Name) {
-				case "CopyMenuItem":
-					copyMenuItem = contextMenuItem;
-					break;
-				case "DeleteMenuItem":
-					deleteMenuItem = contextMenuItem;
-					break;
-			}
-		}
-		
-		// For some reason this solves automatic unselecting of text, not only for copyMenuItem, but for all of them
-		copyMenuItem!.PointerMoved += (_, _) => {
-			messageTextBlock.TextBlock.SelectionStart = start;
-			messageTextBlock.TextBlock.SelectionEnd = end;
-		};
-
-		messageTextBlock.TextBlock.ContextFlyout = null;
-		messageTextBlock.TextBlock.PointerReleased += (_, args) => {
-			if (args.GetCurrentPoint(_context).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonReleased)
-				return;
-
-			start = messageTextBlock.TextBlock.SelectionStart;
-			end = messageTextBlock.TextBlock.SelectionEnd;
-			
-			copyMenuItem.IsVisible = messageTextBlock.TextBlock.SelectedText != "";
-			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.ToBase64String();
-			contextMenu.Open((Control) args.Source!);
-		};
 	}
 
 	public bool Decrypt(Message message, bool isOwnMessage, out DecryptedMessage? decryptedMessage) {

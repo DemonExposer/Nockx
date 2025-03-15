@@ -9,15 +9,14 @@ public partial class MessageItem : UserControl {
 	public long Id { get; init; }
 	public bool IsPersonal { get; init; }
 	public string SenderName {
-		get => _nameBlock.Text;
+		get => _nameBlock.Text ?? "";
 		set => _nameBlock.Text = value;
 	}
 	public string Message {
-		get => _messageBlock.Text;
+		get => _messageBlock.Text ?? "";
 		set => _messageBlock.Text = value;
 	}
 
-	private readonly StackPanel _stackPanel;
 	private readonly SelectableTextBlock _nameBlock, _messageBlock;
 	private readonly MenuItem _copyMenuItem, _deleteMenuItem;
 	private readonly ContextMenu _contextMenu;
@@ -27,7 +26,6 @@ public partial class MessageItem : UserControl {
 	public MessageItem(ChatPanelCommands.DeleteMessageCommand.Callback? callback) {
 		InitializeComponent();
 
-		_stackPanel = this.FindControl<StackPanel>("PART_Panel")!;
 		_nameBlock = this.FindControl<SelectableTextBlock>("PART_Name")!;
 		_messageBlock = this.FindControl<SelectableTextBlock>("PART_Message")!;
 
@@ -37,8 +35,7 @@ public partial class MessageItem : UserControl {
 		_copyMenuItem = new MenuItem {
 			Header = "Copy",
 			Name = "CopyMenuItem",
-			Cursor = new Cursor(StandardCursorType.Arrow),
-			Command = new ChatPanelCommands.CopyCommand(_messageBlock) // TODO: Make this what is actually selected in the MessageItem, not just in PART_Message
+			Cursor = new Cursor(StandardCursorType.Arrow)
 		};
 
 		_deleteMenuItem = new MenuItem {
@@ -57,14 +54,18 @@ public partial class MessageItem : UserControl {
 			}
 		};
 
+		// PointerReleased because PointerPressed doesn't work on SelectableTextBlock
+		_nameBlock.PointerReleased += TextBlock_OnPointerReleased;
+		_messageBlock.PointerReleased += TextBlock_OnPointerReleased;
+
 		PointerEntered += OnPointerEntered;
 		PointerExited += OnPointerExited;
 		PointerPressed += OnPointerPressed;
 	}
 
-	public void OnPointerEntered(object? sender, PointerEventArgs e) => _stackPanel.Background = new SolidColorBrush(Color.Parse("#252525"));
+	public void OnPointerEntered(object? sender, PointerEventArgs e) => Background = new SolidColorBrush(Color.Parse("#252525"));
 
-	public void OnPointerExited(object? sender, PointerEventArgs e) => _stackPanel.Background = (SolidColorBrush) Resources["ApplicationBackgroundColor"]!;
+	public void OnPointerExited(object? sender, PointerEventArgs e) => Background = (SolidColorBrush) App.Current!.Resources["ApplicationBackgroundColor"]!;
 
 	public void OnPointerPressed(object? sender, PointerPressedEventArgs e) {
 		if (e.GetCurrentPoint(this).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonPressed)
@@ -73,5 +74,23 @@ public partial class MessageItem : UserControl {
 		_copyMenuItem.IsVisible = false;
 		_deleteMenuItem.IsVisible = IsPersonal;
 		_contextMenu.Open((Control) e.Source!);
+	}
+
+	public void TextBlock_OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
+		if (e.GetCurrentPoint(this).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonReleased)
+			return;
+
+		SelectableTextBlock source = (SelectableTextBlock) sender!;
+
+		int selectionStart = source.SelectionStart;
+		int selectionEnd = source.SelectionEnd;
+
+		_copyMenuItem.Command = new ChatPanelCommands.CopyCommand(source);
+		_copyMenuItem.IsVisible = source.SelectedText != "";
+		_deleteMenuItem!.IsVisible = IsPersonal;
+		_contextMenu.Open((Control) e.Source!);
+
+		source.SelectionStart = selectionStart;
+		source.SelectionEnd = selectionEnd;
 	}
 }
