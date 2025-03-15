@@ -4,7 +4,10 @@
 			 Background="{DynamicResource ApplicationBackgroundColor}"
 			 Margin="5">
 	<StackPanel Name="PART_Panel">
-		<SelectableTextBlock Name="PART_Name"/>
+		<StackPanel Orientation="Horizontal">
+			<SelectableTextBlock Name="PART_Name"/>
+			<SelectableTextBlock Name="PART_DateTime" Margin="5,0,0,0"/>
+		</StackPanel>
 		<SelectableTextBlock Name="PART_Message" TextWrapping="Wrap"/>
 	</StackPanel>
 </UserControl>

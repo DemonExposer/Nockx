@@ -13,6 +13,7 @@ using SecureChat.ExtendedControls;
 using SecureChat.Model;
 using SecureChat.Util;
 using SecureChat.CustomControls;
+using System.Diagnostics;
 
 namespace SecureChat.Panels;
 
@@ -100,7 +101,8 @@ public class ChatPanel : DockPanel {
 			Id = message.Id,
 			IsPersonal = message.Sender == _controller.PersonalPublicKey.ToBase64String(),
 			SenderName = message.DisplayName.Crop(32),
-			Message = message.Body
+			Message = message.Body,
+			Timestamp = message.Timestamp
 		};
         
 		_messages.Add(messageItem);

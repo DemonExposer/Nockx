@@ -2,6 +2,7 @@
 using Avalonia.Input;
 using Avalonia.Media;
 using SecureChat.Panels;
+using System;
 
 namespace SecureChat.CustomControls;
 
@@ -16,8 +17,12 @@ public partial class MessageItem : UserControl {
 		get => _messageBlock.Text ?? "";
 		set => _messageBlock.Text = value;
 	}
+	public long Timestamp { // Just an approximation, so the returned timestamp will only be accurate to the minute
+		get => DateTimeOffset.ParseExact(_dateTimeBlock.Text, "dd MMMM yyyy HH:mm", null).ToUnixTimeMilliseconds();
+		set => _dateTimeBlock.Text = DateTimeOffset.FromUnixTimeMilliseconds(value).LocalDateTime.ToString("dd MMMM yyyy HH:mm");
+	}
 
-	private readonly SelectableTextBlock _nameBlock, _messageBlock;
+	private readonly SelectableTextBlock _nameBlock, _dateTimeBlock, _messageBlock;
 	private readonly MenuItem _copyMenuItem, _deleteMenuItem;
 	private readonly ContextMenu _contextMenu;
 
@@ -27,6 +32,7 @@ public partial class MessageItem : UserControl {
 		InitializeComponent();
 
 		_nameBlock = this.FindControl<SelectableTextBlock>("PART_Name")!;
+		_dateTimeBlock = this.FindControl<SelectableTextBlock>("PART_DateTime")!;
 		_messageBlock = this.FindControl<SelectableTextBlock>("PART_Message")!;
 
 		_nameBlock.ContextFlyout = null;
