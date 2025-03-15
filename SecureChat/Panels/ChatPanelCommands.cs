@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 using Avalonia.Controls;
-using SecureChat.ExtendedControls;
+using SecureChat.CustomControls;
 
 namespace SecureChat.Panels;
 
@@ -21,17 +21,17 @@ public static class ChatPanelCommands {
 	public class DeleteMessageCommand : ICommand {
 		public delegate void Callback(long id);
 		
-		private readonly MessageTextBlock _textBlock;
+		private readonly MessageItem _messageItem;
 		private readonly Callback _callback;
 
-		public DeleteMessageCommand(MessageTextBlock textBlock, Callback callback) {
-			_textBlock = textBlock;
+		public DeleteMessageCommand(MessageItem messageItem, Callback callback) {
+			_messageItem = messageItem;
 			_callback = callback;
 		}
 
 		public bool CanExecute(object? parameter) => true;
 
-		public void Execute(object? parameter) => _callback(_textBlock.Id);
+		public void Execute(object? parameter) => _callback(_messageItem.Id);
 
 		public event EventHandler? CanExecuteChanged;
 	}

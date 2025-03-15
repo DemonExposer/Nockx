@@ -12,6 +12,7 @@ using SecureChat.ClassExtensions;
 using SecureChat.ExtendedControls;
 using SecureChat.Model;
 using SecureChat.Util;
+using SecureChat.CustomControls;
 
 namespace SecureChat.Panels;
 
@@ -19,7 +20,7 @@ public class ChatPanel : DockPanel {
 	private MainWindowModel? _mainWindowModel;
 	
 	private readonly ChatPanelController _controller;
-	private readonly List<MessageTextBlock> _messages = [];
+	private readonly List<MessageItem> _messages = [];
 
 	private StackPanel? _messagePanel;
 	private ScrollViewer? _messageScrollView;
@@ -95,53 +96,15 @@ public class ChatPanel : DockPanel {
 			return;
 		}
 
-		IBrush originalBackground = new SolidColorBrush(Color.Parse("Transparent"));
-		Border border = new () {
-			Background = originalBackground
-		};
-
-		SelectableTextBlock block = new () {
-			Text = $"{message.DisplayName.Crop(16)} | {message.Body}",
-			Margin = new Thickness(5),
-			TextWrapping = TextWrapping.Wrap
-		};
-		
-		MessageTextBlock messageTextBlock = new () {
+		MessageItem messageItem = new (_controller.DeleteMessage) {
 			Id = message.Id,
-			Border = border,
-			TextBlock = block,
-			Sender = message.Sender
+			IsPersonal = message.Sender == _controller.PersonalPublicKey.ToBase64String(),
+			SenderName = message.DisplayName.Crop(32),
+			Message = message.Body
 		};
-
-		MenuItem copyMenuItem = new () {
-			Header = "Copy",
-			Name = "CopyMenuItem",
-			Cursor = new Cursor(StandardCursorType.Arrow),
-			Command = new ChatPanelCommands.CopyCommand(messageTextBlock.TextBlock)
-		};
-
-		MenuItem deleteMenuItem = new () {
-			Header = "Delete message",
-			Name = "DeleteMenuItem",
-			Cursor = new Cursor(StandardCursorType.Arrow),
-			Command = new ChatPanelCommands.DeleteMessageCommand(messageTextBlock, _controller.DeleteMessage)
-		};
-		
-		deleteMenuItem.Classes.Add("delete_menu_item");
-		
-		ContextMenu contextMenu = new () {
-			Items = {
-				copyMenuItem,
-				deleteMenuItem
-			}
-		};
-
-		_controller.AddListenersToContextMenu(messageTextBlock, originalBackground, contextMenu);
-
-		border.Child = block;
         
-		_messages.Add(messageTextBlock);
-		_messagePanel.Children.Add(border);
+		_messages.Add(messageItem);
+		_messagePanel.Children.Add(messageItem);
 		
 		// Scrolling to end twice is necessary, otherwise it does not always scroll to the end
 		if (_distanceScrolledFromBottom == 0) {
@@ -219,7 +182,7 @@ public class ChatPanel : DockPanel {
 		if (!_isShowCalled)
 			return;
 		
-		_messagePanel.Children.RemoveAll(_messages.Select(block => block.Border));
+		_messagePanel.Children.RemoveAll(_messages);
 		_messages.Clear();
 
 		_callButton.Click -= _controller.OnCallButtonClicked;

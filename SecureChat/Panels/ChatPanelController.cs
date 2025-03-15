@@ -84,17 +84,6 @@ public class ChatPanelController {
 			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.ToBase64String();
 			contextMenu.Open((Control) args.Source!);
 		};
-		
-		messageTextBlock.Border.PointerEntered += (_, _) => messageTextBlock.Border.Background = new SolidColorBrush(Color.Parse("#252525")); 
-		messageTextBlock.Border.PointerExited += (_, _) => messageTextBlock.Border.Background = originalBackground;
-		messageTextBlock.Border.PointerPressed += (_, args) => {
-			if (args.GetCurrentPoint(_context).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonPressed)
-				return;
-
-			copyMenuItem.IsVisible = false;
-			deleteMenuItem!.IsVisible = messageTextBlock.Sender == PersonalPublicKey.ToBase64String();
-			contextMenu.Open((Control) args.Source!);
-		};
 	}
 
 	public bool Decrypt(Message message, bool isOwnMessage, out DecryptedMessage? decryptedMessage) {
