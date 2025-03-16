@@ -1,8 +1,13 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
+using SecureChat.ClassExtensions;
 using SecureChat.Panels;
 using System;
+using System.Threading.Tasks;
 
 namespace SecureChat.CustomControls;
 
@@ -21,10 +26,18 @@ public partial class MessageItem : UserControl {
 		get => DateTimeOffset.ParseExact(_dateTimeBlock.Text, "dd MMMM yyyy HH:mm", null).ToUnixTimeMilliseconds();
 		set => _dateTimeBlock.Text = DateTimeOffset.FromUnixTimeMilliseconds(value).LocalDateTime.ToString("dd MMMM yyyy HH:mm");
 	}
+	public string PublicKey {
+		get => string.Join("", (_tooltipTextBlock.Text ?? "").Split('\n'));
+		set => _tooltipTextBlock.Text = value.Wrap(50);
+	}
 
 	private readonly SelectableTextBlock _nameBlock, _dateTimeBlock, _messageBlock;
 	private readonly MenuItem _copyMenuItem, _deleteMenuItem;
 	private readonly ContextMenu _contextMenu;
+	private readonly Popup _tooltip;
+	private readonly TextBlock _tooltipTextBlock;
+
+	private bool _isPointerOverName;
 
 	public MessageItem() : this(null) {	}
 
@@ -34,6 +47,8 @@ public partial class MessageItem : UserControl {
 		_nameBlock = this.FindControl<SelectableTextBlock>("PART_Name")!;
 		_dateTimeBlock = this.FindControl<SelectableTextBlock>("PART_DateTime")!;
 		_messageBlock = this.FindControl<SelectableTextBlock>("PART_Message")!;
+		_tooltip = this.FindControl<Popup>("Tooltip")!;
+		_tooltipTextBlock = this.FindControl<TextBlock>("TooltipText")!;
 
 		_nameBlock.ContextFlyout = null;
 		_messageBlock.ContextFlyout = null;
@@ -60,6 +75,9 @@ public partial class MessageItem : UserControl {
 			}
 		};
 
+		_nameBlock.PointerEntered += NameBlock_OnPointerEntered;
+		_nameBlock.PointerExited += NameBlock_OnPointerExited;
+
 		// PointerReleased because PointerPressed doesn't work on SelectableTextBlock
 		_nameBlock.PointerReleased += TextBlock_OnPointerReleased;
 		_messageBlock.PointerReleased += TextBlock_OnPointerReleased;
@@ -69,11 +87,33 @@ public partial class MessageItem : UserControl {
 		PointerPressed += OnPointerPressed;
 	}
 
-	public void OnPointerEntered(object? sender, PointerEventArgs e) => Background = new SolidColorBrush(Color.Parse("#252525"));
+	private void NameBlock_OnPointerEntered(object? sender, PointerEventArgs e) {
+		_isPointerOverName = true;
 
-	public void OnPointerExited(object? sender, PointerEventArgs e) => Background = (SolidColorBrush) App.Current!.Resources["ApplicationBackgroundColor"]!;
+		Task.Run(() => {
+			Task.Delay(500).Wait();
+			if (!_isPointerOverName)
+				return;
 
-	public void OnPointerPressed(object? sender, PointerPressedEventArgs e) {
+			Dispatcher.UIThread.InvokeAsync(() => {
+				Point position = e.GetPosition(this);
+				_tooltip.HorizontalOffset = position.X;
+				_tooltip.VerticalOffset = position.Y;
+				_tooltip.IsOpen = true;
+			});
+		});
+	}
+
+	private void NameBlock_OnPointerExited(object? sender, PointerEventArgs e) {
+		_isPointerOverName = false;
+		_tooltip.IsOpen = false;
+	}
+
+	private void OnPointerEntered(object? sender, PointerEventArgs e) => Background = new SolidColorBrush(Color.Parse("#252525"));
+
+	private void OnPointerExited(object? sender, PointerEventArgs e) => Background = (SolidColorBrush) App.Current!.Resources["ApplicationBackgroundColor"]!;
+
+	private void OnPointerPressed(object? sender, PointerPressedEventArgs e) {
 		if (e.GetCurrentPoint(this).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonPressed)
 			return;
 
@@ -82,7 +122,7 @@ public partial class MessageItem : UserControl {
 		_contextMenu.Open((Control) e.Source!);
 	}
 
-	public void TextBlock_OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
+	private void TextBlock_OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
 		if (e.GetCurrentPoint(this).Properties.PointerUpdateKind != PointerUpdateKind.RightButtonReleased)
 			return;
 

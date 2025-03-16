@@ -1,19 +1,15 @@
 ﻿using System;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Collections.Generic;
 using System.Linq;
-using Avalonia.Media;
 using Avalonia.Threading;
 using SecureChat.ClassExtensions;
-using SecureChat.ExtendedControls;
 using SecureChat.Model;
 using SecureChat.Util;
 using SecureChat.CustomControls;
-using System.Diagnostics;
 
 namespace SecureChat.Panels;
 
@@ -102,7 +98,8 @@ public class ChatPanel : DockPanel {
 			IsPersonal = message.Sender == _controller.PersonalPublicKey.ToBase64String(),
 			SenderName = message.DisplayName.Crop(32),
 			Message = message.Body,
-			Timestamp = message.Timestamp
+			Timestamp = message.Timestamp,
+			PublicKey = message.Sender
 		};
         
 		_messages.Add(messageItem);

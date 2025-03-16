@@ -5,7 +5,12 @@
 			 Margin="5">
 	<StackPanel Name="PART_Panel">
 		<StackPanel Orientation="Horizontal">
-			<SelectableTextBlock Name="PART_Name"/>
+			<StackPanel>
+				<SelectableTextBlock Name="PART_Name"/>
+				<Popup Name="Tooltip" IsLightDismissEnabled="False" Placement="TopEdgeAlignedLeft">
+					<TextBlock Name="TooltipText" Background="#202020"/>
+				</Popup>
+			</StackPanel>
 			<SelectableTextBlock Name="PART_DateTime" Margin="5,0,0,0"/>
 		</StackPanel>
 		<SelectableTextBlock Name="PART_Message" TextWrapping="Wrap"/>
