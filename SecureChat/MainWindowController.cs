@@ -12,8 +12,10 @@ using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
+using OsNotifications;
 using SecureChat.Audio;
 using SecureChat.ClassExtensions;
+using SecureChat.Model;
 using SecureChat.Util;
 using SecureChat.Windows;
 
@@ -29,6 +31,7 @@ public class MainWindowController {
 	private ClientWebSocket _webSocket;
 
 	private bool _isWebsocketInitialized;
+	private bool _isWindowActivated;
 	private Timer _keepAliveTimer;
 
 	public MainWindowController(MainWindow context, MainWindowModel model) {
@@ -181,8 +184,16 @@ public class MainWindowController {
 
 				Dictionary<string, Action<JsonObject>> actions = new () {
 					["add"] = message => {
-						Sounds.Notification.Play();
-						AddMessage(message);
+						Message parsedMessage = Message.Parse(message);
+						bool isMessageAdded = AddMessage(parsedMessage);
+
+						if (isMessageAdded) {
+							Sounds.Notification.Play();
+						} else if (TryDecryptMessage(parsedMessage, out DecryptedMessage? decryptedMessage)) {
+							Sounds.Notification.Play();
+							if (!_isWindowActivated)
+								Notifications.ShowNotification(decryptedMessage!.DisplayName, decryptedMessage.Body);
+						}
 					},
 					["delete"] = DeleteMessage,
 					["callStart"] = message => {
@@ -218,9 +229,7 @@ public class MainWindowController {
 		}
 	}
 
-	private void AddMessage(JsonObject messageJson) {
-		Message message = Message.Parse(messageJson);
-		
+	private bool AddMessage(Message message) {
 		// Add new chat if receiver does not yet have a chat with sender
 		if (!Chats.ChatExists(message.Sender))
 			Chats.Add(message.Sender);
@@ -232,10 +241,11 @@ public class MainWindowController {
 			if (!message.IsRead)
 				_model.SetChatReadStatus(message.Sender.ToBase64String(), false);
 			
-			return;
+			return false;
 		}
 
 		_context.ChatPanel.DecryptAndAddMessage(message);
+		return true;
 	}
 
 	private void DeleteMessage(JsonObject messageJson) {
@@ -271,5 +281,20 @@ public class MainWindowController {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not add friend on server ({Settings.GetInstance().Hostname})"));
 			return;
 		}
+	}
+
+	public void OnWindowActivated(object? sender, EventArgs e) => _isWindowActivated = true;
+
+	public void OnWindowDeactivated(object? sender, EventArgs e) => _isWindowActivated = false;
+
+	public bool TryDecryptMessage(Message message, out DecryptedMessage? decryptedMessage) {
+		DecryptedMessage uncheckedMessage = Cryptography.Decrypt(message, _privateKey, false);
+		if (Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, _publicKey, message.Sender, false)) {
+			decryptedMessage = uncheckedMessage;
+			return true;
+		}
+
+		decryptedMessage = null;
+		return false;
 	}
 }

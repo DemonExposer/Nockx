@@ -20,7 +20,7 @@ public class UserInfoPanelController {
 
 	public UserInfoPanelController() {
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
-			PemReader pemReader = new(reader);
+			PemReader pemReader = new (reader);
 			PublicKey = (RsaKeyParameters) pemReader.ReadObject();
 		}
 

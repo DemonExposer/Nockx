@@ -33,7 +33,9 @@ public partial class MainWindow : Window {
 		_ = _controller.ListenOnWebsocket();
 
 		Instance = this;
-		
+
+		Activated += _controller.OnWindowActivated;
+		Deactivated += _controller.OnWindowDeactivated;
 		PositionChanged += OnRendered;
 	}
 
