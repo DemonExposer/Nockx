@@ -9,6 +9,7 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
+using OsNotifications;
 using SecureChat.Audio;
 using SecureChat.Util;
 using SecureChat.Windows;
@@ -43,6 +44,7 @@ public partial class App : Application {
 		}
 		
 		GlobalPlaybackDevice.Initialize();
+		Notifications.BundleIdentifier = "com.apple.finder"; // TODO: change this to the actual bundle identifier
 		
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
