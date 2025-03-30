@@ -21,6 +21,7 @@
         <PackageReference Include="LessAnnoyingHttp" Version="1.1.0" />
         <PackageReference Include="OpenTK" Version="4.9.3" />
         <PackageReference Include="OsNotifications" Version="1.1.2" />
+        <PackageReference Include="QRCoder" Version="1.6.0" />
     </ItemGroup>
 
 	<ItemGroup>

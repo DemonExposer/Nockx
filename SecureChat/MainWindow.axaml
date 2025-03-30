@@ -46,6 +46,7 @@
 			<TextBox MaxLength="255" Name="DisplayNameBox"></TextBox>
 			<TextBlock Margin="0,20,0,0">Key:</TextBlock>
 			<TextBox IsReadOnly="True" Name="KeyBox"/>
+			<Image Height="500" Width="500" Name="QrCodeImage"/>
 		</panels:UserInfoPanel>
 	</Window.Resources>
 	

@@ -2,7 +2,10 @@
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using System.Collections.Generic;
+using System.IO;
 using Avalonia.Input;
+using Avalonia.Media.Imaging;
+using QRCoder;
 using SecureChat.ClassExtensions;
 
 namespace SecureChat.Panels;
@@ -32,6 +35,23 @@ public class UserInfoPanel : StackPanel {
 										textBox.Text = _controller.DisplayName;
 								}
 							};
+							break;
+					}
+				} else if (enumerator.Current.GetType() == typeof(Image)) {
+					Image image = (Image) enumerator.Current;
+					switch (image.Name) {
+						case "QrCodeImage":
+							QRCodeGenerator qrGenerator = new ();
+							QRCodeData qrCodeData = qrGenerator.CreateQrCode(_controller.PublicKey.ToBase64String(), QRCodeGenerator.ECCLevel.M);
+							PngByteQRCode qrCode = new (qrCodeData);
+							
+							byte[] qrCodeBytes = qrCode.GetGraphic(20);
+							
+							using (MemoryStream stream = new (qrCodeBytes)) {
+								Bitmap bitmap = new (stream);
+								image.Source = bitmap;
+							}
+
 							break;
 					}
 				}
