@@ -45,6 +45,7 @@ public partial class App : Application {
 		
 		GlobalPlaybackDevice.Initialize();
 		Notifications.BundleIdentifier = "com.apple.finder"; // TODO: change this to the actual bundle identifier
+		Notifications.WindowsAudioSource = null;
 		
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
