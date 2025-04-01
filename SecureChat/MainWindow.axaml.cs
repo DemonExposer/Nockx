@@ -14,7 +14,9 @@ public partial class MainWindow : Window {
 	private DockPanel _mainPanel;
 	private Panel? _uiPanel;
 	private Button? _pressedButton;
+
 	public ChatPanel ChatPanel { get; private set; }
+	public UserInfoPanel UserInfoPanel { get; private set; }
 	
 	private bool _isRendered;
 	private readonly List<Action> _onRenderedActions = [];
@@ -45,8 +47,8 @@ public partial class MainWindow : Window {
 		AddUserPanel addUserPanel = (AddUserPanel) Resources["AddUserPanel"]!;
 		ChatPanel = (ChatPanel) Resources["ChatPanel"]!;
 		ChatPanel.SetMainWindowModel(_model);
-		UserInfoPanel userInfoPanel = (UserInfoPanel) Resources["UserInfoPanel"]!;
-		userInfoPanel.SetMainWindowModel(_model);
+		UserInfoPanel = (UserInfoPanel) Resources["UserInfoPanel"]!;
+		UserInfoPanel.SetMainWindowModel(_model);
 
 		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
 
@@ -82,7 +84,7 @@ public partial class MainWindow : Window {
 		Button userInfoButton = this.FindControl<Button>("UserInfoButton")!;
 		userInfoButton.Click += (_, _) => {
 			SetPressedButton(userInfoButton);
-			SetUiPanel(userInfoPanel);
+			SetUiPanel(UserInfoPanel);
 		};
 
 		Button settingsButton = this.FindControl<Button>("SettingsButton")!;

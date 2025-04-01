@@ -15,9 +15,11 @@ using SecureChat.Model;
 namespace SecureChat.Util;
 
 public static class Cryptography {
+	public const int AesKeyLength = 256;
+
 	public static byte[] GenerateAesKey() {
 		CipherKeyGenerator aesKeyGen = new ();
-		aesKeyGen.Init(new KeyGenerationParameters(new SecureRandom(), 256));
+		aesKeyGen.Init(new KeyGenerationParameters(new SecureRandom(), AesKeyLength));
 		return aesKeyGen.GenerateKey();
 	}
 

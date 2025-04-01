@@ -12,6 +12,7 @@ using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Pkcs;
 using OsNotifications;
 using SecureChat.Audio;
 using SecureChat.ClassExtensions;
@@ -218,6 +219,35 @@ public class MainWindowController {
 						
 						if (message["sender"]!.GetValue<string>() == CallWindow.ForeignKey.ToBase64String())
 							CallWindow.Close();
+					},
+					["privateKeyRequest"] = message => {
+						string senderKeyBase64 = message["sender"]!.GetValue<string>();
+						RsaKeyParameters foreignPublicKey = RsaKeyParametersExtension.FromBase64String(senderKeyBase64);
+						long timestamp = message["timestamp"]!.GetValue<long>();
+						string signature = message["signature"]!.GetValue<string>();
+
+						if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestamp > 10000) // Unable to verify authenticity, because of possible replay attack
+							return;
+
+						if (!Cryptography.Verify(timestamp.ToString(), signature, null, foreignPublicKey, false))
+							return;
+
+						byte[] privateKeyBytes = PrivateKeyInfoFactory.CreatePrivateKeyInfo(_privateKey).GetEncoded();
+						byte[] aesKey = Cryptography.GenerateAesKey();
+						byte[] cipherBytes = Cryptography.EncryptWithAes(privateKeyBytes, privateKeyBytes.Length, aesKey);
+						byte[] encryptedKey = Cryptography.EncryptAesKey(aesKey, foreignPublicKey);
+
+						byte[] qrData = new byte[Cryptography.AesKeyLength + cipherBytes.Length];
+						Buffer.BlockCopy(encryptedKey, 0, qrData, 0, Cryptography.AesKeyLength);
+						Buffer.BlockCopy(cipherBytes, 0, qrData, Cryptography.AesKeyLength, cipherBytes.Length);
+
+						new DialogWindow(
+							$"{senderKeyBase64} is trying to retrieve your private key. If this key does not correspond to the one on the device you scanned your QR code with, DO NOT ACCEPT THIS REQUEST, BECAUSE YOU CAN LOSE YOUR ACCOUNT!!!",
+							accepted => {
+								if (accepted)
+									_context.UserInfoPanel.SetQrCode(Convert.ToBase64String(qrData));
+							}
+						).Show(_context);
 					}
 				};
 
