@@ -71,11 +71,19 @@ public class MainWindowController {
 		foreach (JsonNode? jsonNode in chats) {
 			JsonObject chatObject = jsonNode!.AsObject();
 			if (chatObject["user1"]!["key"]!.GetValue<string>() != _publicKey.ToBase64String()) {
-				_context.AddUser(RsaKeyParametersExtension.FromBase64String(chatObject["user1"]!["key"]!.GetValue<string>()), chatObject["user1"]!["displayName"]!.GetValue<string>(), false);
-				_model.SetChatReadStatus(chatObject["user1"]!["key"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+				RsaKeyParameters key = RsaKeyParametersExtension.FromBase64String(chatObject["user1"]!["key"]!.GetValue<string>());
+				string name = chatObject["user1"]!["displayName"]!.GetValue<string>();
+				
+				_context.AddUser(key, name, false);
+				_model.SetChatReadStatus(key.ToBase64String(), chatObject["isRead"]!.GetValue<bool>());
+				_model.UpdateName(key.ToBase64String(), name);
 			} else {
-				_context.AddUser(RsaKeyParametersExtension.FromBase64String(chatObject["user2"]!["key"]!.GetValue<string>()), chatObject["user2"]!["displayName"]!.GetValue<string>(), false);
-				_model.SetChatReadStatus(chatObject["user2"]!["key"]!.GetValue<string>(), chatObject["isRead"]!.GetValue<bool>());
+				string key = chatObject["user2"]!["key"]!.GetValue<string>();
+				string name = chatObject["user2"]!["displayName"]!.GetValue<string>();
+
+				_context.AddUser(RsaKeyParametersExtension.FromBase64String(key), name, false);
+				_model.SetChatReadStatus(key, chatObject["isRead"]!.GetValue<bool>());
+				_model.UpdateName(key, name);
 			}
 		}
 	}
@@ -260,11 +268,8 @@ public class MainWindowController {
 	}
 
 	private bool AddMessage(Message message) {
-		// Add new chat if receiver does not yet have a chat with sender
-		if (!Chats.ChatExists(message.Sender))
-			Chats.Add(message.Sender);
-		
 		_context.AddUser(message.Sender, message.SenderDisplayName, false);
+		_model.UpdateName(message.Sender.ToBase64String(), message.SenderDisplayName);
 
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender)) {

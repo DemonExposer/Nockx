@@ -49,21 +49,13 @@ public class ChatPanelController {
 
 	public bool Decrypt(Message message, bool isOwnMessage, out DecryptedMessage? decryptedMessage) {
 		DecryptedMessage uncheckedMessage = Cryptography.Decrypt(message, _privateKey, isOwnMessage);
-		if (Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage)) {
-			decryptedMessage = uncheckedMessage;
-			return true;
+		if (!Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage)) {
+			decryptedMessage = null;
+			return false;
 		}
 
-		if (!isOwnMessage && ForeignDisplayName != message.SenderDisplayName) {
-			ForeignDisplayName = message.SenderDisplayName;
-			_context.ChangeDisplayName();
-		} else if (isOwnMessage && ForeignDisplayName != message.ReceiverDisplayName) {
-			ForeignDisplayName = message.ReceiverDisplayName;
-			_context.ChangeDisplayName();
-		}
-
-		decryptedMessage = null;
-		return false;
+		decryptedMessage = uncheckedMessage;
+		return true;
 	}
 
 	public DecryptedMessage[] GetPastMessages() {
@@ -77,13 +69,7 @@ public class ChatPanelController {
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
 			if (!Decrypt(message, isOwnMessage, out DecryptedMessage? decryptedMessage))
 				continue; // Just don't add the message if it is not legitimate
-			if (!isOwnMessage && ForeignDisplayName != message.SenderDisplayName) {
-				ForeignDisplayName = message.SenderDisplayName;
-				_context.ChangeDisplayName();
-			} else if (isOwnMessage && ForeignDisplayName != message.ReceiverDisplayName) {
-				ForeignDisplayName = message.ReceiverDisplayName;
-				_context.ChangeDisplayName();
-			}
+			
 			res.Add(decryptedMessage!);
 		}
 

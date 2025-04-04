@@ -101,7 +101,12 @@ public class ChatPanel : DockPanel {
 			Timestamp = message.Timestamp,
 			PublicKey = message.Sender
 		};
-        
+
+		if (message.Sender == _controller.ForeignPublicKey.ToBase64String() && _controller.ForeignDisplayName != message.DisplayName) {
+			_controller.ForeignDisplayName = message.DisplayName;
+			_headerUsernameTextBlock!.Text = _controller.ForeignDisplayName.Crop(30);
+		}
+
 		_messages.Add(messageItem);
 		_messagePanel.Children.Add(messageItem);
 		
@@ -124,16 +129,6 @@ public class ChatPanel : DockPanel {
 		_isResized = true;
 		_messageScrollView!.Offset = _messageScrollView.Offset.WithY(_messageScrollView.ScrollBarMaximum.Y - _distanceScrolledFromBottom);
 	}
-
-	public void ChangeDisplayName() {
-		if (_controller.ForeignDisplayName != null && _headerUsernameTextBlock != null)
-			_headerUsernameTextBlock.Text = _controller.ForeignDisplayName.Crop(30);
-	}
-
-	public void UpdateDisplayName(string name) {
-		_controller.ForeignDisplayName = name;
-		ChangeDisplayName();
-	}
 	
 	public void Show(RsaKeyParameters publicKey, MainWindow context) {
 		if (_mainWindowModel == null)
@@ -148,7 +143,7 @@ public class ChatPanel : DockPanel {
 		}
 		
 		_controller.ForeignPublicKey = publicKey;
-		ChangeDisplayName();
+		_headerUsernameTextBlock.Text = _controller.ForeignDisplayName.Crop(30);
 
 		// If chat is unread, make it read
 		if (!_mainWindowModel.GetChatReadStatus(publicKey.ToBase64String())) {

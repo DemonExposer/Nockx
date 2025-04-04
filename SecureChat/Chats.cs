@@ -11,7 +11,7 @@ namespace SecureChat;
 
 public class Chats {
 	private string _file;
-	private readonly ISet<RsaKeyParameters> _pubKeys = new HashSet<RsaKeyParameters>();
+	private readonly Dictionary<RsaKeyParameters, string> _keyNameBindings = [];
 
 	private static Chats? _instance = null;
 
@@ -19,13 +19,13 @@ public class Chats {
 		
 	}
 	
-	private Chats(string filename, IEnumerable<RsaKeyParameters> publicKeys) {
+	private Chats(string filename, Dictionary<RsaKeyParameters, string> keyNameBindings) {
 		_file = filename;
-		_pubKeys.UnionWith(publicKeys);
+		_keyNameBindings = keyNameBindings;
 	}
 
-	public static void Add(RsaKeyParameters publicKey) {
-		(_instance ?? throw new InvalidOperationException("Chats must be loaded before modifications can be made"))._pubKeys.Add(publicKey);
+	public static void Add(RsaKeyParameters publicKey, string name) {
+		(_instance ?? throw new InvalidOperationException("Chats must be loaded before modifications can be made"))._keyNameBindings[publicKey] = name;
 		Save();
 	}
 
@@ -33,7 +33,7 @@ public class Chats {
 		if (_instance == null)
 			throw new InvalidOperationException("Chats must be loaded before checks can be performed");
 
-		return Enumerable.Contains(_instance._pubKeys, publicKey);
+		return _instance._keyNameBindings.ContainsKey(publicKey);
 	}
 
 	public static void LoadOrDefault(string filename) {
@@ -51,24 +51,25 @@ public class Chats {
 	
 	public static void Load(string filename) {
 		JsonArray chatsArray = JsonNode.Parse(File.ReadAllText(filename))!.AsArray();
-		_instance = new Chats(filename, chatsArray.ToArray().Select(node => RsaKeyParametersExtension.FromBase64String(node!["publicKey"]!.GetValue<string>())));
+		Dictionary<RsaKeyParameters, string> keyNameBindings = [];
+		foreach (JsonNode? chat in chatsArray)
+			keyNameBindings[RsaKeyParametersExtension.FromBase64String(chat!["publicKey"]!.GetValue<string>())] = chat["name"]!.GetValue<string>();
+		_instance = new Chats(filename, keyNameBindings);
 	}
 
 	private static void Save() {
 		JsonArray chats = [];
-		foreach (RsaKeyParameters pubKey in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be saved"))._pubKeys)
+		foreach (RsaKeyParameters pubKey in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be saved"))._keyNameBindings.Keys)
 			chats.Add(new JsonObject {
 				["publicKey"] = pubKey.ToBase64String(),
-				["name"] = pubKey.ToBase64String()
+				["name"] = _instance._keyNameBindings[pubKey]
 			});
 		
 		File.WriteAllText(_instance._file, JsonSerializer.Serialize(chats, new JsonSerializerOptions { WriteIndented = true }));
 	}
 
 	public static void Show(MainWindow window) {
-		foreach (RsaKeyParameters key in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be shown"))._pubKeys) {
-			string name = key.ToBase64String();
-			window.AddUser(key, name, false);
-		}
+		foreach (RsaKeyParameters key in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be shown"))._keyNameBindings.Keys)
+			window.AddUser(key, _instance._keyNameBindings[key], false);
 	}
 }
