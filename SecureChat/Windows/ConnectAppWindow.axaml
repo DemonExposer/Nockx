@@ -5,6 +5,8 @@
 		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		x:Class="SecureChat.Windows.ConnectAppWindow"
 		Title="Connect app"
+		Width="100"
+		Height="100"
 		WindowState="FullScreen">
 	<Image VerticalAlignment="Stretch" HorizontalAlignment="Center" Name="QrCodeImage"/>
 </Window>

@@ -10,7 +10,7 @@ using SecureChat.Windows;
 namespace SecureChat.Panels;
 
 public class UserInfoPanel : StackPanel {
-	private UserInfoPanelController _controller = new ();
+	private readonly UserInfoPanelController _controller = new ();
 	private ConnectAppWindow? _connectAppWindow;
 
 	public UserInfoPanel() {
@@ -61,6 +61,6 @@ public class UserInfoPanel : StackPanel {
 		_connectAppWindow.SetQrCode(_controller.PublicKey.ToBase64String());
 		_connectAppWindow.Show(MainWindow.Instance);
 	}
-
+	
 	public void SetQrCode(string qrCodeData) => _connectAppWindow?.SetQrCode(qrCodeData);
 }

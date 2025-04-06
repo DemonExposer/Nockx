@@ -13,6 +13,8 @@ public partial class ConnectAppWindow : PopupWindow {
 		InitializeComponent();
 
 		_image = this.FindControl<Image>("QrCodeImage")!;
+		_image.Focusable = true;
+		Opened += (_, _) => _image.Focus();
 		KeyDown += ConnectAppWindow_KeyDown;
 	}
 
@@ -27,9 +29,9 @@ public partial class ConnectAppWindow : PopupWindow {
 		QRCodeGenerator qrGenerator = new ();
 		QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.M);
 		PngByteQRCode qrCode = new (qrCodeData);
-
+		
 		byte[] qrCodeBytes = qrCode.GetGraphic(20);
-
+		
 		using MemoryStream stream = new (qrCodeBytes);
 		Bitmap bitmap = new (stream);
 		_image.Source = bitmap;
