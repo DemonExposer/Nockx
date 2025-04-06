@@ -2,19 +2,16 @@
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using System.Collections.Generic;
-using System.IO;
 using Avalonia.Input;
-using Avalonia.Media.Imaging;
-using QRCoder;
 using SecureChat.ClassExtensions;
-using System;
+using Avalonia.Interactivity;
+using SecureChat.Windows;
 
 namespace SecureChat.Panels;
 
 public class UserInfoPanel : StackPanel {
 	private UserInfoPanelController _controller = new ();
-
-	private Image? _image;
+	private ConnectAppWindow? _connectAppWindow;
 
 	public UserInfoPanel() {
 		Dispatcher.UIThread.InvokeAsync(() => {
@@ -40,13 +37,11 @@ public class UserInfoPanel : StackPanel {
 							};
 							break;
 					}
-				} else if (enumerator.Current.GetType() == typeof(Image)) {
-					Image image = (Image) enumerator.Current;
-					switch (image.Name) {
-						case "QrCodeImage":
-							_image = image;
-							// TODO: also put timestamp with signature in the QR code so that the scanner can be verified as being a real scanner
-							SetQrCode(_controller.PublicKey.ToBase64String());
+				} else if (enumerator.Current.GetType() == typeof(Button)) {
+					Button button = (Button) enumerator.Current;
+					switch (button.Name) {
+						case "ConnectAppButton":
+							button.Click += ConnectAppButton_OnClick;
 							break;
 					}
 				}
@@ -59,20 +54,13 @@ public class UserInfoPanel : StackPanel {
 		_controller.SetMainWindowModel(mainWindowModel);
 	}
 
-	public void SetQrCode(string data) {
-		if (_image == null) {
-			Console.WriteLine("SetQrCode was called before UI was loaded");
-			return;
-		}
-
-		QRCodeGenerator qrGenerator = new ();
-		QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.M);
-		PngByteQRCode qrCode = new (qrCodeData);
-
-		byte[] qrCodeBytes = qrCode.GetGraphic(20);
-
-		using MemoryStream stream = new (qrCodeBytes);
-		Bitmap bitmap = new (stream);
-		_image.Source = bitmap;
+	private void ConnectAppButton_OnClick(object? sender, RoutedEventArgs e) {
+		_connectAppWindow = new ConnectAppWindow();
+		_connectAppWindow.Closed += (_, _) => _connectAppWindow = null;
+		// TODO: also put timestamp with signature in the QR code so that the scanner can be verified as being a real scanner
+		_connectAppWindow.SetQrCode(_controller.PublicKey.ToBase64String());
+		_connectAppWindow.Show(MainWindow.Instance);
 	}
+
+	public void SetQrCode(string qrCodeData) => _connectAppWindow?.SetQrCode(qrCodeData);
 }
