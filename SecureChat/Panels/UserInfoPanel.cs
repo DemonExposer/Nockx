@@ -6,6 +6,7 @@ using Avalonia.Input;
 using SecureChat.ClassExtensions;
 using Avalonia.Interactivity;
 using SecureChat.Windows;
+using System;
 
 namespace SecureChat.Panels;
 
@@ -61,6 +62,17 @@ public class UserInfoPanel : StackPanel {
 		_connectAppWindow.SetQrCode(_controller.PublicKey.ToBase64String());
 		_connectAppWindow.Show();
 	}
-	
-	public void SetQrCode(string qrCodeData) => _connectAppWindow?.SetQrCode(qrCodeData);
+
+	public void ShowQrCodeConfirmationWindow(string key, byte[] onConfirmData) {
+		if (_connectAppWindow == null)
+			return;
+
+		new DialogWindow(
+			$"{key} is trying to retrieve your private key. If this key does not correspond to the one on the device you scanned your QR code with, DO NOT ACCEPT THIS REQUEST, BECAUSE YOU CAN LOSE YOUR ACCOUNT!!!",
+			accepted => {
+				if (accepted)
+					_connectAppWindow?.SetQrCode(Convert.ToBase64String(onConfirmData));
+			}
+		).Show(_connectAppWindow);
+	}
 }

@@ -249,13 +249,7 @@ public class MainWindowController {
 						Buffer.BlockCopy(encryptedKey, 0, qrData, 0, Cryptography.AesKeyLength);
 						Buffer.BlockCopy(cipherBytes, 0, qrData, Cryptography.AesKeyLength, cipherBytes.Length);
 
-						new DialogWindow(
-							$"{senderKeyBase64} is trying to retrieve your private key. If this key does not correspond to the one on the device you scanned your QR code with, DO NOT ACCEPT THIS REQUEST, BECAUSE YOU CAN LOSE YOUR ACCOUNT!!!",
-							accepted => {
-								if (accepted)
-									_context.UserInfoPanel.SetQrCode(Convert.ToBase64String(qrData));
-							}
-						).Show(_context);
+						_context.UserInfoPanel.ShowQrCodeConfirmationWindow(senderKeyBase64, qrData);
 					}
 				};
 
