@@ -59,7 +59,7 @@ public class UserInfoPanel : StackPanel {
 		_connectAppWindow.Closed += (_, _) => _connectAppWindow = null;
 		// TODO: also put timestamp with signature in the QR code so that the scanner can be verified as being a real scanner
 		_connectAppWindow.SetQrCode(_controller.PublicKey.ToBase64String());
-		_connectAppWindow.Show(MainWindow.Instance);
+		_connectAppWindow.Show();
 	}
 	
 	public void SetQrCode(string qrCodeData) => _connectAppWindow?.SetQrCode(qrCodeData);
