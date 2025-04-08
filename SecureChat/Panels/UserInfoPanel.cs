@@ -25,6 +25,7 @@ public class UserInfoPanel : StackPanel {
 					switch (textBox.Name) {
 						case "KeyBox":
 							keyBox = textBox;
+							keyBox.PointerReleased += (_, _) => keyBox.SelectAll();
 							break;
 						case "DisplayNameBox":
 							textBox.Text = _controller.DisplayName;
