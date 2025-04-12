@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using OpenTK.Mathematics;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.ClassExtensions;
 using SecureChat.Model;
@@ -85,6 +88,23 @@ public partial class MainWindow : Window {
 		userInfoButton.Click += (_, _) => {
 			SetPressedButton(userInfoButton);
 			SetUiPanel(UserInfoPanel);
+
+			Dispatcher.UIThread.InvokeAsync(async () => {
+				List<Vector2> pixels = [];
+				for (double t = 0; t < 0.5 * Math.PI; t += 0.005) {
+					pixels.Add(new Vector2((int) Math.Round(Math.Cos(t) * 20), (int) Math.Round(Math.Sin(t) * 20)));
+				}
+
+				for (double t = 0; ; t -= 0.2 % (2 * Math.PI)) {
+					Matrix2 m = new ((float) Math.Cos(t), (float) Math.Sin(t), (float) -Math.Sin(t), (float) Math.Cos(t));
+					UserInfoPanel.Clear();
+					foreach (Vector2 v in pixels) {
+						Vector2 v2 = m * v;
+						UserInfoPanel.DrawPixel((int) v2.X + 100, (int) v2.Y + 100, 255, 0, 0, 255);
+					}
+					await Task.Delay(20);
+				}
+			});
 		};
 
 		Button settingsButton = this.FindControl<Button>("SettingsButton")!;

@@ -8,6 +8,7 @@
 	<StackPanel Orientation="Horizontal">
 		<TextBox MaxLength="255" Name="DisplayNameBox"/>
 		<Button Name="SetDisplayNameButton">Set</Button>
+		<Image Name="PixelImage" Width="200" Height="200"/>
 	</StackPanel>
 	<TextBlock Margin="0,20,0,0">Key:</TextBlock>
 	<TextBox IsReadOnly="True" Name="KeyBox"/>

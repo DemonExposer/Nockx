@@ -1,9 +1,12 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Platform;
 using SecureChat.ClassExtensions;
 using Avalonia.Interactivity;
 using SecureChat.Windows;
 using System;
+using Avalonia.Media.Imaging;
 
 namespace SecureChat.Panels;
 
@@ -12,6 +15,8 @@ public partial class UserInfoPanel : StackPanel {
 
 	private readonly UserInfoPanelController _controller;
 	private ConnectAppWindow? _connectAppWindow;
+	private WriteableBitmap _bitmap;
+	private Image _pixelImage;
 
 	public UserInfoPanel() {
 		_controller = new UserInfoPanelController(this);
@@ -39,6 +44,34 @@ public partial class UserInfoPanel : StackPanel {
 		connectAppButton.Click += ConnectAppButton_OnClick;
 
 		keyBox!.Text = _controller.PublicKey.ToBase64String();
+
+		_pixelImage = this.FindControl<Image>("PixelImage")!;
+		_bitmap = new WriteableBitmap(new PixelSize(200, 200), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
+
+		_pixelImage.Source = _bitmap;
+	}
+
+	public void DrawPixel(int x, int y, byte r, byte g, byte b, byte a) {
+		using (var fb = _bitmap.Lock()) {
+			unsafe {
+				int *buffer = (int *) fb.Address;
+				int index = y * fb.RowBytes / 4 + x;
+
+				// BGRA
+				buffer[index] = (a << 24) | (r << 16) | (g << 8) | b;
+			}
+		}
+
+		// Invalidate the bitmap to show the changes
+		_pixelImage.InvalidateVisual();
+	}
+
+	public void Clear() {
+		for (int i = 0; i < 200; i++) {
+			for (int j = 0; j < 200; j++) {
+				DrawPixel(i, j, 0, 0, 0, 0);
+			}
+		}
 	}
 	
 	public void SetMainWindowModel(MainWindowModel mainWindowModel) {
