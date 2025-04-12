@@ -29,7 +29,7 @@
 			<DependentUpon>ChatPanel.cs</DependentUpon>
 		</Compile>
 		<Compile Update="panels\UserInfoPanelController.cs">
-			<DependentUpon>UserInfoPanel.cs</DependentUpon>
+			<DependentUpon>UserInfoPanel.axaml.cs</DependentUpon>
 		</Compile>
         <Compile Update="MainWindowController.cs">
             <DependentUpon>MainWindow.axaml.cs</DependentUpon>

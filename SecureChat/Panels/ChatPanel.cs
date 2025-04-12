@@ -43,7 +43,7 @@ public class ChatPanel : DockPanel {
 								if (textBox.Text == null)
 									return;
 								if (_mainWindowModel == null)
-									throw new InvalidOperationException("Cannot add message before _mainWindowModel is set, using SetMainWindowModel");
+									throw new InvalidOperationException("Cannot add message before _mainWindowModel is set using SetMainWindowModel");
 								long id = _controller.SendMessage(textBox.Text);
 								AddMessage(new DecryptedMessage { Body = textBox.Text, Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName});
 								textBox.Text = null;
@@ -132,7 +132,7 @@ public class ChatPanel : DockPanel {
 	
 	public void Show(RsaKeyParameters publicKey, MainWindow context) {
 		if (_mainWindowModel == null)
-			throw new InvalidOperationException("Show may not be called before _mainWindowModel is set, using SetMainWindowModel");
+			throw new InvalidOperationException("Show may not be called before _mainWindowModel is set using SetMainWindowModel");
 		
 		// _messagePanel should never be null, because a user cannot open this panel before the UI is done.
 		// However, in theory, when the program is loaded from a saved state, it is theoretically possible to trigger this. So this is just for debug.

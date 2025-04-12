@@ -7,6 +7,8 @@ namespace SecureChat;
 public class MainWindowModel {
 	private readonly List<Chat> _chats = [];
 
+	public string DisplayName = "";
+
 	public void AddChat(Chat chat) {
 		_chats.Add(chat);
 		chat.UpdateName(chat.Name);
@@ -21,6 +23,4 @@ public class MainWindowModel {
 	public void SetChatReadStatus(string key, bool isRead) => GetChat(key)!.ChatButton.Tag = isRead ? "" : "\u25cf";
 	
 	public bool GetChatReadStatus(string key) => (string) GetChat(key)!.ChatButton.Tag! == "";
-
-	public string DisplayName = "";
 }

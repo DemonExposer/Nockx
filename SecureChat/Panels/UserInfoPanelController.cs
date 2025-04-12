@@ -15,10 +15,13 @@ namespace SecureChat.Panels;
 public class UserInfoPanelController {
 	public readonly RsaKeyParameters PublicKey;
 	private readonly RsaKeyParameters _privateKey;
-	public string DisplayName = "";
+
+	private readonly UserInfoPanel _context;
 	private MainWindowModel? _mainWindowModel;
 
-	public UserInfoPanelController() {
+	public UserInfoPanelController(UserInfoPanel context) {
+		_context = context;
+
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
 			PublicKey = (RsaKeyParameters) pemReader.ReadObject();
@@ -28,8 +31,6 @@ public class UserInfoPanelController {
 			PemReader pemReader = new (reader);
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
 		}
-
-		DisplayName = PublicKey.ToBase64String();
 	}
 	
 	public void SetMainWindowModel(MainWindowModel mainWindowModel) {
@@ -42,16 +43,18 @@ public class UserInfoPanelController {
 
 	private void GetDisplayName() {
 		if (_mainWindowModel == null)
-			throw new InvalidOperationException("GetDisplayName may not be called before _mainWindowModel is set, using SetMainWindowModel");
+			throw new InvalidOperationException("GetDisplayName may not be called before _mainWindowModel is set using SetMainWindowModel");
+
 		string getVariables = $"key={HttpUtility.UrlEncode(PublicKey.ToBase64String())}";
-		
-		DisplayName = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/displayname?" + getVariables).Body;
-		_mainWindowModel.DisplayName = DisplayName;
+
+		_mainWindowModel.DisplayName = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/displayname?" + getVariables).Body;
+		_context.DisplayNameTextBox.Text = _mainWindowModel.DisplayName;
 	}
 
 	public bool SetDisplayName(string displayName) {
 		if (_mainWindowModel == null)
-			throw new InvalidOperationException("SetDisplayName may not be called before _mainWindowModel is set, using SetMainWindowModel");
+			throw new InvalidOperationException("SetDisplayName may not be called before _mainWindowModel is set using SetMainWindowModel");
+
 		JsonObject body = new () {
 			["user"] = new JsonObject {
 				["key"] = PublicKey.ToBase64String(),
@@ -59,12 +62,13 @@ public class UserInfoPanelController {
 			},
 			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
+
 		string bodyString = JsonSerializer.Serialize(body);
 		Response response = Http.Put($"https://{Settings.GetInstance().Hostname}:5000/displayname", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
-		if (response.IsSuccessful) {
-			DisplayName = displayName;
+
+		if (response.IsSuccessful)
 			_mainWindowModel.DisplayName = displayName;
-		}
+
 		return response.IsSuccessful;
 	}
 }

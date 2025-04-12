@@ -41,13 +41,6 @@
 				</StackPanel>
 			</ScrollViewer>
 		</panels:ChatPanel>
-		<panels:UserInfoPanel x:Key="UserInfoPanel">
-			<TextBlock Margin="0, 20, 0, 0">Display name:</TextBlock>
-			<TextBox MaxLength="255" Name="DisplayNameBox"></TextBox>
-			<TextBlock Margin="0,20,0,0">Key:</TextBlock>
-			<TextBox IsReadOnly="True" Name="KeyBox"/>
-			<Button Name="ConnectAppButton">Connect mobile app</Button>
-		</panels:UserInfoPanel>
 	</Window.Resources>
 	
 	<DockPanel>

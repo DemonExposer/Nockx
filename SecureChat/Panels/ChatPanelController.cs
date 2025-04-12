@@ -78,7 +78,7 @@ public class ChatPanelController {
 	
 	public long SendMessage(string message) {
 		if (_mainWindowModel == null)
-			throw new InvalidOperationException("SendMessage may not be called before _mainWindowModel is set, using SetMainWindowModel");
+			throw new InvalidOperationException("SendMessage may not be called before _mainWindowModel is set using SetMainWindowModel");
 		Message encryptedMessage = Cryptography.Encrypt(message, PersonalPublicKey, ForeignPublicKey, _privateKey);
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
