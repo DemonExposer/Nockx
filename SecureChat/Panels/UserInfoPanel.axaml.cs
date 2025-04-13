@@ -7,6 +7,13 @@ using Avalonia.Interactivity;
 using SecureChat.Windows;
 using System;
 using Avalonia.Media.Imaging;
+using System.IO;
+using SkiaSharp;
+using Avalonia.Media;
+using System.Collections.Generic;
+using OpenTK.Mathematics;
+using System.Diagnostics;
+using Avalonia.Threading;
 
 namespace SecureChat.Panels;
 
@@ -17,6 +24,9 @@ public partial class UserInfoPanel : StackPanel {
 	private ConnectAppWindow? _connectAppWindow;
 	private WriteableBitmap _bitmap;
 	private Image _pixelImage;
+
+	private Bitmap _pngBitmap;
+	private RenderTargetBitmap _rotatedBitmap;
 
 	public UserInfoPanel() {
 		_controller = new UserInfoPanelController(this);
@@ -46,12 +56,44 @@ public partial class UserInfoPanel : StackPanel {
 		keyBox!.Text = _controller.PublicKey.ToBase64String();
 
 		_pixelImage = this.FindControl<Image>("PixelImage")!;
-		_bitmap = new WriteableBitmap(new PixelSize(200, 200), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
+		
+		_bitmap = new WriteableBitmap(new PixelSize(128, 128), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
+
+		byte[] bitmap = File.ReadAllBytes("in.bmp")[138..];
+		int[] pixels = new int[bitmap.Length / sizeof(int)];
+		Debug.WriteLine("{0} {1}", bitmap.Length, pixels.Length);
+		Buffer.BlockCopy(bitmap, 0, pixels, 0, bitmap.Length);
+		using (ILockedFramebuffer fb = _bitmap.Lock()) {
+			unsafe {
+				int *buffer = (int *) fb.Address;
+
+				for (int i = 0; i < pixels.Length; i++)
+					buffer[i] = pixels[i];
+			}
+		}
 
 		_pixelImage.Source = _bitmap;
 	}
 
+	public List<Vector4> GetPixelMap() {
+		List<Vector4> res = [];
+		
+		using (var fb = _bitmap.Lock()) {
+			unsafe {
+				int *buffer = (int *) fb.Address;
+				for (int i = 0; i < 128 * 128; i++) {
+				//	Debug.WriteLine("{0} {1}", i % 128, i / 128);
+					res.Add(new Vector4(i % 128, i / 128, buffer[i] & 0xFF, buffer[i] >> 24));
+				}
+			}
+		}
+
+		return res;
+	}
+
 	public void DrawPixel(int x, int y, byte r, byte g, byte b, byte a) {
+		if (x >= 128 || y >= 128 || x < 0 || y < 0)
+			return;
 		using (var fb = _bitmap.Lock()) {
 			unsafe {
 				int *buffer = (int *) fb.Address;
@@ -67,11 +109,16 @@ public partial class UserInfoPanel : StackPanel {
 	}
 
 	public void Clear() {
-		for (int i = 0; i < 200; i++) {
-			for (int j = 0; j < 200; j++) {
+		for (int i = 0; i < 128; i++) {
+			for (int j = 0; j < 128; j++) {
 				DrawPixel(i, j, 0, 0, 0, 0);
 			}
 		}
+	}
+
+	public void Save() {
+		using FileStream fs = File.Create("out.png");
+		_bitmap.Save(fs);
 	}
 	
 	public void SetMainWindowModel(MainWindowModel mainWindowModel) {

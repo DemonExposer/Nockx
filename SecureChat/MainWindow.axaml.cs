@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -88,21 +90,39 @@ public partial class MainWindow : Window {
 		userInfoButton.Click += (_, _) => {
 			SetPressedButton(userInfoButton);
 			SetUiPanel(UserInfoPanel);
-
+			
 			Dispatcher.UIThread.InvokeAsync(async () => {
-				List<Vector2> pixels = [];
-				for (double t = 0; t < 0.5 * Math.PI; t += 0.005) {
-					pixels.Add(new Vector2((int) Math.Round(Math.Cos(t) * 20), (int) Math.Round(Math.Sin(t) * 20)));
-				}
+				try {
+					List<Vector4> pixels = UserInfoPanel.GetPixelMap();
+					bool hasDone = false;
+					double t = 0;
+					Timer timer = new (_ => {
+						Dispatcher.UIThread.InvokeAsync(() => {
+							Stopwatch sw = Stopwatch.StartNew();
+							Matrix2 m = new ((float) Math.Cos(t), (float) Math.Sin(t), (float) -Math.Sin(t), (float) Math.Cos(t));
+							t -= Math.PI / 15;
+							t %= Math.Tau;
+							UserInfoPanel.Clear();
+							for (int i = 0; i < pixels.Count; i++) {
+								Vector4 v = new Vector4(pixels[i].X - 64, -pixels[i].Y + 64, pixels[i].Z, pixels[i].W);
+								pixels[i] = v;
+							}
 
-				for (double t = 0; ; t -= 0.2 % (2 * Math.PI)) {
-					Matrix2 m = new ((float) Math.Cos(t), (float) Math.Sin(t), (float) -Math.Sin(t), (float) Math.Cos(t));
-					UserInfoPanel.Clear();
-					foreach (Vector2 v in pixels) {
-						Vector2 v2 = m * v;
-						UserInfoPanel.DrawPixel((int) v2.X + 100, (int) v2.Y + 100, 255, 0, 0, 255);
-					}
-					await Task.Delay(20);
+							foreach (Vector4 v in pixels) {
+								Vector2 v2 = m * new Vector2(v.X, v.Y);
+								UserInfoPanel.DrawPixel((int) v2.X + 64, (int) v2.Y + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
+							}
+
+							for (int i = 0; i < pixels.Count; i++) {
+								Vector4 v = new Vector4(pixels[i].X + 64, -pixels[i].Y + 64, pixels[i].Z, pixels[i].W);
+								pixels[i] = v;
+							}
+						});
+					}, null, 0, 1000/60);
+
+					await new TaskCompletionSource<bool>().Task;
+				} catch (Exception e) {
+					Debug.WriteLine(e);
 				}
 			});
 		};
