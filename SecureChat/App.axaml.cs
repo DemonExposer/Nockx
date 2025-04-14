@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -94,9 +93,7 @@ public partial class App : Application {
 		if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
 			desktop.Exit += (_, _) => {
 				GlobalPlaybackDevice.Close();
-				Debug.WriteLine("DISPOSING TIMERS");
 				_timers.ForEach(t => t.Dispose());
-				Debug.WriteLine("TIMERS DISPOSED");
 			};
 			
 			if (!_isKeyLoadedSuccessfully) {

@@ -38,16 +38,12 @@ public partial class Spinner : Border {
 
 		int i = 0;
 		Timer timer = new (_ => {
-			try {
+			Dispatcher.UIThread.InvokeAsync(() => {
 				lock (this) {
-					Dispatcher.UIThread.Invoke(() => {
-						_innerImage.Source = _frames[i++];
-					});
+					_innerImage.Source = _frames[i++];
 					i %= _frames.Count;
 				}
-			} catch (Exception e) {
-				Console.WriteLine(e);
-			}
+			});
 		}, null, 0, 1000/60);
 
 		// For disposing and also to cancel garbage collection, the timer needs to be stored
