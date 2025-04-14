@@ -1,7 +1,6 @@
 ﻿using System;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.LogicalTree;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +12,7 @@ using SecureChat.CustomControls;
 
 namespace SecureChat.Panels;
 
-public class ChatPanel : DockPanel {
+public partial class ChatPanel : DockPanel {
 	private MainWindowModel? _mainWindowModel;
 	
 	private readonly ChatPanelController _controller;
@@ -31,52 +30,37 @@ public class ChatPanel : DockPanel {
 
 	public ChatPanel() {
 		_controller = new ChatPanelController(this);
-		
-		Dispatcher.UIThread.InvokeAsync(() => {
-			using IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
-			while (enumerator.MoveNext()) {
-				if (enumerator.Current.GetType() == typeof(TextBox)) {
-					TextBox textBox = (TextBox) enumerator.Current;
-					if (textBox.Name == "MessageBox") {
-						textBox.KeyDown += (_, args) => {
-							if (args.Key == Key.Enter) {
-								if (textBox.Text == null)
-									return;
-								if (_mainWindowModel == null)
-									throw new InvalidOperationException("Cannot add message before _mainWindowModel is set using SetMainWindowModel");
-								long id = _controller.SendMessage(textBox.Text);
-								AddMessage(new DecryptedMessage { Body = textBox.Text, Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName});
-								textBox.Text = null;
-							}
-						};
-					}
-				} else if (enumerator.Current.GetType() == typeof(StackPanel)) {
-					StackPanel stackPanel = (StackPanel) enumerator.Current;
-					if (stackPanel.Name == "MessagePanel")
-						_messagePanel = stackPanel;
-				} else if (enumerator.Current.GetType() == typeof(ScrollViewer)) {
-					ScrollViewer scrollViewer = (ScrollViewer) enumerator.Current;
-					if (scrollViewer.Name == "MessageScrollView") {
-						_messageScrollView = scrollViewer;
-						_distanceScrolledFromBottom = _messageScrollView.ScrollBarMaximum.Y - _messageScrollView.Offset.Y;
-						_messageScrollView.ScrollChanged += (sender, args) => {
-							if (!_isResized)
-								_distanceScrolledFromBottom = _messageScrollView.ScrollBarMaximum.Y - _messageScrollView.Offset.Y;
-							else
-								_isResized = false;
-						};
-					}
-				} else if (enumerator.Current.GetType() == typeof(TextBlock)) {
-					TextBlock textBlock = (TextBlock) enumerator.Current;
-					if (textBlock.Name == "HeaderForeignUsername")
-						_headerUsernameTextBlock = textBlock;
-				} else if (enumerator.Current.GetType() == typeof(Button)) {
-					Button button = (Button) enumerator.Current;
-					if (button.Name == "CallButton")
-						_callButton = button;
-				}
+
+		InitializeComponent();
+
+		TextBox messageBox = this.FindControl<TextBox>("MessageBox")!;
+		messageBox.KeyDown += (_, args) => {
+			if (args.Key == Key.Enter) {
+				if (messageBox.Text == null)
+					return;
+				if (_mainWindowModel == null)
+					throw new InvalidOperationException("Cannot add message before _mainWindowModel is set using SetMainWindowModel");
+
+				long id = _controller.SendMessage(messageBox.Text);
+				AddMessage(new DecryptedMessage { Body = messageBox.Text, Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName });
+				messageBox.Text = null;
 			}
-		});
+		};
+
+		_messagePanel = this.FindControl<StackPanel>("MessagePanel")!;
+
+		_messageScrollView = this.FindControl<ScrollViewer>("MessageScrollView")!;
+		_distanceScrolledFromBottom = _messageScrollView.ScrollBarMaximum.Y - _messageScrollView.Offset.Y;
+		_messageScrollView.ScrollChanged += (sender, args) => {
+			if (!_isResized)
+				_distanceScrolledFromBottom = _messageScrollView.ScrollBarMaximum.Y - _messageScrollView.Offset.Y;
+			else
+				_isResized = false;
+		};
+
+		_headerUsernameTextBlock = this.FindControl<TextBlock>("HeaderForeignUsername")!;
+
+		_callButton = this.FindControl<Button>("CallButton")!;
 	}
 
 	public void SetMainWindowModel(MainWindowModel mainWindowModel) {

@@ -8,4 +8,3 @@ Saved states
 Load things in the background so it doesn't block UI
 Don't crash when connection to server cannot be established or is lost
 Make type text caps or lower when selected and caps lock is pressed
-Fix the format of the panels in MainWindow.axaml. They should be separate axaml files instead.

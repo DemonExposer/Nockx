@@ -1,0 +1,10 @@
+<StackPanel xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:customControls="clr-namespace:SecureChat.CustomControls"
+		mc:Ignorable="d" d:DesignWidth="650" d:DesignHeight="400"
+		x:Class="SecureChat.Panels.AddFriendPanel">
+	<TextBlock FontSize="15" Margin="10">Add Friend</TextBlock>
+	<TextBox Name="KeyTextBox" Watermark="Key"/>
+</StackPanel>

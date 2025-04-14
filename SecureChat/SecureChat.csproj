@@ -26,7 +26,7 @@
 
 	<ItemGroup>
 		<Compile Update="panels\ChatPanelController.cs">
-			<DependentUpon>ChatPanel.cs</DependentUpon>
+			<DependentUpon>ChatPanel.axaml.cs</DependentUpon>
 		</Compile>
 		<Compile Update="panels\UserInfoPanelController.cs">
 			<DependentUpon>UserInfoPanel.axaml.cs</DependentUpon>
@@ -35,7 +35,7 @@
             <DependentUpon>MainWindow.axaml.cs</DependentUpon>
         </Compile>
         <Compile Update="panels\ChatPanelCommands.cs">
-          <DependentUpon>ChatPanel.cs</DependentUpon>
+          <DependentUpon>ChatPanel.axaml.cs</DependentUpon>
         </Compile>
         <Compile Update="MainWindowModel.cs">
           <DependentUpon>MainWindow.axaml.cs</DependentUpon>
@@ -44,7 +44,7 @@
           <DependentUpon>CallPopupWindow.axaml.cs</DependentUpon>
         </Compile>
         <Compile Update="panels\FriendsPanelController.cs">
-          <DependentUpon>FriendsPanel.cs</DependentUpon>
+          <DependentUpon>FriendsPanel.axaml.cs</DependentUpon>
         </Compile>
 	</ItemGroup>
     

@@ -44,8 +44,8 @@ public partial class MainWindow : Window {
 	private void InitializeComponent() {
 		AvaloniaXamlLoader.Load(this);
 
-		AddUserPanel addUserPanel = (AddUserPanel) Resources["AddUserPanel"]!;
-		ChatPanel = (ChatPanel) Resources["ChatPanel"]!;
+		AddUserPanel addUserPanel = new ();
+		ChatPanel = new ChatPanel();
 		ChatPanel.SetMainWindowModel(_model);
 		UserInfoPanel = new UserInfoPanel();
 		UserInfoPanel.SetMainWindowModel(_model);
@@ -63,7 +63,7 @@ public partial class MainWindow : Window {
 			SetUiPanel(addUserPanel);
 		};
 		
-		AddFriendPanel addFriendPanel = (AddFriendPanel) Resources["AddFriendPanel"]!;
+		AddFriendPanel addFriendPanel = new ();
 		addFriendPanel.SetOnEnter(OnAddFriend);
 
 		Button addFriendButton = this.FindControl<Button>("AddFriendButton")!;
@@ -72,7 +72,7 @@ public partial class MainWindow : Window {
 			SetUiPanel(addFriendPanel);
 		};
 		
-		FriendsPanel friendsPanel = (FriendsPanel) Resources["FriendsPanel"]!;
+		FriendsPanel friendsPanel = new ();
 		
 		Button friendsButton = this.FindControl<Button>("FriendsButton")!;
 		friendsButton.Click += (_, _) => {

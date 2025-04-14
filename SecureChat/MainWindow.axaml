@@ -11,38 +11,6 @@
 		Width="1000"
 		Height="600"
 		WindowState="Maximized">
-	<Window.Resources>
-		<panels:FriendsPanel x:Key="FriendsPanel">
-			<DockPanel DockPanel.Dock="Top" Background="#202020">
-				<TextBlock VerticalAlignment="Center" FontSize="15" Margin="10">Friends</TextBlock>
-			</DockPanel>
-			<ScrollViewer Name="FriendsScrollView" VerticalScrollBarVisibility="Auto">
-				<StackPanel Name="FriendsStackPanel">
-					
-				</StackPanel>
-			</ScrollViewer>
-		</panels:FriendsPanel>
-		<panels:AddUserPanel x:Key="AddUserPanel">
-			<TextBox Name="KeyTextBox" Watermark="Key"/>
-		</panels:AddUserPanel>
-		<panels:AddFriendPanel x:Key="AddFriendPanel">
-			<TextBlock FontSize="15" Margin="10">Add Friend</TextBlock>
-			<TextBox Name="FriendKeyTextBox" Watermark="Key"/>
-		</panels:AddFriendPanel>
-		<panels:ChatPanel x:Key="ChatPanel">
-			<DockPanel DockPanel.Dock="Top" Background="#202020">
-				<Button DockPanel.Dock="Right" Name="CallButton" Content="Call"/>
-				<TextBlock Name="HeaderForeignUsername" VerticalAlignment="Center" FontSize="15" Margin="10"/>
-			</DockPanel>
-			<TextBox DockPanel.Dock="Bottom" Name="MessageBox" Margin="0" Width="NaN" HorizontalAlignment="Stretch"/>
-			<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
-				<StackPanel Name="MessagePanel">
-				
-				</StackPanel>
-			</ScrollViewer>
-		</panels:ChatPanel>
-	</Window.Resources>
-	
 	<DockPanel>
 		<DockPanel DockPanel.Dock="Left" Width="200">
 			<StackPanel DockPanel.Dock="Bottom">

@@ -4,32 +4,25 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.LogicalTree;
 using Avalonia.Media;
-using Avalonia.Threading;
 using SecureChat.ClassExtensions;
 using SecureChat.extended_controls;
 using SecureChat.util;
 
 namespace SecureChat.Panels;
 
-public class FriendsPanel : DockPanel {
+public partial class FriendsPanel : DockPanel {
 	private readonly FriendsPanelController _controller;
 	private readonly List<FriendDockPanel> _friends = [];
-	private StackPanel? _friendsPanel;
+	private StackPanel? _mainPanel;
 	private bool _isShowCalled;
 
 	public FriendsPanel() {
 		_controller = new FriendsPanelController();
-		
-		Dispatcher.UIThread.InvokeAsync(() => {
-			using IEnumerator<ILogical> enumerator = this.GetLogicalDescendants().GetEnumerator();
-			while (enumerator.MoveNext()) {
-				if (enumerator.Current.GetType() == typeof(StackPanel)) {
-					_friendsPanel = (StackPanel) enumerator.Current;
-				}
-			}
-		});
+
+		InitializeComponent();
+
+		_mainPanel = this.FindControl<StackPanel>("MainPanel");
 	}
 
 	public void Show(MainWindow window) {
@@ -43,12 +36,13 @@ public class FriendsPanel : DockPanel {
 	public void Unshow() {
 		if (!_isShowCalled)
 			return;
-		_friendsPanel.Children.RemoveAll(_friends.Select(block => block.Border));
+
+		_mainPanel.Children.RemoveAll(_friends.Select(block => block.Border));
 		_friends.Clear();
 	}
 
 	private void AddFriend(FriendRequest friendRequest, MainWindow window) {
-		if (_friendsPanel == null) {
+		if (_mainPanel == null) {
 			Console.WriteLine("AddFriend: FriendsPanel is not initialized");
 			return;
 		}
@@ -126,6 +120,6 @@ public class FriendsPanel : DockPanel {
 		border.Child = dockPanel;
 
 		_friends.Add(friendDockPanel);
-		_friendsPanel.Children.Add(border);
+		_mainPanel.Children.Add(border);
 	}
 }
