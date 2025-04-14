@@ -9,7 +9,7 @@
 	<StackPanel Orientation="Horizontal">
 		<TextBox MaxLength="255" Name="DisplayNameBox"/>
 		<Button Name="SetDisplayNameButton">Set</Button>
-		<customControls:Spinner Name="LoadingSpinner"/>
+		<customControls:Spinner Name="LoadingSpinner" Height="32" Width="32"/>
 	</StackPanel>
 	<TextBlock Margin="0,20,0,0">Key:</TextBlock>
 	<TextBox IsReadOnly="True" Name="KeyBox"/>

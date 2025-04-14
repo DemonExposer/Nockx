@@ -11,7 +11,9 @@ namespace SecureChat.CustomControls;
 
 public partial class Spinner : Border {
 	private List<Bitmap> _frames = [];
+	private Bitmap _checkmark;
 	private bool _isSpinning;
+	private Timer? _timer;
 
 	private Image _innerImage;
 
@@ -25,6 +27,8 @@ public partial class Spinner : Border {
 	private void InitializeComponent() {
 		for (int i = 0; File.Exists($"animations/spinner/{i}.png"); i++)
 			_frames.Add(new Bitmap($"animations/spinner/{i}.png"));
+
+		_checkmark = new Bitmap("animations/spinner/checkmark.png");
 	}
 
 	public void Spin() {
@@ -37,7 +41,7 @@ public partial class Spinner : Border {
 		_isSpinning = true;
 
 		int i = 0;
-		Timer timer = new (_ => {
+		_timer = new (_ => {
 			Dispatcher.UIThread.InvokeAsync(() => {
 				lock (this) {
 					_innerImage.Source = _frames[i++];
@@ -47,6 +51,15 @@ public partial class Spinner : Border {
 		}, null, 0, 1000/60);
 
 		// For disposing and also to cancel garbage collection, the timer needs to be stored
-		((App) App.Current!).AddTimer(timer);
+		((App) App.Current!).AddTimer(_timer);
+	}
+
+	public void Success() {
+		if (_isSpinning) {
+			_timer.Dispose();
+			_isSpinning = false;
+		}
+
+		Dispatcher.UIThread.InvokeAsync(() => _innerImage.Source = _checkmark);
 	}
 }

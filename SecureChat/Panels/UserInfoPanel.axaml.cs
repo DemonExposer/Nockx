@@ -5,6 +5,8 @@ using Avalonia.Interactivity;
 using SecureChat.Windows;
 using System;
 using Spinner = SecureChat.CustomControls.Spinner;
+using System.Threading.Tasks;
+using Avalonia.Threading;
 
 namespace SecureChat.Panels;
 
@@ -35,7 +37,11 @@ public partial class UserInfoPanel : StackPanel {
 			if (DisplayNameTextBox?.Text == null)
 				return;
 
-			_controller.SetDisplayName(DisplayNameTextBox.Text);
+			Task.Run(() => {
+				Spinner.Spin(); // this does not work when actually pressing the button, because an animation is then already playing on the UI thread
+				Dispatcher.UIThread.Invoke(() => _controller.SetDisplayName(DisplayNameTextBox.Text));
+				Spinner.Success();
+			});
 		};
 
 		connectAppButton.Click += ConnectAppButton_OnClick;

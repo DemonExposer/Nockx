@@ -68,6 +68,12 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="animations\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 	<!--TODO: possibly add transitive licenses, and mention all the libraries in the README-->
 	<Target Name="CopyAndRenameLicenses" AfterTargets="Publish">
 		<ItemGroup>

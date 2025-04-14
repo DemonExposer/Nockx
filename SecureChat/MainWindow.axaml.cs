@@ -85,8 +85,6 @@ public partial class MainWindow : Window {
 		userInfoButton.Click += (_, _) => {
 			SetPressedButton(userInfoButton);
 			SetUiPanel(UserInfoPanel);
-
-			UserInfoPanel.Spinner.Spin();
 		};
 
 		Button settingsButton = this.FindControl<Button>("SettingsButton")!;
