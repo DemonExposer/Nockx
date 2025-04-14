@@ -1,36 +1,23 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Platform;
 using SecureChat.ClassExtensions;
 using Avalonia.Interactivity;
 using SecureChat.Windows;
 using System;
-using Avalonia.Media.Imaging;
-using System.IO;
-using SkiaSharp;
-using Avalonia.Media;
-using System.Collections.Generic;
-using OpenTK.Mathematics;
-using System.Diagnostics;
-using Avalonia.Threading;
+using Spinner = SecureChat.CustomControls.Spinner;
 
 namespace SecureChat.Panels;
 
 public partial class UserInfoPanel : StackPanel {
 	public readonly TextBox DisplayNameTextBox;
+	public readonly Spinner Spinner;
 
 	private readonly UserInfoPanelController _controller;
 	private ConnectAppWindow? _connectAppWindow;
-	private WriteableBitmap _bitmap;
-	private Image _pixelImage;
-
-	private Bitmap _pngBitmap;
-	private RenderTargetBitmap _rotatedBitmap;
 
 	public UserInfoPanel() {
 		_controller = new UserInfoPanelController(this);
-
+		
 		InitializeComponent();
 
 		TextBox keyBox = this.FindControl<TextBox>("KeyBox")!;
@@ -55,65 +42,7 @@ public partial class UserInfoPanel : StackPanel {
 
 		keyBox!.Text = _controller.PublicKey.ToBase64String();
 
-		_pixelImage = this.FindControl<Image>("PixelImage")!;
-		
-		_pngBitmap = new Bitmap("in.png");
-
-		_bitmap = new WriteableBitmap(new PixelSize(128, 128), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
-;
-		using (ILockedFramebuffer fb = _bitmap.Lock()) {
-			unsafe {
-				_pngBitmap.CopyPixels(fb, AlphaFormat.Unpremul);
-			}
-		}
-
-		_pixelImage.Source = _bitmap;
-	}
-
-	public List<Vector4> GetPixelMap() {
-		List<Vector4> res = [];
-		
-		using (var fb = _bitmap.Lock()) {
-			unsafe {
-				int *buffer = (int *) fb.Address;
-				for (int i = 0; i < 128 * 128; i++) {
-				//	Debug.WriteLine("{0} {1}", i % 128, i / 128);
-					res.Add(new Vector4(i % 128, i / 128, buffer[i] & 0xFF, buffer[i] >> 24));
-				}
-			}
-		}
-
-		return res;
-	}
-
-	public void DrawPixel(int x, int y, byte r, byte g, byte b, byte a) {
-		if (x >= 128 || y >= 128 || x < 0 || y < 0)
-			return;
-		using (var fb = _bitmap.Lock()) {
-			unsafe {
-				int *buffer = (int *) fb.Address;
-				int index = y * fb.RowBytes / 4 + x;
-
-				// BGRA
-				buffer[index] = (a << 24) | (r << 16) | (g << 8) | b;
-			}
-		}
-
-		// Invalidate the bitmap to show the changes
-		_pixelImage.InvalidateVisual();
-	}
-
-	public void Clear() {
-		for (int i = 0; i < 128; i++) {
-			for (int j = 0; j < 128; j++) {
-				DrawPixel(i, j, 0, 0, 0, 0);
-			}
-		}
-	}
-
-	public void Save(string name) {
-		using FileStream fs = File.Create($"{name}.png");
-		_bitmap.Save(fs);
+		Spinner = this.FindControl<Spinner>("LoadingSpinner")!;
 	}
 	
 	public void SetMainWindowModel(MainWindowModel mainWindowModel) {

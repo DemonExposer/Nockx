@@ -1,12 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
-using OpenTK.Mathematics;
 using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.ClassExtensions;
 using SecureChat.Model;
@@ -90,91 +85,8 @@ public partial class MainWindow : Window {
 		userInfoButton.Click += (_, _) => {
 			SetPressedButton(userInfoButton);
 			SetUiPanel(UserInfoPanel);
-			
-			Dispatcher.UIThread.InvokeAsync(async () => {
-				try {
-					List<Vector4> pixels = UserInfoPanel.GetPixelMap();
-					bool hasDone = false;
-				//double t = 0;
-				//Timer timer = new (_ => {
-				//	Dispatcher.UIThread.InvokeAsync(() => {
-				//		Matrix2 m = new ((float) Math.Cos(t), (float) Math.Sin(t), (float) -Math.Sin(t), (float) Math.Cos(t));
-				//		t -= Math.PI / 15;
-				//		t %= Math.Tau;
-				//		UserInfoPanel.Clear();
-				//		for (int i = 0; i < pixels.Count; i++) {
-				//			Vector4 v = new Vector4(pixels[i].X - 64, -pixels[i].Y + 64, pixels[i].Z, pixels[i].W);
-				//			pixels[i] = v;
-				//		}
 
-				//		foreach (Vector4 v in pixels) {
-				//			Vector2 v2 = m * new Vector2(v.X, v.Y);
-				//			UserInfoPanel.DrawPixel((int) v2.X + 64, (int) v2.Y + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-				//		}
-
-				//		for (int i = 0; i < pixels.Count; i++) {
-				//			Vector4 v = new Vector4(pixels[i].X + 64, -pixels[i].Y + 64, pixels[i].Z, pixels[i].W);
-				//			pixels[i] = v;
-				//		}
-				//	});
-				//}, null, 0, 1000/60);
-
-					int imageIndex = 0;
-					for (double t = 0; t > -Math.Tau; t -= Math.PI / 15) {
-						Matrix2 m = new((float) Math.Cos(t), (float) Math.Sin(t), (float) -Math.Sin(t), (float) Math.Cos(t));
-						UserInfoPanel.Clear();
-						for (int i = 0; i < pixels.Count; i++) {
-							Vector4 v = new Vector4(pixels[i].X - 64, -pixels[i].Y + 64, pixels[i].Z, pixels[i].W);
-							pixels[i] = v;
-						}
-
-						foreach (Vector4 v in pixels) {
-							Vector2 v2 = m * new Vector2(v.X, v.Y);
-							float xOffset = v2.X % 1;
-							float yOffset = v2.Y % 1;
-
-							int xFactor = v2.X < 0 ? -1 : 1;
-							int yFactor = v2.Y < 0 ? -1 : 1;
-
-							xOffset *= xFactor;
-							yOffset *= yFactor;
-
-							int newX = xOffset > 0.75 ? (int) v2.X + xFactor : (int) v2.X;
-							int newY = yOffset > 0.75 ? (int) v2.Y + yFactor : (int) v2.Y;
-
-							if (xOffset > 0.25 && xOffset < 0.75) {
-								if (yOffset > 0.25 && yOffset < 0.75) {
-									UserInfoPanel.DrawPixel(newX + 64, newY + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-									UserInfoPanel.DrawPixel(newX + 64 + xFactor, newY + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-									UserInfoPanel.DrawPixel(newX + 64, newY + 64 + yFactor, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-									UserInfoPanel.DrawPixel(newX + 64 + xFactor, newY + 64 + yFactor, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-								} else {
-									UserInfoPanel.DrawPixel(newX + 64, newY + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-									UserInfoPanel.DrawPixel(newX + 64 + xFactor, newY + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-								}
-							} else {
-								if (yOffset > 0.25 && yOffset < 0.75) {
-									UserInfoPanel.DrawPixel(newX + 64, newY + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-									UserInfoPanel.DrawPixel(newX + 64, newY + 64 + yFactor, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-								} else {
-									UserInfoPanel.DrawPixel(newX + 64, newY + 64, (byte) v.Z, (byte) v.Z, (byte) v.Z, (byte) v.W);
-								}
-							}
-						}
-
-						UserInfoPanel.Save($"output/{imageIndex++}");
-
-						for (int i = 0; i < pixels.Count; i++) {
-							Vector4 v = new Vector4(pixels[i].X + 64, -pixels[i].Y + 64, pixels[i].Z, pixels[i].W);
-							pixels[i] = v;
-						}
-					}
-
-					await new TaskCompletionSource<bool>().Task;
-				} catch (Exception e) {
-					Debug.WriteLine(e);
-				}
-			});
+			UserInfoPanel.Spinner.Spin();
 		};
 
 		Button settingsButton = this.FindControl<Button>("SettingsButton")!;

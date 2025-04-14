@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Nodes;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -22,6 +24,7 @@ public partial class App : Application {
 	private bool _isKeyLoadedSuccessfully;
 	private bool _doUpdate;
 	private JsonObject _releaseFileObject;
+	private List<Timer> _timers = [];
 	
 	public override void Initialize() {
 		Chats.LoadOrDefault(Constants.ChatsFile);
@@ -51,6 +54,8 @@ public partial class App : Application {
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
 	}
+
+	public void AddTimer(Timer timer) => _timers.Add(timer);
 
 	private void CheckOrGenerateKeys() {
 		if (!File.Exists(Constants.PrivateKeyFile) && !File.Exists(Constants.PublicKeyFile)) {
@@ -86,7 +91,10 @@ public partial class App : Application {
 
 	public override void OnFrameworkInitializationCompleted() {
 		if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
-			desktop.Exit += (_, _) => GlobalPlaybackDevice.Close();
+			desktop.Exit += (_, _) => {
+				GlobalPlaybackDevice.Close();
+				_timers.ForEach(t => t.Dispose());
+			};
 			
 			if (!_isKeyLoadedSuccessfully) {
 				// TODO: add option to generate public key from private key if only the private key is available or the option to regenerate both
