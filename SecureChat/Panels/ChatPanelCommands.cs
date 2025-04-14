@@ -6,32 +6,28 @@ using SecureChat.CustomControls;
 namespace SecureChat.Panels;
 
 public static class ChatPanelCommands {
-	public class CopyCommand : ICommand {
-		private readonly SelectableTextBlock _textBlock;
-
-		public CopyCommand(SelectableTextBlock textBlock) => _textBlock = textBlock;
-
+	public class CopyCommand(SelectableTextBlock textBlock) : ICommand {
 		public bool CanExecute(object? parameter) => true;
 		
-		public void Execute(object? parameter) => _textBlock.Copy();
+		public void Execute(object? parameter) => textBlock.Copy();
 
 		public event EventHandler? CanExecuteChanged;
 	}
 
-	public class DeleteMessageCommand : ICommand {
-		public delegate void Callback(long id);
-		
-		private readonly MessageItem _messageItem;
-		private readonly Callback _callback;
+	public class CopyPublicKeyCommand(MessageItem messageItem, SelectableTextBlock textBlock) : ICommand {
+		public bool CanExecute(object? parameter) => true;
 
-		public DeleteMessageCommand(MessageItem messageItem, Callback callback) {
-			_messageItem = messageItem;
-			_callback = callback;
-		}
+		public void Execute(object? parameter) => TopLevel.GetTopLevel(textBlock)?.Clipboard?.SetTextAsync(messageItem.PublicKey).Wait();
+
+		public event EventHandler? CanExecuteChanged;
+	}
+
+	public class DeleteMessageCommand(MessageItem messageItem, DeleteMessageCommand.Callback callback) : ICommand {
+		public delegate void Callback(long id);
 
 		public bool CanExecute(object? parameter) => true;
 
-		public void Execute(object? parameter) => _callback(_messageItem.Id);
+		public void Execute(object? parameter) => callback(messageItem.Id);
 
 		public event EventHandler? CanExecuteChanged;
 	}

@@ -59,6 +59,14 @@ public partial class MessageItem : UserControl {
 			Cursor = new Cursor(StandardCursorType.Arrow)
 		};
 
+		MenuItem copyPublicKeyItem = new () {
+			Header = "Copy public key",
+			Name = "CopyPublicKeyItem",
+			Cursor = new Cursor(StandardCursorType.Arrow),
+			Command = new ChatPanelCommands.CopyPublicKeyCommand(this, _nameBlock),
+			IsVisible = true
+		};
+
 		_deleteMenuItem = new MenuItem {
 			Header = "Delete message",
 			Name = "DeleteMenuItem",
@@ -71,6 +79,7 @@ public partial class MessageItem : UserControl {
 		_contextMenu = new ContextMenu {
 			Items = {
 				_copyMenuItem,
+				copyPublicKeyItem,
 				_deleteMenuItem
 			}
 		};
