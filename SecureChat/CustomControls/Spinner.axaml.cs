@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using System;
@@ -8,12 +9,17 @@ using System.Threading;
 
 namespace SecureChat.CustomControls; 
 
-public partial class Spinner : Image {
+public partial class Spinner : Border {
 	private List<Bitmap> _frames = [];
 	private bool _isSpinning;
 
+	private Image _innerImage;
+
 	public Spinner() {
+		AvaloniaXamlLoader.Load(this);
 		InitializeComponent();
+
+		_innerImage = this.FindControl<Image>("PART_Image")!;
 	}
 
 	private void InitializeComponent() {
@@ -35,7 +41,7 @@ public partial class Spinner : Image {
 			try {
 				lock (this) {
 					Dispatcher.UIThread.Invoke(() => {
-						Source = _frames[i++];
+						_innerImage.Source = _frames[i++];
 					});
 					i %= _frames.Count;
 				}
