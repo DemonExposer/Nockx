@@ -57,18 +57,13 @@ public partial class UserInfoPanel : StackPanel {
 
 		_pixelImage = this.FindControl<Image>("PixelImage")!;
 		
-		_bitmap = new WriteableBitmap(new PixelSize(128, 128), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
+		_pngBitmap = new Bitmap("in.png");
 
-		byte[] bitmap = File.ReadAllBytes("in.bmp")[138..];
-		int[] pixels = new int[bitmap.Length / sizeof(int)];
-		Debug.WriteLine("{0} {1}", bitmap.Length, pixels.Length);
-		Buffer.BlockCopy(bitmap, 0, pixels, 0, bitmap.Length);
+		_bitmap = new WriteableBitmap(new PixelSize(128, 128), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
+;
 		using (ILockedFramebuffer fb = _bitmap.Lock()) {
 			unsafe {
-				int *buffer = (int *) fb.Address;
-
-				for (int i = 0; i < pixels.Length; i++)
-					buffer[i] = pixels[i];
+				_pngBitmap.CopyPixels(fb, AlphaFormat.Unpremul);
 			}
 		}
 
@@ -116,8 +111,8 @@ public partial class UserInfoPanel : StackPanel {
 		}
 	}
 
-	public void Save() {
-		using FileStream fs = File.Create("out.png");
+	public void Save(string name) {
+		using FileStream fs = File.Create($"{name}.png");
 		_bitmap.Save(fs);
 	}
 	
