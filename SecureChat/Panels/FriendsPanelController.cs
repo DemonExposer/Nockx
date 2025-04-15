@@ -8,7 +8,6 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.ClassExtensions;
-using SecureChat.util;
 using SecureChat.Util;
 
 namespace SecureChat.Panels;
@@ -30,8 +29,7 @@ public class FriendsPanelController {
 	}
 
 	public List<FriendRequest> GetFriends() {
-		string getVariables =
-			$"key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}";
+		string getVariables = $"key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 		Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/friends?{getVariables}",
 			[new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
 		//TODO: error popup when friends could not be retrieved
@@ -50,6 +48,7 @@ public class FriendsPanelController {
 	}
 
 	public void AcceptFriendRequest(FriendRequest friendRequest) {
+		friendRequest.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		string body = FriendRequest.Serialize(friendRequest);
 		Response response = Http.Put($"https://{Settings.GetInstance().Hostname}:5000/friends", body,
 			[new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
@@ -59,6 +58,7 @@ public class FriendsPanelController {
 	}
 
 	public void DeleteFriendRequest(FriendRequest friendRequest) {
+		friendRequest.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		string body = FriendRequest.Serialize(friendRequest);
 		Response response =
 			Http.Delete(

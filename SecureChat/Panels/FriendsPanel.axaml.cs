@@ -6,8 +6,8 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using SecureChat.ClassExtensions;
-using SecureChat.extended_controls;
-using SecureChat.util;
+using SecureChat.ExtendedControls;
+using SecureChat.Util;
 
 namespace SecureChat.Panels;
 
@@ -48,7 +48,7 @@ public partial class FriendsPanel : DockPanel {
 		}
 		
 		IBrush originalBackground = new SolidColorBrush(Color.Parse("Transparent"));
-		Border border = new() {
+		Border border = new () {
 			Background = originalBackground
 		};
 		border.PointerEntered += (_, _) => border.Background = new SolidColorBrush(Color.Parse("#252525"));
@@ -66,7 +66,7 @@ public partial class FriendsPanel : DockPanel {
 			Width = double.NaN,
 			Text = amISender ? friendRequest.ReceiverName : friendRequest.SenderName
 		};
-		Button rejectButton = new() {
+		Button rejectButton = new () {
 			Margin = new Thickness(5),
 			Content = "Reject",
 			Classes = { "reject" }
@@ -100,9 +100,9 @@ public partial class FriendsPanel : DockPanel {
 			key = friendRequest.ReceiverKey;
 			name = friendRequest.ReceiverName;
 		}
-		chatButton.Click += (_, _) => { window.AddUser(RsaKeyParametersExtension.FromBase64String(key), name, true); };
+		chatButton.Click += (_, _) => window.AddUser(RsaKeyParametersExtension.FromBase64String(key), name, true);
 
-		DockPanel dockPanel = new();
+		DockPanel dockPanel = new ();
 		if (!friendRequest.Accepted && !amISender)
 			dockPanel.Children.Add(rejectButton);
 		dockPanel.Children.Add(button);
@@ -110,7 +110,7 @@ public partial class FriendsPanel : DockPanel {
 			dockPanel.Children.Add(chatButton);
 		dockPanel.Children.Add(textBlock);
 
-		FriendDockPanel friendDockPanel = new() {
+		FriendDockPanel friendDockPanel = new () {
 			DockPanel = dockPanel,
 			Border = border,
 			SenderKey = friendRequest.SenderKey,

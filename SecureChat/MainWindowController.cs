@@ -301,7 +301,8 @@ public class MainWindowController {
 				["key"] = publicKey.ToBase64String(),
 				["displayName"] = ""
 			},
-			["accepted"] = false
+			["accepted"] = false,
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 		};
 		string json = JsonSerializer.Serialize(body);
 		Response response = Http.Post($"https://{Settings.GetInstance().Hostname}:5000/friends", json, [new Header { Name = "Signature", Value = Cryptography.Sign(json, _privateKey) }]);

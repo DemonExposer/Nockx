@@ -1,6 +1,6 @@
 ﻿using Avalonia.Controls;
 
-namespace SecureChat.extended_controls;
+namespace SecureChat.ExtendedControls;
 
 public class FriendDockPanel {
 	public string SenderKey { get; set; }
