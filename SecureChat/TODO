@@ -6,4 +6,3 @@ Forbid self-messages
 Translations
 Saved states
 Don't crash when connection to server cannot be established or is lost
-Make type text caps or lower when selected and caps lock is pressed

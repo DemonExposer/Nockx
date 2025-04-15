@@ -11,6 +11,7 @@ using SecureChat.Util;
 using SecureChat.CustomControls;
 using System.Threading.Tasks;
 using Spinner = SecureChat.CustomControls.Spinner;
+using System.Text;
 
 namespace SecureChat.Panels;
 
@@ -37,15 +38,35 @@ public partial class ChatPanel : DockPanel {
 
 		TextBox messageBox = this.FindControl<TextBox>("MessageBox")!;
 		messageBox.KeyDown += (_, args) => {
-			if (args.Key == Key.Enter) {
-				if (messageBox.Text == null)
-					return;
-				if (_mainWindowModel == null)
-					throw new InvalidOperationException("Cannot add message before _mainWindowModel is set using SetMainWindowModel");
+			switch (args.Key) {
+				case Key.Enter:
+					if (messageBox.Text == null)
+						return;
+					if (_mainWindowModel == null)
+						throw new InvalidOperationException("Cannot add message before _mainWindowModel is set using SetMainWindowModel");
 
-				long id = _controller.SendMessage(messageBox.Text);
-				AddMessage(new DecryptedMessage { Body = messageBox.Text, Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName });
-				messageBox.Text = null;
+					long id = _controller.SendMessage(messageBox.Text);
+					AddMessage(new DecryptedMessage { Body = messageBox.Text, Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Id = id, Sender = _controller.PersonalPublicKey.ToBase64String(), DisplayName = _mainWindowModel.DisplayName });
+					messageBox.Text = null;
+					break;
+				case Key.CapsLock:
+					if (messageBox.SelectionStart > messageBox.SelectionEnd)
+						(messageBox.SelectionEnd, messageBox.SelectionStart) = (messageBox.SelectionStart, messageBox.SelectionEnd);
+					
+					StringBuilder sb = new (messageBox.Text[..messageBox.SelectionStart]);
+					for (int i = messageBox.SelectionStart; i < messageBox.SelectionEnd; i++) {
+						if (messageBox.Text[i] <= 'z' && messageBox.Text[i] >= 'a')
+							sb.Append((char) (messageBox.Text[i] + ('A' - 'a')));
+						else if (messageBox.Text[i] <= 'Z' && messageBox.Text[i] >= 'A')
+							sb.Append((char) (messageBox.Text[i] - ('A' - 'a')));
+						else
+							sb.Append(messageBox.Text[i]);
+					}
+
+					sb.Append(messageBox.Text[messageBox.SelectionEnd..]);
+
+					messageBox.Text = sb.ToString();
+					break;
 			}
 		};
 
