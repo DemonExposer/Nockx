@@ -54,12 +54,16 @@ public partial class Spinner : Border {
 		((App) App.Current!).AddTimer(_timer);
 	}
 
-	public void Success() {
-		if (_isSpinning) {
-			_timer.Dispose();
-			_isSpinning = false;
-		}
+	public void StopSpinning() {
+		if (!_isSpinning)
+			return;
 
+		_timer.Dispose();
+		_isSpinning = false;
+	}
+
+	public void Success() {
+		StopSpinning();
 		Dispatcher.UIThread.InvokeAsync(() => _innerImage.Source = _checkmark);
 	}
 }

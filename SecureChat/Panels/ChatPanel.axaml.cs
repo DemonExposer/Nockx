@@ -9,6 +9,8 @@ using SecureChat.ClassExtensions;
 using SecureChat.Model;
 using SecureChat.Util;
 using SecureChat.CustomControls;
+using System.Threading.Tasks;
+using Spinner = SecureChat.CustomControls.Spinner;
 
 namespace SecureChat.Panels;
 
@@ -135,9 +137,22 @@ public partial class ChatPanel : DockPanel {
 			_controller.SetChatRead();
 		}
 		
-		DecryptedMessage[] messages = _controller.GetPastMessages();
+		Spinner spinner = new () {
+			Height = 128,
+			Width = 128
+		};
+		_messagePanel.Children.Add(spinner);
 
-		messages.ToList().ForEach(AddMessage);
+		// Retrieve and decypt messages in the background
+		Task.Run(() => {
+			spinner.Spin();
+			DecryptedMessage[] messages = _controller.GetPastMessages();
+			spinner.StopSpinning();
+			Dispatcher.UIThread.InvokeAsync(() => {
+				_messagePanel.Children.Remove(spinner);
+				messages.ToList().ForEach(AddMessage);
+			});
+		});
 
 		_callButton.Click += _controller.OnCallButtonClicked;
 

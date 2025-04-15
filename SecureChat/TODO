@@ -5,6 +5,5 @@ Load only part of a conversation and dynamically load more
 Forbid self-messages
 Translations
 Saved states
-Load things in the background so it doesn't block UI
 Don't crash when connection to server cannot be established or is lost
 Make type text caps or lower when selected and caps lock is pressed
