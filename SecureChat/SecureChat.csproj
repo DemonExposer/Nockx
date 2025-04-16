@@ -8,6 +8,7 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <OutputPath>../bin/</OutputPath>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <ApplicationIcon>nockx-logo.ico</ApplicationIcon>
     </PropertyGroup>
     
     <ItemGroup>
@@ -72,6 +73,10 @@
 		<None Include="animations\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="nockx-logo.ico" />
 	</ItemGroup>
 
 	<!--TODO: possibly add transitive licenses, and mention all the libraries in the README-->
