@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using System;
+using System.IO;
 
 namespace SecureChat;
 
@@ -9,6 +10,9 @@ class Program {
 	// yet and stuff might break.
 	[STAThread]
 	public static void Main(string[] args) {
+		// Set working directory, so that the application works in a macOS bundle
+		Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+		
 		BuildAvaloniaApp()
 			.StartWithClassicDesktopLifetime(args);
 	}
