@@ -5,10 +5,13 @@ using SecureChat.Util;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using System.Web;
+using Avalonia.Threading;
 using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using SecureChat.ClassExtensions;
+using SecureChat.Windows;
 
 namespace SecureChat.Panels;
 
@@ -38,17 +41,22 @@ public class UserInfoPanelController {
 			return;
 		
 		_mainWindowModel = mainWindowModel;
-		GetDisplayName();
+		_ = GetDisplayName();
 	}
 
-	private void GetDisplayName() {
+	private async Task GetDisplayName() {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("GetDisplayName may not be called before _mainWindowModel is set using SetMainWindowModel");
 
 		string getVariables = $"key={HttpUtility.UrlEncode(PublicKey.ToBase64String())}";
 
-		_mainWindowModel.DisplayName = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/displayname?" + getVariables).Body;
-		_context.DisplayNameTextBox.Text = _mainWindowModel.DisplayName;
+		try {
+			Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/displayname?" + getVariables);
+			_mainWindowModel.DisplayName = response.Body;
+			await Dispatcher.UIThread.InvokeAsync(() => _context.DisplayNameTextBox.Text = _mainWindowModel.DisplayName);
+		} catch (TimeoutException) {
+			new ErrorPopupWindow($"Cannot retrieve display name ({Settings.GetInstance().Hostname})").Show(MainWindow.Instance);
+		}
 	}
 
 	public bool SetDisplayName(string displayName) {

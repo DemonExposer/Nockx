@@ -61,8 +61,15 @@ public class MainWindowController {
 
 	private void CheckForNewChats() {
 		string getVariables = $"key={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-		Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/chats?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
-		if (!response.IsSuccessful) {
+		Response response = null!;
+		bool hasTimedOut = false;
+		try {
+			response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/chats?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(getVariables, _privateKey) }]);
+		} catch (TimeoutException) {
+			hasTimedOut = true;
+		}
+
+		if (hasTimedOut || !response.IsSuccessful) {
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Could not retrieve chats from server ({Settings.GetInstance().Hostname})"));
 			return;
 		}
