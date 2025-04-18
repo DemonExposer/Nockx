@@ -29,6 +29,8 @@ public partial class MainWindow : Window {
 	public MainWindow() {
 		_model = new MainWindowModel();
 		
+		Activated += OnRendered;
+		
 		InitializeComponent();
 		
 		_controller = new MainWindowController(this, _model);
@@ -38,7 +40,6 @@ public partial class MainWindow : Window {
 
 		Activated += _controller.OnWindowActivated;
 		Deactivated += _controller.OnWindowDeactivated;
-		PositionChanged += OnRendered;
 	}
 
 	private void InitializeComponent() {
@@ -88,9 +89,7 @@ public partial class MainWindow : Window {
 		};
 
 		Button settingsButton = this.FindControl<Button>("SettingsButton")!;
-		settingsButton.Click += (_, _) => {
-			ShowPopupWindowOnTop(new SettingsPopupWindow());
-		};
+		settingsButton.Click += (_, _) => ShowPopupWindowOnTop(new SettingsPopupWindow());
 	}
 
 	private void SetPressedButton(Button button) {
@@ -149,10 +148,10 @@ public partial class MainWindow : Window {
 		_controller.SendFriendRequest(publicKey);
 	}
 	
-	private void OnRendered(object? sender, PixelPointEventArgs e) {
+	private void OnRendered(object? sender, EventArgs e) {
 		_isRendered = true;
 		_onRenderedActions.ForEach(task => task());
-		PositionChanged -= OnRendered;
+		Activated -= OnRendered;
 	}
 
 	public void SetCallWindow(CallPopupWindow? window) => _controller.CallWindow = window;
