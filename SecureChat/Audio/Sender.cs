@@ -21,6 +21,8 @@ public class Sender {
 	private int _newDeviceIndex = -1;
 	private ALCaptureDevice _captureDevice;
 
+	private readonly List<byte[]> _bufferBuffer = [];
+
 	private readonly NoiseGateSlider _volumeBar;
 	
 	public Sender(NoiseGateSlider volumeBar) {
@@ -76,8 +78,15 @@ public class Sender {
 						noiseGateDecay = 20;
 
 					if (noiseGateDecay > 0) {
+						_bufferBuffer.ForEach(buf => network.Send(buf, buf.Length));
+						_bufferBuffer.Clear();
+						
 						network.Send(byteArray, samplesAvailable * sizeof(short));
 						noiseGateDecay--;
+					} else {
+						_bufferBuffer.Add(byteArray[..(samplesAvailable * sizeof(short))]);
+						if (_bufferBuffer.Count > 10) // Add a delay of 10 buffers, which will be sent retroactively if the noise gate threshold is broken, to provide smoothing
+							_bufferBuffer.RemoveAt(0);
 					}
 
 					if (_doChangeDevice) {
