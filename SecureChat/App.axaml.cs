@@ -24,7 +24,7 @@ public partial class App : Application {
 	private bool _isKeyLoadedSuccessfully;
 	private bool _doUpdate;
 	private JsonObject _releaseFileObject;
-	private List<Timer> _timers = [];
+	private readonly List<Timer> _timers = [];
 	
 	public override void Initialize() {
 		Chats.LoadOrDefault(Constants.ChatsFile);

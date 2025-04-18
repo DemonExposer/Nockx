@@ -61,8 +61,8 @@
 		</None>
 	</ItemGroup>
 
-	<!--TODO: make this only happen when running on windows or publishing TO windows. currently it only does it when on windows, no matter what is being targeted-->
-	<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+	<!--TODO: make this also happen when running on windows and not publishing-->
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
 		<None Include="lib\win\soft_oal.dll">
 			<Link>OpenAL32.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -88,7 +88,7 @@
 		<Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(PublishDir)LICENSES\" />
 	</Target>
 
-	<Target Name="CopyAndRenameLicensesWin" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
+	<Target Name="CopyAndRenameLicensesWin" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'win-x64'">
 		<ItemGroup>
 			<LicenseFilesWin Include="lib\win\licenses\**\*" />
 		</ItemGroup>
