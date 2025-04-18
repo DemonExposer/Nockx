@@ -1,29 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
-        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <OutputPath>../bin/</OutputPath>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <ApplicationIcon>nockx-logo.ico</ApplicationIcon>
-    </PropertyGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.2.4" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.2.4" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.4" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.4" />
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.4" />
-        <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
-        <PackageReference Include="LessAnnoyingHttp" Version="1.1.0" />
-        <PackageReference Include="OpenTK" Version="4.9.3" />
-        <PackageReference Include="OsNotifications" Version="1.1.2" />
-        <PackageReference Include="QRCoder" Version="1.6.0" />
-    </ItemGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<OutputPath>../bin/</OutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ApplicationIcon>nockx-logo.ico</ApplicationIcon>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.2.4" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.2.4" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.4" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.4" />
+		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.4" />
+		<PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
+		<PackageReference Include="LessAnnoyingHttp" Version="1.1.0" />
+		<PackageReference Include="OpenTK" Version="4.9.3" />
+		<PackageReference Include="OsNotifications" Version="1.1.2" />
+		<PackageReference Include="QRCoder" Version="1.6.0" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Compile Update="panels\ChatPanelController.cs">
@@ -32,36 +32,36 @@
 		<Compile Update="panels\UserInfoPanelController.cs">
 			<DependentUpon>UserInfoPanel.axaml.cs</DependentUpon>
 		</Compile>
-        <Compile Update="MainWindowController.cs">
-            <DependentUpon>MainWindow.axaml.cs</DependentUpon>
-        </Compile>
-        <Compile Update="panels\ChatPanelCommands.cs">
-          <DependentUpon>ChatPanel.axaml.cs</DependentUpon>
-        </Compile>
-        <Compile Update="MainWindowModel.cs">
-          <DependentUpon>MainWindow.axaml.cs</DependentUpon>
-        </Compile>
-        <Compile Update="windows\CallPopupWindowController.cs">
-          <DependentUpon>CallPopupWindow.axaml.cs</DependentUpon>
-        </Compile>
-        <Compile Update="panels\FriendsPanelController.cs">
-          <DependentUpon>FriendsPanel.axaml.cs</DependentUpon>
-        </Compile>
+		<Compile Update="MainWindowController.cs">
+			<DependentUpon>MainWindow.axaml.cs</DependentUpon>
+		</Compile>
+		<Compile Update="panels\ChatPanelCommands.cs">
+		  <DependentUpon>ChatPanel.axaml.cs</DependentUpon>
+		</Compile>
+		<Compile Update="MainWindowModel.cs">
+		  <DependentUpon>MainWindow.axaml.cs</DependentUpon>
+		</Compile>
+		<Compile Update="windows\CallPopupWindowController.cs">
+		  <DependentUpon>CallPopupWindow.axaml.cs</DependentUpon>
+		</Compile>
+		<Compile Update="panels\FriendsPanelController.cs">
+		  <DependentUpon>FriendsPanel.axaml.cs</DependentUpon>
+		</Compile>
 	</ItemGroup>
-    
-    <ItemGroup>
-        <None Include="sounds\**\*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+	
+	<ItemGroup>
+		<None Include="sounds\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Include="LICENSE">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Include="README">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-    </ItemGroup>
+	</ItemGroup>
 
-    <!--TODO: make this only happen when running on windows or publishing TO windows. currently it only does it when on windows, no matter what is being targeted-->
+	<!--TODO: make this only happen when running on windows or publishing TO windows. currently it only does it when on windows, no matter what is being targeted-->
 	<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
 		<None Include="lib\win\soft_oal.dll">
 			<Link>OpenAL32.dll</Link>
@@ -76,7 +76,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="nockx-logo.ico" />
+		<Content Include="nockx-logo.ico" />
 	</ItemGroup>
 
 	<!--TODO: possibly add transitive licenses, and mention all the libraries in the README-->
@@ -94,5 +94,32 @@
 		</ItemGroup>
 
 		<Copy SourceFiles="@(LicenseFilesWin)" DestinationFolder="$(PublishDir)LICENSES\" />
+	</Target>
+
+	<Target Name="CustomMacPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">
+
+		<PropertyGroup>
+			<MacAppName>Nockx.app</MacAppName>
+			<MacAppRunFolder>$(PublishDir)$(MacAppName)/Contents/MacOS/</MacAppRunFolder>
+		</PropertyGroup>
+		
+		<MakeDir Directories="$(MacAppRunFolder)" />
+
+		<ItemGroup>
+			<FilesToMove Include="$(PublishDir)**\*" Exclude="$(MacAppRunFolder)**\*;$(PublishDir)$(MacAppName)\**\*" />
+		</ItemGroup>
+
+		<Move SourceFiles="@(FilesToMove->'%(FullPath)')" DestinationFiles="@(FilesToMove->'$(MacAppRunFolder)%(RecursiveDir)%(Filename)%(Extension)')" />
+
+		<Copy
+				SourceFiles="mac-packaging-files/Contents/Info.plist"
+				DestinationFiles="$(PublishDir)$(MacAppName)/Contents/Info.plist"
+		/>
+	
+		<Copy
+				SourceFiles="mac-packaging-files/Contents/Resources/nockx-icon.icns"
+				DestinationFiles="$(PublishDir)$(MacAppName)/Contents/Resources/nockx-icon.icns"
+		/>
+		
 	</Target>
 </Project>
