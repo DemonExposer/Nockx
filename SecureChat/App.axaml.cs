@@ -47,7 +47,6 @@ public partial class App : Application {
 		}
 		
 		GlobalPlaybackDevice.Initialize();
-		Notifications.BundleIdentifier = "com.demonexposer.nockx";
 		Notifications.SetGuiApplication(true);
 		Notifications.WindowsAudioSource = null;
 		

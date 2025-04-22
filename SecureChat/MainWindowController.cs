@@ -207,8 +207,13 @@ public class MainWindowController {
 							Sounds.Notification.Play();
 						} else if (TryDecryptMessage(parsedMessage, out DecryptedMessage? decryptedMessage)) {
 							Sounds.Notification.Play();
-							if (!_isWindowActivated)
-								Notifications.ShowNotification(decryptedMessage!.DisplayName, decryptedMessage.Body);
+							if (!_isWindowActivated) {
+								try {
+									Notifications.ShowNotification(decryptedMessage!.DisplayName, decryptedMessage.Body);
+								} catch (PlatformNotSupportedException e) {
+									Console.WriteLine(e);
+								}
+							}
 						}
 					},
 					["delete"] = DeleteMessage,
