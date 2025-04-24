@@ -19,7 +19,6 @@ public partial class AddFriendPanel : StackPanel {
 	}
 
 	public void SetOnEnter(DataCallback callback) {
-		// TODO: add check to see whether TextBoxes are actually filled
 		_keyTextBox!.KeyDown += (_, args) => {
 			if (args.Key == Key.Enter) {
 				RsaKeyParameters rsaKeyParameters;
