@@ -44,25 +44,12 @@ public partial class MainWindow : Window {
 
 	private void InitializeComponent() {
 		AvaloniaXamlLoader.Load(this);
-
-		AddUserPanel addUserPanel = new ();
 		ChatPanel = new ChatPanel();
 		ChatPanel.SetMainWindowModel(_model);
 		UserInfoPanel = new UserInfoPanel();
 		UserInfoPanel.SetMainWindowModel(_model);
 
 		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
-
-		addUserPanel.SetOnEnter(OnAddUser);
-
-		SetUiPanel(addUserPanel);
-		
-		Button addChatButton = this.FindControl<Button>("AddChatButton")!;
-		SetPressedButton(addChatButton);
-		addChatButton.Click += (_, _) => {
-			SetPressedButton(addChatButton);
-			SetUiPanel(addUserPanel);
-		};
 		
 		AddFriendPanel addFriendPanel = new ();
 		addFriendPanel.SetOnEnter(OnAddFriend);
@@ -140,10 +127,6 @@ public partial class MainWindow : Window {
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
 	}
 	
-	private void OnAddUser(RsaKeyParameters publicKey, string name) {
-		AddUser(publicKey, name, true);
-	}
-
 	private void OnAddFriend(RsaKeyParameters publicKey) {
 		_controller.SendFriendRequest(publicKey);
 	}

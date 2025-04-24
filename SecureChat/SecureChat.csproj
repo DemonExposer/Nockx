@@ -25,6 +25,11 @@
 		<PackageReference Include="QRCoder" Version="1.6.0" />
 	</ItemGroup>
 
+	<!--Disable Avalonia "no public constructor" warning-->
+	<PropertyGroup>
+		<NoWarn>AVLN3001</NoWarn>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<Compile Update="panels\ChatPanelController.cs">
 			<DependentUpon>ChatPanel.axaml.cs</DependentUpon>

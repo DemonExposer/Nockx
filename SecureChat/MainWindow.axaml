@@ -19,7 +19,6 @@
 			</StackPanel>
 			<StackPanel Name="ChatListPanel" Width="200">
 				<Button Name="FriendsButton" Content="Friends" Classes="chat_selector"/>
-				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
 				<Button Name="AddFriendButton" Content="New Friend" Classes="chat_selector"/>
 			</StackPanel>
 		</DockPanel>
