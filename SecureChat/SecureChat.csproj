@@ -61,13 +61,21 @@
 		</None>
 	</ItemGroup>
 
-	<!--TODO: make this also happen when running on windows and not publishing-->
-	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' or ('$(OS)' == 'Windows_NT' and '$(PublishDir)' == '')">
 		<None Include="lib\win\soft_oal.dll">
 			<Link>OpenAL32.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+
+	<Target Name="CopyAndRenameFile" AfterTargets="BuildOnlySettings"
+        Condition="'$(OS)' == 'Windows_NT'">
+		<Message Text="Copying and renaming file during regular build..." Importance="high" />
+		<Copy
+		  SourceFiles="lib\win\soft_oal.dll"
+		  DestinationFiles="$(OutDir)\OpenAL32.dll"
+		  SkipUnchangedFiles="true" />
+	</Target>
 
 	<ItemGroup>
 		<None Include="animations\**\*">
