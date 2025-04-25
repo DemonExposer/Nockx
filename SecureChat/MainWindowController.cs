@@ -267,7 +267,8 @@ public class MainWindowController {
 						FriendRequest request = new () {
 							Accepted = false,
 							SenderKey = friendRequest["sender"]!["key"]!.GetValue<string>(),
-							SenderName = friendRequest["sender"]!["displayName"]!.GetValue<string>()
+							SenderName = friendRequest["sender"]!["displayName"]!.GetValue<string>(),
+							ReceiverKey = _publicKey.ToBase64String()
 						};
 						
 						_context.AddFriendRequest(request);
@@ -329,7 +330,6 @@ public class MainWindowController {
 			},
 			["receiver"] = new JsonObject {
 				["key"] = publicKey.ToBase64String(),
-				["displayName"] = ""
 			},
 			["accepted"] = false,
 			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
