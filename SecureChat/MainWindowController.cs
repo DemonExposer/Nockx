@@ -262,6 +262,24 @@ public class MainWindowController {
 						Buffer.BlockCopy(cipherBytes, 0, qrData, Cryptography.AesKeyLength, cipherBytes.Length);
 
 						_context.UserInfoPanel.ShowQrCodeConfirmationWindow(senderKeyBase64, qrData);
+					},
+					["addFriendRequest"] = friendRequest => {
+						FriendRequest request = new () {
+							Accepted = false,
+							SenderKey = friendRequest["sender"]!["key"]!.GetValue<string>(),
+							SenderName = friendRequest["sender"]!["displayName"]!.GetValue<string>()
+						};
+						
+						_context.AddFriendRequest(request);
+						
+						Sounds.Notification.Play();
+						if (!_isWindowActivated) {
+							try {
+								Notifications.ShowNotification("Friend request", $"{request.SenderName} has sent you a friend request");
+							} catch (PlatformNotSupportedException e) {
+								Console.WriteLine(e);
+							}
+						}
 					}
 				};
 

@@ -6,6 +6,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.ClassExtensions;
 using SecureChat.Model;
 using SecureChat.Panels;
+using SecureChat.Util;
 using SecureChat.Windows;
 
 namespace SecureChat;
@@ -101,6 +102,11 @@ public partial class MainWindow : Window {
 
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not Panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
 
+	public void AddFriendRequest(FriendRequest friendRequest) {
+		if (_uiPanel is FriendsPanel friendsPanel)
+			friendsPanel.AddFriend(friendRequest, this);
+	}
+	
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
 		if (_model.ContainsChat(publicKey.ToBase64String()))
 			return;

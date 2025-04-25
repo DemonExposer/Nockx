@@ -41,7 +41,7 @@ public partial class FriendsPanel : DockPanel {
 		_friends.Clear();
 	}
 
-	private void AddFriend(FriendRequest friendRequest, MainWindow window) {
+	public void AddFriend(FriendRequest friendRequest, MainWindow window) {
 		if (_mainPanel == null) {
 			Console.WriteLine("AddFriend: FriendsPanel is not initialized");
 			return;

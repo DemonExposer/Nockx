@@ -5,14 +5,15 @@ using System.Text.Json.Nodes;
 namespace SecureChat.Util;
 
 public class FriendRequest {
-	public required string SenderKey, ReceiverKey, SenderName, ReceiverName;
+	public required string SenderKey, SenderName;
+	public string ReceiverKey, ReceiverName;
 	public bool Accepted;
-	public required long Timestamp;
+	public long Timestamp;
 
 	public static FriendRequest? Parse(JsonObject jsonFriendRequest) {
 		FriendRequest? friendRequest;
 		try {
-			friendRequest = new FriendRequest() {
+			friendRequest = new FriendRequest {
 				SenderKey = jsonFriendRequest["sender"]!["key"]!.GetValue<string>(),
 				SenderName = jsonFriendRequest["sender"]!["displayName"]!.GetValue<string>(),
 				ReceiverKey = jsonFriendRequest["receiver"]!["key"]!.GetValue<string>(),
@@ -24,6 +25,7 @@ public class FriendRequest {
 			Console.WriteLine(e);
 			friendRequest = null;
 		}
+		
 		return friendRequest;
 	}
 
@@ -34,12 +36,12 @@ public class FriendRequest {
 				["displayName"] = friendRequest.SenderName
 			},
 			["receiver"] = new JsonObject {
-				["key"] = friendRequest.ReceiverKey,
-				["displayName"] = friendRequest.ReceiverName
+				["key"] = friendRequest.ReceiverKey
 			},
 			["accepted"] = friendRequest.Accepted,
 			["timestamp"] = friendRequest.Timestamp
 		};
+		
 		return JsonSerializer.Serialize(friendRequestObj);
 	}
 }
