@@ -58,7 +58,6 @@ public class FriendsPanelController {
 	public void DeleteFriendRequest(FriendRequest friendRequest) {
 		friendRequest.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		string body = FriendRequest.Serialize(friendRequest);
-		Response response =
 		Response response = Http.Delete($"https://{Settings.GetInstance().Hostname}:5000/friends?key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}", body, [new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.StatusCode);
