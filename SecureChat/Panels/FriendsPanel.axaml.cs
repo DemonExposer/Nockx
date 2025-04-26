@@ -122,4 +122,18 @@ public partial class FriendsPanel : DockPanel {
 		_friends.Add(friendDockPanel);
 		_mainPanel.Children.Add(border);
 	}
+
+	public void RemoveFriend(string foreignKey) {
+		if (_mainPanel == null) {
+			Console.WriteLine("RemoveFriend: FriendsPanel is not initialized");
+			return;
+		}
+		
+		FriendDockPanel? friendDockPanel = _friends.Find(friendPanel => friendPanel.ReceiverKey == foreignKey || friendPanel.SenderKey == foreignKey);
+		if (friendDockPanel == null)
+			return;
+		
+		_friends.Remove(friendDockPanel);
+		_mainPanel.Children.Remove(friendDockPanel.Border);
+	}
 }
