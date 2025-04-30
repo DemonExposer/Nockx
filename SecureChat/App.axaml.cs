@@ -31,7 +31,7 @@ public partial class App : Application {
 		
 		Settings.LoadOrDefault(Constants.SettingsFile);
 		
-		Response response = Http.Get("https://api.github.com/repos/DemonExposer/SecureChat/releases/latest", [new Header { Name = "User-Agent", Value = "Nockx-Client" }]);
+		Response response = Http.Get("https://api.github.com/repos/DemonExposer/Nockx/releases/latest", [new Header { Name = "User-Agent", Value = "Nockx-Client" }]);
 		if (response.IsSuccessful) {
 			JsonObject releaseObj = JsonNode.Parse(response.Body)!.AsObject();
 			if (releaseObj["name"]!.GetValue<string>() != Version) {
