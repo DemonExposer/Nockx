@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using Avalonia;
@@ -13,6 +15,7 @@ using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using OsNotifications;
 using SecureChat.Audio;
+using SecureChat.ClassExtensions;
 using SecureChat.Util;
 using SecureChat.Windows;
 
@@ -86,6 +89,9 @@ public partial class App : Application {
 		} else {
 			_isKeyLoadedSuccessfully = true;
 		}
+
+		if (_isKeyLoadedSuccessfully)
+			RegisterUser();
 	}
 
 	public override void OnFrameworkInitializationCompleted() {
@@ -107,5 +113,26 @@ public partial class App : Application {
 		}
 
 		base.OnFrameworkInitializationCompleted();
+	}
+
+	private void RegisterUser() {
+		RsaKeyParameters publicKey, privateKey;
+		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
+			PemReader pemReader = new (reader);
+			publicKey = (RsaKeyParameters) pemReader.ReadObject();
+		}
+
+		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
+			PemReader pemReader = new (reader);
+			privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
+		}
+
+		JsonObject jsonObject = new () {
+			["key"] = publicKey.ToBase64String(),
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+		};
+		string body = JsonSerializer.Serialize(jsonObject);
+
+		Http.Post($"https://{Settings.GetInstance().Hostname}:5000/registerUser", body, [new Header { Name = "Signature", Value = Cryptography.Sign(body, privateKey) }]);
 	}
 }

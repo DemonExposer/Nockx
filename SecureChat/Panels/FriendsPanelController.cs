@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
 using LessAnnoyingHttp;
@@ -55,10 +56,15 @@ public class FriendsPanelController {
 		}
 	}
 
-	public void DeleteFriendRequest(FriendRequest friendRequest) {
-		friendRequest.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-		string body = FriendRequest.Serialize(friendRequest);
-		Response response = Http.Delete($"https://{Settings.GetInstance().Hostname}:5000/friends?key={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}", body, [new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
+	public void DeleteFriendRequest(string personalKey, string foreignKey) {
+		JsonObject jsonObject = new () {
+			["personalKey"] = personalKey,
+			["foreignKey"] = foreignKey,
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+		};
+		string body = JsonSerializer.Serialize(jsonObject);
+
+		Response response = Http.Delete($"https://{Settings.GetInstance().Hostname}:5000/friends", body, [new Header { Name = "Signature", Value = Cryptography.Sign(body, _privateKey) }]);
 		if (!response.IsSuccessful) {
 			Console.WriteLine(response.StatusCode);
 			Console.WriteLine(response.Body);

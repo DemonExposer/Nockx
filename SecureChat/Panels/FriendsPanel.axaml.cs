@@ -14,7 +14,7 @@ namespace SecureChat.Panels;
 public partial class FriendsPanel : DockPanel {
 	private readonly FriendsPanelController _controller;
 	private readonly List<FriendDockPanel> _friends = [];
-	private StackPanel? _mainPanel;
+	private StackPanel _mainPanel;
 	private bool _isShowCalled;
 
 	public FriendsPanel() {
@@ -22,14 +22,14 @@ public partial class FriendsPanel : DockPanel {
 
 		InitializeComponent();
 
-		_mainPanel = this.FindControl<StackPanel>("MainPanel");
+		_mainPanel = this.FindControl<StackPanel>("MainPanel")!;
 	}
 
 	public void Show(MainWindow window) {
 		List<FriendRequest> friends = _controller.GetFriends();
-		foreach (FriendRequest friend in friends) {
+		foreach (FriendRequest friend in friends)
 			AddFriend(friend, window);
-		}
+		
 		_isShowCalled = true;
 	}
 
@@ -59,6 +59,8 @@ public partial class FriendsPanel : DockPanel {
 		};
 		SetDock(button, Dock.Right);
 		bool amISender = friendRequest.SenderKey == _controller.PersonalPublicKey.ToBase64String();
+		string foreignKey = amISender ? friendRequest.ReceiverKey : friendRequest.SenderKey;
+
 		SelectableTextBlock textBlock = new () {
 			VerticalAlignment = VerticalAlignment.Center,
 			Margin = new Thickness(5),
@@ -72,16 +74,17 @@ public partial class FriendsPanel : DockPanel {
 			Classes = { "reject" }
 		};
 		SetDock(rejectButton, Dock.Right);
-		rejectButton.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(window); };
+		// TODO: check whether request succeeded and based on that, update the page. Do not refresh it.
+		rejectButton.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(window); };
 		if (friendRequest.Accepted) {
 			button.Content = "Remove";
 			button.Classes.Add("reject");
-			button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(window); };
+			button.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(window); };
 		} else {
 			if (amISender) {
 				button.Content = "Cancel";
 				button.Classes.Add("cancel");
-				button.Click += (_, _) => { _controller.DeleteFriendRequest(friendRequest); Unshow(); Show(window); };
+				button.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(window); };
 			} else {
 				button.Content = "Accept";
 				button.Classes.Add("accept");
@@ -128,7 +131,7 @@ public partial class FriendsPanel : DockPanel {
 			Console.WriteLine("RemoveFriend: FriendsPanel is not initialized");
 			return;
 		}
-		
+
 		FriendDockPanel? friendDockPanel = _friends.Find(friendPanel => friendPanel.ReceiverKey == foreignKey || friendPanel.SenderKey == foreignKey);
 		if (friendDockPanel == null)
 			return;

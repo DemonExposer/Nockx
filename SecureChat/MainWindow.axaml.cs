@@ -143,6 +143,11 @@ public partial class MainWindow : Window {
 		Activated -= OnRendered;
 	}
 
+	public void RemoveFriendRequest(string foreignKey) {
+		if (_uiPanel is FriendsPanel friendsPanel)
+			friendsPanel.RemoveFriend(foreignKey);
+	}
+
 	public void SetCallWindow(CallPopupWindow? window) => _controller.CallWindow = window;
 
 	public void ShowPopupWindowOnTop(PopupWindow popupWindow) {
