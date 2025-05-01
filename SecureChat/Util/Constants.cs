@@ -1,3 +1,5 @@
+using Org.BouncyCastle.Math;
+
 namespace SecureChat.Util;
 
 public static class Constants {
@@ -8,4 +10,5 @@ public static class Constants {
 
 	public const int KEY_SIZE_BITS = 2048;
 	public const int KEY_SIZE_BYTES = KEY_SIZE_BITS / 8;
+	public static readonly BigInteger KEY_EXPONENT = new ("10001", 16);
 }

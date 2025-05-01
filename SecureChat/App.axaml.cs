@@ -63,7 +63,7 @@ public partial class App : Application {
 		if (!File.Exists(Constants.PrivateKeyFile) && !File.Exists(Constants.PublicKeyFile)) {
 			// Generate RSA key
 			RsaKeyPairGenerator rsaGenerator = new ();
-			rsaGenerator.Init(new KeyGenerationParameters(new SecureRandom(), Constants.KEY_SIZE_BITS));
+			rsaGenerator.Init(new RsaKeyGenerationParameters(Constants.KEY_EXPONENT, new SecureRandom(), Constants.KEY_SIZE_BITS, 80));
 			
 			AsymmetricCipherKeyPair keyPair = rsaGenerator.GenerateKeyPair();
 
@@ -84,7 +84,22 @@ public partial class App : Application {
 			}
 
 			_isKeyLoadedSuccessfully = true;
-		} else if (!File.Exists(Constants.PrivateKeyFile) || !File.Exists(Constants.PublicKeyFile)) {
+		} else if (!File.Exists(Constants.PublicKeyFile)) {
+			RsaKeyParameters privateKey;
+			using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
+				PemReader pemReader = new (reader);
+				privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
+			}
+			
+			// Create a public key from the private key and write it to a file
+			using (TextWriter textWriter = new StreamWriter(Constants.PublicKeyFile)) {
+				PemWriter pemWriter = new (textWriter);
+				pemWriter.WriteObject(new RsaKeyParameters(false, privateKey.Modulus, Constants.KEY_EXPONENT));
+				pemWriter.Writer.Flush();
+			}
+			
+			_isKeyLoadedSuccessfully = true;
+		} else if (!File.Exists(Constants.PrivateKeyFile)) {
 			_isKeyLoadedSuccessfully = false;
 		} else {
 			_isKeyLoadedSuccessfully = true;
@@ -102,8 +117,7 @@ public partial class App : Application {
 			};
 			
 			if (!_isKeyLoadedSuccessfully) {
-				// TODO: add option to generate public key from private key if only the private key is available or the option to regenerate both
-				desktop.MainWindow = new ErrorPopupWindow("one key file found, zero or two expected");
+				desktop.MainWindow = new ErrorPopupWindow("Private key was not found, whereas public key was found");
 			} else if (_doUpdate) {
 				desktop.MainWindow = new UpdateWindow();
 				((UpdateWindow) desktop.MainWindow!).Update(_releaseFileObject);
