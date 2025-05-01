@@ -42,11 +42,6 @@ public partial class FriendsPanel : DockPanel {
 	}
 
 	public void AddFriend(FriendRequest friendRequest, MainWindow window) {
-		if (_mainPanel == null) {
-			Console.WriteLine("AddFriend: FriendsPanel is not initialized");
-			return;
-		}
-		
 		IBrush originalBackground = new SolidColorBrush(Color.Parse("Transparent"));
 		Border border = new () {
 			Background = originalBackground
