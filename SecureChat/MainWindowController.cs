@@ -288,7 +288,11 @@ public class MainWindowController {
 				};
 
 				JsonObject messageJson = JsonNode.Parse(Encoding.UTF8.GetString(bytes.ToArray()))!.AsObject();
-				actions[messageJson["action"]!.GetValue<string>()](messageJson);
+				try {
+					actions[messageJson["action"]!.GetValue<string>()](messageJson);
+				} catch (Exception e) {
+					Console.WriteLine(e);
+				}
 			}
 		} catch (Exception e) {
 			Console.WriteLine(e);
