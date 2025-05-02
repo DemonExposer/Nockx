@@ -58,11 +58,14 @@ public class ChatPanelController {
 		return true;
 	}
 
-	public DecryptedMessage[] GetPastMessages() {
+	public DecryptedMessage[] GetPastMessages(long lastMessageId = -1) {
 		List<DecryptedMessage> res = [];
 		
 		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(ForeignPublicKey.ToBase64String())}&timestamp={timestamp}";
+		if (lastMessageId != -1)
+			getVariables += $"&lastMessageId={lastMessageId}";
+		
 		JsonArray messages = JsonNode.Parse(Http.Get($"https://{Settings.GetInstance().Hostname}:5000/messages?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]).Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());

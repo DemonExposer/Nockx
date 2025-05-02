@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -14,7 +13,7 @@ namespace SecureChat.Panels;
 public partial class FriendsPanel : DockPanel {
 	private readonly FriendsPanelController _controller;
 	private readonly List<FriendDockPanel> _friends = [];
-	private StackPanel _mainPanel;
+	private readonly StackPanel _mainPanel;
 	private bool _isShowCalled;
 
 	public FriendsPanel() {

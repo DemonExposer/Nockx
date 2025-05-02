@@ -192,6 +192,13 @@ public partial class ChatPanel : DockPanel {
 		}
 	}
 
+	public DecryptedMessage[] RetrieveUnretrievedMessages() {
+		DecryptedMessage[] messages = _controller.GetPastMessages(_messages[^1].Id);
+		Dispatcher.UIThread.InvokeAsync(() => messages.ToList().ForEach(AddMessage));
+		
+		return messages;
+	}
+
 	public void Unshow(MainWindow context) {
 		if (!_isShowCalled)
 			return;

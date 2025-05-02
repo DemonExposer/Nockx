@@ -32,6 +32,7 @@ public class MainWindowController {
 	private ClientWebSocket _webSocket;
 
 	private bool _isWebsocketInitialized;
+	private bool _isWebsocketReinitializing;
 	private bool _isWindowActivated;
 	private Timer _keepAliveTimer;
 
@@ -118,6 +119,21 @@ public class MainWindowController {
 			}, null, 0, 5000);
 			
 			_isWebsocketInitialized = true;
+
+			// Retrieve lost messages in case of reinitialization due to connection loss
+			if (_context.GetCurrentChatIdentity() != null) { // TODO: Check if other chats are unread and flag them as such
+				DecryptedMessage[] messages = _context.ChatPanel.RetrieveUnretrievedMessages();
+				if (messages.Length > 0) {
+					Sounds.Notification.Play();
+					if (!_isWindowActivated) {
+						try {
+							Notifications.ShowNotification(messages[^1].DisplayName, messages[^1].Body);
+						} catch (PlatformNotSupportedException e) {
+							Console.WriteLine(e);
+						}
+					}
+				}
+			}
 		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 			if (!isCalledFromUI)
 				return;
@@ -131,7 +147,8 @@ public class MainWindowController {
 		}
 	}
 
-	private async Task ReinitializeWebsocket() { // TODO: retrieve all messages after reinitialization, so that missed messages are loaded
+	private async Task ReinitializeWebsocket() {
+		_isWebsocketReinitializing = true;
 		if (_isWebsocketInitialized) {
 			_isWebsocketInitialized = false;
 			await _keepAliveTimer.DisposeAsync();
@@ -144,6 +161,8 @@ public class MainWindowController {
 		_webSocket = new ClientWebSocket();
 
 		await InitializeWebsocket(false);
+
+		_isWebsocketReinitializing = false;
 	}
 
 	public async Task ListenOnWebsocket() {
@@ -155,7 +174,7 @@ public class MainWindowController {
 			byte[] buffer = new byte[arrSize];
 
 			Timer timer = new (_ => {
-				if (_webSocket.State != WebSocketState.Open)
+				if (_webSocket.State != WebSocketState.Open && !_isWebsocketReinitializing)
 					ReinitializeWebsocket().Wait();
 			}, null, 0, 5000);
 
