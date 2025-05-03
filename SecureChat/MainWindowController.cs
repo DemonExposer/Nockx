@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -35,6 +37,7 @@ public class MainWindowController {
 	private bool _isWebsocketReinitializing;
 	private bool _isWindowActivated;
 	private Timer _keepAliveTimer;
+	private long _lastMessageId;
 
 	public MainWindowController(MainWindow context, MainWindowModel model) {
 		_context = context;
@@ -56,8 +59,13 @@ public class MainWindowController {
 		// Check if new chats were created while offline
 		CheckForNewChats();
 
+		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+		string getVariables = $"requestingUser={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={timestamp}";
+		Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/messages/lastReceived?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
+		_lastMessageId = response.StatusCode == HttpStatusCode.NoContent ? -1 : JsonNode.Parse(response.Body)!["id"]!.GetValue<long>();
+		
 		_webSocket = new ClientWebSocket();
-		_ = InitializeWebsocket(true);
+		_ = InitializeWebsocket(true, false);
 	}
 
 	private void CheckForNewChats() {
@@ -96,7 +104,7 @@ public class MainWindowController {
 		}
 	}
 
-	private async Task InitializeWebsocket(bool isCalledFromUI) {
+	private async Task InitializeWebsocket(bool isCalledFromUI, bool isReinitializing) {
 		using CancellationTokenSource cts = new (5000);
 		try {
 			await _webSocket.ConnectAsync(new Uri($"wss://{Settings.GetInstance().Hostname}:5000/ws"), cts.Token);
@@ -121,15 +129,29 @@ public class MainWindowController {
 			_isWebsocketInitialized = true;
 
 			// Retrieve lost messages in case of reinitialization due to connection loss
-			if (_context.GetCurrentChatIdentity() != null) { // TODO: Check if other chats are unread and flag them as such
-				DecryptedMessage[] messages = _context.ChatPanel.RetrieveUnretrievedMessages();
-				if (messages.Length > 0) {
-					Sounds.Notification.Play();
-					if (!_isWindowActivated) {
-						try {
-							Notifications.ShowNotification(messages[^1].DisplayName, messages[^1].Body);
-						} catch (PlatformNotSupportedException e) {
-							Console.WriteLine(e);
+			if (isReinitializing) {
+				timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+				string getVariables = $"requestingUser={HttpUtility.UrlEncode(keyBase64)}&timestamp={timestamp}&lastMessageId={_lastMessageId}";
+				Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/messages/all?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
+				JsonArray messagesJson = JsonNode.Parse(response.Body)!.AsArray();
+				RsaKeyParameters? foreignKey = _context.GetCurrentChatIdentity();
+				List<string> senders = messagesJson.DistinctBy(elem => elem!["sender"]!["key"]!.ToString()).Where(elem => elem!["sender"]!["key"]!.GetValue<string>() != keyBase64 && (foreignKey == null || elem["sender"]!["key"]!.GetValue<string>() != foreignKey.ToBase64String())).Select(elem => elem!["sender"]!["key"]!.GetValue<string>()).ToList();
+				
+				// TODO: Flag senders' chats as unread
+				Console.WriteLine("Senders while away:");
+				foreach (string sender in senders)
+					Console.WriteLine(sender);
+
+				if (foreignKey != null) {
+					DecryptedMessage[] messages = _context.ChatPanel.RetrieveUnretrievedMessages();
+					if (messages.Length > 0) {
+						Sounds.Notification.Play();
+						if (!_isWindowActivated) {
+							try {
+								Notifications.ShowNotification(messages[^1].DisplayName, messages[^1].Body);
+							} catch (PlatformNotSupportedException e) {
+								Console.WriteLine(e);
+							}
 						}
 					}
 				}
@@ -143,7 +165,7 @@ public class MainWindowController {
 				return;
 			_context.ShowPopupWindowOnTop(new ErrorPopupWindow($"Websocket could not be connected ({Settings.GetInstance().Hostname})"));
 		} catch (Exception e) {
-			Console.WriteLine(e.ToString());
+			Console.WriteLine(e);
 		}
 	}
 
@@ -160,7 +182,7 @@ public class MainWindowController {
 
 		_webSocket = new ClientWebSocket();
 
-		await InitializeWebsocket(false);
+		await InitializeWebsocket(false, true);
 
 		_isWebsocketReinitializing = false;
 	}
@@ -223,12 +245,14 @@ public class MainWindowController {
 						bool isMessageAdded = AddMessage(parsedMessage);
 
 						if (isMessageAdded) {
+							_lastMessageId = parsedMessage.Id;
 							Sounds.Notification.Play();
 						} else if (TryDecryptMessage(parsedMessage, out DecryptedMessage? decryptedMessage)) {
+							_lastMessageId = decryptedMessage!.Id;
 							Sounds.Notification.Play();
 							if (!_isWindowActivated) {
 								try {
-									Notifications.ShowNotification(decryptedMessage!.DisplayName, decryptedMessage.Body);
+									Notifications.ShowNotification(decryptedMessage.DisplayName, decryptedMessage.Body);
 								} catch (PlatformNotSupportedException e) {
 									Console.WriteLine(e);
 								}
