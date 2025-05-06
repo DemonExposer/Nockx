@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Avalonia.Threading;
 using LessAnnoyingHttp;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -137,15 +138,22 @@ public class MainWindowController {
 				RsaKeyParameters? foreignKey = _context.GetCurrentChatIdentity();
 				List<string> senders = messagesJson.DistinctBy(elem => elem!["sender"]!["key"]!.ToString()).Where(elem => elem!["sender"]!["key"]!.GetValue<string>() != keyBase64 && (foreignKey == null || elem["sender"]!["key"]!.GetValue<string>() != foreignKey.ToBase64String())).Select(elem => elem!["sender"]!["key"]!.GetValue<string>()).ToList();
 				
-				// TODO: Flag senders' chats as unread
-				Console.WriteLine("Senders while away:");
-				foreach (string sender in senders)
-					Console.WriteLine(sender);
-
+				// Flag chats as unread
+				Dispatcher.UIThread.InvokeAsync(() => {
+					foreach (string sender in senders)
+						_model.SetChatReadStatus(sender, false);
+				});
+				
+				if (senders.Count > 0)
+					Sounds.Notification.Play();
+				
+				// Update current chat
 				if (foreignKey != null) {
 					DecryptedMessage[] messages = _context.ChatPanel.RetrieveUnretrievedMessages();
 					if (messages.Length > 0) {
-						Sounds.Notification.Play();
+						if (senders.Count == 0)
+							Sounds.Notification.Play();
+						
 						if (!_isWindowActivated) {
 							try {
 								Notifications.ShowNotification(messages[^1].DisplayName, messages[^1].Body);
