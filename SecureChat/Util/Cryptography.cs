@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
@@ -17,22 +19,67 @@ namespace SecureChat.Util;
 public static class Cryptography {
 	public const int AesKeyLength = 256;
 
-	public static byte[] GenerateAesKey() {
-		CipherKeyGenerator aesKeyGen = new ();
-		aesKeyGen.Init(new KeyGenerationParameters(new SecureRandom(), AesKeyLength));
-		return aesKeyGen.GenerateKey();
+	public static DecryptedMessage Decrypt(Message message, RsaKeyParameters privateKey, bool isOwnMessage) {
+		// Decrypt the AES key using RSA
+		byte[] aesKeyEncrypted = Convert.FromBase64String(isOwnMessage ? message.SenderEncryptedKey : message.ReceiverEncryptedKey);
+		
+		byte[] aesKey = DecryptAesKey(aesKeyEncrypted, privateKey);
+		
+		// Decrypt the message using AES
+		(byte[] plainBytes, int length) = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
+
+		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
+		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.ToBase64String(), DisplayName = message.SenderDisplayName, Timestamp = message.Timestamp};
+	}
+
+	public static byte[] DecryptAesKey(byte[] encryptedAesKey, RsaKeyParameters rsaPrivateKey) {
+    	OaepEncoding rsaEngine = new (new RsaEngine());
+    	rsaEngine.Init(false, rsaPrivateKey);
+    	return rsaEngine.ProcessBlock(encryptedAesKey, 0, encryptedAesKey.Length);
+    }
+	
+	public static (byte[] plainBytes, int length) DecryptWithAes(byte[] data, byte[] aesKey) {
+		AesEngine aesEngine = new ();
+		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
+		cipher.Init(false, new KeyParameter(aesKey));
+		
+		byte[] plainBytes = new byte[cipher.GetOutputSize(data.Length)];
+		int length = cipher.ProcessBytes(data, 0, data.Length, plainBytes, 0);
+		length += cipher.DoFinal(plainBytes, length);
+
+		return (plainBytes, length);
+	}
+
+	public static Message Encrypt(string inputText, RsaKeyParameters personalPublicKey, RsaKeyParameters foreignPublicKey, RsaKeyParameters privateKey) {
+		// Encrypt using AES
+		byte[] aesKey = GenerateAesKey();
+
+		byte[] plainBytes = Encoding.UTF8.GetBytes(inputText);
+		byte[] cipherBytes = EncryptWithAes(plainBytes, plainBytes.Length, aesKey);
+		
+		// Encrypt the AES key using RSA
+		byte[] personalEncryptedKey = EncryptAesKey(aesKey, personalPublicKey);
+		
+		byte[] foreignEncryptedKey = EncryptAesKey(aesKey, foreignPublicKey);
+
+		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+		return new Message {
+			Body = Convert.ToBase64String(cipherBytes),
+			SenderEncryptedKey = Convert.ToBase64String(personalEncryptedKey),
+			ReceiverEncryptedKey = Convert.ToBase64String(foreignEncryptedKey),
+			Timestamp = timestamp,
+			Signature = Sign(inputText + timestamp, privateKey), // TODO: add receiver's key to this as well, so no forwarding can be done
+			Receiver = foreignPublicKey,
+			Sender = personalPublicKey,
+			SenderDisplayName = "",
+			ReceiverDisplayName = ""
+		};
 	}
 
 	public static byte[] EncryptAesKey(byte[] aesKey, RsaKeyParameters rsaPublicKey) {
 		OaepEncoding rsaEngine = new (new RsaEngine());
 		rsaEngine.Init(true, rsaPublicKey);
 		return rsaEngine.ProcessBlock(aesKey, 0, aesKey.Length);
-	}
-
-	public static byte[] DecryptAesKey(byte[] encryptedAesKey, RsaKeyParameters rsaPrivateKey) {
-		OaepEncoding rsaEngine = new (new RsaEngine());
-		rsaEngine.Init(false, rsaPrivateKey);
-		return rsaEngine.ProcessBlock(encryptedAesKey, 0, encryptedAesKey.Length);
 	}
 
 	public static byte[] EncryptWithAes(byte[] data, int inputLength, byte[] aesKey) {
@@ -46,18 +93,14 @@ public static class Cryptography {
 
 		return cipherBytes;
 	}
-
-	public static (byte[] plainBytes, int length) DecryptWithAes(byte[] data, byte[] aesKey) {
-		AesEngine aesEngine = new ();
-		PaddedBufferedBlockCipher cipher = new (new CbcBlockCipher(aesEngine), new Pkcs7Padding());
-		cipher.Init(false, new KeyParameter(aesKey));
-		
-		byte[] plainBytes = new byte[cipher.GetOutputSize(data.Length)];
-		int length = cipher.ProcessBytes(data, 0, data.Length, plainBytes, 0);
-		length += cipher.DoFinal(plainBytes, length);
-
-		return (plainBytes, length);
+	
+	public static byte[] GenerateAesKey() {
+		CipherKeyGenerator aesKeyGen = new ();
+		aesKeyGen.Init(new KeyGenerationParameters(new SecureRandom(), AesKeyLength));
+		return aesKeyGen.GenerateKey();
 	}
+	
+	public static string Md5Hash(string input) => MD5.HashData(Encoding.Default.GetBytes(input)).Aggregate(new StringBuilder(), (sb, cur) => sb.Append(cur.ToString("x2"))).ToString();
 	
 	public static string Sign(string text, RsaKeyParameters privateKey) {
 		byte[] bytes = Encoding.UTF8.GetBytes(text);
@@ -87,44 +130,5 @@ public static class Cryptography {
 		verifier.BlockUpdate(textBytes, 0, textBytes.Length);
 
 		return verifier.VerifySignature(signatureBytes);
-	}
-
-	public static Message Encrypt(string inputText, RsaKeyParameters personalPublicKey, RsaKeyParameters foreignPublicKey, RsaKeyParameters privateKey) {
-		// Encrypt using AES
-		byte[] aesKey = GenerateAesKey();
-
-		byte[] plainBytes = Encoding.UTF8.GetBytes(inputText);
-		byte[] cipherBytes = EncryptWithAes(plainBytes, plainBytes.Length, aesKey);
-		
-		// Encrypt the AES key using RSA
-		byte[] personalEncryptedKey = EncryptAesKey(aesKey, personalPublicKey);
-		
-		byte[] foreignEncryptedKey = EncryptAesKey(aesKey, foreignPublicKey);
-
-		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-		return new Message {
-			Body = Convert.ToBase64String(cipherBytes),
-			SenderEncryptedKey = Convert.ToBase64String(personalEncryptedKey),
-			ReceiverEncryptedKey = Convert.ToBase64String(foreignEncryptedKey),
-			Timestamp = timestamp,
-			Signature = Sign(inputText + timestamp, privateKey), // TODO: add receiver's key to this as well, so no forwarding can be done
-			Receiver = foreignPublicKey,
-			Sender = personalPublicKey,
-			SenderDisplayName = "",
-			ReceiverDisplayName = ""
-		};
-	}
-
-	public static DecryptedMessage Decrypt(Message message, RsaKeyParameters privateKey, bool isOwnMessage) {
-		// Decrypt the AES key using RSA
-		byte[] aesKeyEncrypted = Convert.FromBase64String(isOwnMessage ? message.SenderEncryptedKey : message.ReceiverEncryptedKey);
-		
-		byte[] aesKey = DecryptAesKey(aesKeyEncrypted, privateKey);
-		
-		// Decrypt the message using AES
-		(byte[] plainBytes, int length) = DecryptWithAes(Convert.FromBase64String(message.Body), aesKey);
-
-		string body = Encoding.UTF8.GetString(plainBytes, 0, length);
-		return new DecryptedMessage { Id = message.Id, Body = body, Sender = message.Sender.ToBase64String(), DisplayName = message.SenderDisplayName, Timestamp = message.Timestamp};
 	}
 }

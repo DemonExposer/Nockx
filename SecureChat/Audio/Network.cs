@@ -17,17 +17,24 @@ public class Network(Network.DataReceivedCallback dataReceivedCallback, IPEndPoi
 
 	public void Run() {
 		Task.Run(() => {
+			IPEndPoint endPoint = new (IPAddress.Any, 0);
+			
 			try {
-				_socket.Send(Encoding.UTF8.GetBytes("PING"), 4, endpoint);
-				IPEndPoint endPoint = new (IPAddress.Any, 0);
-				byte[] data = _socket.Receive(ref endPoint);
-				pingCallback(int.Parse(Encoding.UTF8.GetString(data))); // TODO: this is not reliable, since it's UDP. possibly check it against a hash.
+				string[] portAndHash;
+				do {
+					_socket.Send(Encoding.UTF8.GetBytes("PING"), 4, endpoint);
+
+					// The port needs to be retrieved from the server, because in certain networks, the socket port here can differ from the socket port at the modem
+					byte[] data = _socket.Receive(ref endPoint); // TODO: test what happens when the server doesn't respond
+					portAndHash = Encoding.UTF8.GetString(data).Split(':');
+				} while (Cryptography.Md5Hash(portAndHash[0]) != portAndHash[1]); // Verify port, because it's sent over UDP
+				
+				pingCallback(int.Parse(portAndHash[0]));
 			} catch (Exception e) {
 				Console.WriteLine(e);
 			}
 			
 			while (true) try {
-				IPEndPoint endPoint = new (IPAddress.Any, 0);
 				byte[] data = _socket.Receive(ref endPoint);
 
 				if (_key == null)
