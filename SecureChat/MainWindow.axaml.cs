@@ -23,18 +23,18 @@ public partial class MainWindow : Window {
 	private readonly List<Action> _onRenderedActions = [];
 
 	private readonly MainWindowController _controller;
-	private readonly MainWindowModel _model;
+	public readonly MainWindowModel Model;
 
 	public static MainWindow Instance { get; private set; }
 	
 	public MainWindow() {
-		_model = new MainWindowModel();
+		Model = new MainWindowModel();
 		
 		Activated += OnRendered;
 		
 		InitializeComponent();
 		
-		_controller = new MainWindowController(this, _model);
+		_controller = new MainWindowController(this, Model);
 		_ = _controller.ListenOnWebsocket();
 
 		Instance = this;
@@ -46,9 +46,9 @@ public partial class MainWindow : Window {
 	private void InitializeComponent() {
 		AvaloniaXamlLoader.Load(this);
 		ChatPanel = new ChatPanel();
-		ChatPanel.SetMainWindowModel(_model);
+		ChatPanel.SetMainWindowModel(Model);
 		UserInfoPanel = new UserInfoPanel();
-		UserInfoPanel.SetMainWindowModel(_model);
+		UserInfoPanel.SetMainWindowModel(Model);
 
 		_mainPanel = this.FindControl<DockPanel>("MainPanel")!;
 		
@@ -67,7 +67,7 @@ public partial class MainWindow : Window {
 		friendsButton.Click += (_, _) => {
 			SetPressedButton(friendsButton);
 			SetUiPanel(friendsPanel);
-			friendsPanel.Show(this);
+			friendsPanel.Show(_controller.PublicKey, this);
 		};
 
 		Button userInfoButton = this.FindControl<Button>("UserInfoButton")!;
@@ -87,7 +87,7 @@ public partial class MainWindow : Window {
 		button.Classes.Add("selected");
 	}
 
-	private void SetUiPanel(Panel panel) {
+	private void SetUiPanel(IContentPanel panel) {
 		if (_uiPanel != null) {
 			if (_uiPanel is ChatPanel chatPanel)
 				chatPanel.Unshow(this);
@@ -96,8 +96,8 @@ public partial class MainWindow : Window {
 			_mainPanel.Children.Remove(_uiPanel);
 		}
 
-		_uiPanel = panel;
-		_mainPanel.Children.Add(panel);
+		_uiPanel = (Panel) panel;
+		_mainPanel.Children.Add((Panel) panel);
 	}
 
 	public RsaKeyParameters? GetCurrentChatIdentity() => _uiPanel is not Panels.ChatPanel ? null : ChatPanel.GetForeignPublicKey();
@@ -108,7 +108,7 @@ public partial class MainWindow : Window {
 	}
 	
 	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
-		if (_model.ContainsChat(publicKey.ToBase64String()))
+		if (Model.ContainsChat(publicKey.ToBase64String()))
 			return;
 
 		Chats.Add(publicKey, name);
@@ -116,13 +116,10 @@ public partial class MainWindow : Window {
 		Button chatButton = new ();
 		chatButton.Classes.Add("chat_selector");
 
-		_model.AddChat(new Chat(chatButton, name, publicKey.ToBase64String()));
+		Model.AddChat(new Chat(chatButton, name, publicKey.ToBase64String()));
 		
-		if (doAutoFocus) {
-			SetUiPanel(ChatPanel);
-			ChatPanel.Show(publicKey, this);
-			SetPressedButton(chatButton);
-		}
+		if (doAutoFocus)
+			FocusPanel(publicKey, ChatPanel, chatButton);
 		
 		chatButton.Click += (_, _) => {
 			SetPressedButton(chatButton);
@@ -131,6 +128,12 @@ public partial class MainWindow : Window {
 		};
 		
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
+	}
+
+	public void FocusPanel(RsaKeyParameters publicKey, IContentPanel panel, Button button) {
+		SetUiPanel(panel);
+		panel.Show(publicKey, this);
+		SetPressedButton(button);
 	}
 	
 	private void OnAddFriend(RsaKeyParameters publicKey) {

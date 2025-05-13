@@ -4,13 +4,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Org.BouncyCastle.Crypto.Parameters;
 using SecureChat.ClassExtensions;
 using SecureChat.ExtendedControls;
 using SecureChat.Util;
 
 namespace SecureChat.Panels;
 
-public partial class FriendsPanel : DockPanel {
+public partial class FriendsPanel : DockPanel, IContentPanel {
 	private readonly FriendsPanelController _controller;
 	private readonly List<FriendDockPanel> _friends = [];
 	private readonly StackPanel _mainPanel;
@@ -24,10 +25,12 @@ public partial class FriendsPanel : DockPanel {
 		_mainPanel = this.FindControl<StackPanel>("MainPanel")!;
 	}
 
-	public void Show(MainWindow window) {
+	public void Show(RsaKeyParameters publicKey, MainWindow context) {
+		_controller.PersonalPublicKey = publicKey;
+
 		List<FriendRequest> friends = _controller.GetFriends();
 		foreach (FriendRequest friend in friends)
-			AddFriend(friend, window);
+			AddFriend(friend, context);
 		
 		_isShowCalled = true;
 	}
@@ -69,20 +72,20 @@ public partial class FriendsPanel : DockPanel {
 		};
 		SetDock(rejectButton, Dock.Right);
 		// TODO: check whether request succeeded and based on that, update the page. Do not refresh it.
-		rejectButton.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(window); };
+		rejectButton.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(_controller.PersonalPublicKey, window); };
 		if (friendRequest.Accepted) {
 			button.Content = "Remove";
 			button.Classes.Add("reject");
-			button.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(window); };
+			button.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(_controller.PersonalPublicKey, window); };
 		} else {
 			if (amISender) {
 				button.Content = "Cancel";
 				button.Classes.Add("cancel");
-				button.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(window); };
+				button.Click += (_, _) => { _controller.DeleteFriendRequest(_controller.PersonalPublicKey.ToBase64String(), foreignKey); Unshow(); Show(_controller.PersonalPublicKey, window); };
 			} else {
 				button.Content = "Accept";
 				button.Classes.Add("accept");
-				button.Click += (_, _) => { _controller.AcceptFriendRequest(friendRequest); Unshow(); Show(window); };
+				button.Click += (_, _) => { _controller.AcceptFriendRequest(friendRequest); Unshow(); Show(_controller.PersonalPublicKey, window); };
 			}
 		}
 
@@ -97,7 +100,13 @@ public partial class FriendsPanel : DockPanel {
 			key = friendRequest.ReceiverKey;
 			name = friendRequest.ReceiverName;
 		}
-		chatButton.Click += (_, _) => window.AddUser(RsaKeyParametersExtension.FromBase64String(key), name, true);
+
+		chatButton.Click += (_, _) => {
+			if (window.Model.ContainsChat(key))
+				window.FocusPanel(RsaKeyParametersExtension.FromBase64String(key), window.ChatPanel, window.Model.GetChat(key)!.ChatButton);
+			else
+				window.AddUser(RsaKeyParametersExtension.FromBase64String(key), name, true);
+		};
 
 		DockPanel dockPanel = new ();
 		if (!friendRequest.Accepted && !amISender)

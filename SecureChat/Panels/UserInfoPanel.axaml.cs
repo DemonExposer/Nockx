@@ -7,10 +7,11 @@ using System;
 using Spinner = SecureChat.CustomControls.Spinner;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SecureChat.Panels;
 
-public partial class UserInfoPanel : StackPanel {
+public partial class UserInfoPanel : StackPanel, IContentPanel {
 	public readonly TextBox DisplayNameTextBox;
 	public readonly Spinner Spinner;
 
@@ -75,4 +76,6 @@ public partial class UserInfoPanel : StackPanel {
 			}
 		).Show(_connectAppWindow);
 	}
+
+	public void Show(RsaKeyParameters publicKey, MainWindow context) { }
 }

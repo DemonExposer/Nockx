@@ -15,7 +15,7 @@ using System.Text;
 
 namespace SecureChat.Panels;
 
-public partial class ChatPanel : DockPanel {
+public partial class ChatPanel : DockPanel, IContentPanel {
 	private MainWindowModel? _mainWindowModel;
 	
 	private readonly ChatPanelController _controller;

@@ -7,7 +7,7 @@ using SecureChat.Windows;
 
 namespace SecureChat.Panels;
 
-public partial class AddFriendPanel : StackPanel {
+public partial class AddFriendPanel : StackPanel, IContentPanel {
 	public delegate void DataCallback(RsaKeyParameters publicKey);
 
 	private readonly TextBox _keyTextBox;
@@ -33,4 +33,6 @@ public partial class AddFriendPanel : StackPanel {
 			}
 		};
 	}
+
+	public void Show(RsaKeyParameters publicKey, MainWindow context) { }
 }

@@ -28,7 +28,8 @@ namespace SecureChat;
 public class MainWindowController {
 	public CallPopupWindow? CallWindow;
 	
-	private readonly RsaKeyParameters _publicKey, _privateKey;
+	public readonly RsaKeyParameters PublicKey;
+	private readonly RsaKeyParameters _privateKey;
 
 	private readonly MainWindow _context;
 	private readonly MainWindowModel _model;
@@ -46,7 +47,7 @@ public class MainWindowController {
 
 		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
 			PemReader pemReader = new (reader);
-			_publicKey = (RsaKeyParameters) pemReader.ReadObject();
+			PublicKey = (RsaKeyParameters) pemReader.ReadObject();
 		}
 
 		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
@@ -61,7 +62,7 @@ public class MainWindowController {
 		CheckForNewChats();
 
 		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-		string getVariables = $"requestingUser={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={timestamp}";
+		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PublicKey.ToBase64String())}&timestamp={timestamp}";
 		Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/messages/lastReceived?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
 		_lastMessageId = response.StatusCode == HttpStatusCode.NoContent ? -1 : JsonNode.Parse(response.Body)!["id"]!.GetValue<long>();
 		
@@ -70,7 +71,7 @@ public class MainWindowController {
 	}
 
 	private void CheckForNewChats() {
-		string getVariables = $"key={HttpUtility.UrlEncode(_publicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+		string getVariables = $"key={HttpUtility.UrlEncode(PublicKey.ToBase64String())}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 		Response response = null!;
 		bool hasTimedOut = false;
 		try {
@@ -87,7 +88,7 @@ public class MainWindowController {
 		JsonArray chats = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? jsonNode in chats) {
 			JsonObject chatObject = jsonNode!.AsObject();
-			if (chatObject["user1"]!["key"]!.GetValue<string>() != _publicKey.ToBase64String()) {
+			if (chatObject["user1"]!["key"]!.GetValue<string>() != PublicKey.ToBase64String()) {
 				RsaKeyParameters key = RsaKeyParametersExtension.FromBase64String(chatObject["user1"]!["key"]!.GetValue<string>());
 				string name = chatObject["user1"]!["displayName"]!.GetValue<string>();
 				
@@ -110,7 +111,7 @@ public class MainWindowController {
 		try {
 			await _webSocket.ConnectAsync(new Uri($"wss://{Settings.GetInstance().Hostname}:5000/ws"), cts.Token);
 
-			string keyBase64 = _publicKey.ToBase64String();
+			string keyBase64 = PublicKey.ToBase64String();
 			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 			JsonObject message = new () {
 				["key"] = keyBase64,
@@ -320,7 +321,7 @@ public class MainWindowController {
 							Accepted = false,
 							SenderKey = friendRequest["sender"]!["key"]!.GetValue<string>(),
 							SenderName = friendRequest["sender"]!["displayName"]!.GetValue<string>(),
-							ReceiverKey = _publicKey.ToBase64String()
+							ReceiverKey = PublicKey.ToBase64String()
 						};
 						
 						_context.AddFriendRequest(request);
@@ -378,13 +379,13 @@ public class MainWindowController {
 	}
 
 	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey, string foreignDisplayName, long timestamp) {
-		new CallRequestPopupWindow(_publicKey, foreignPublicKey, foreignDisplayName, timestamp).Show(_context);
+		new CallRequestPopupWindow(PublicKey, foreignPublicKey, foreignDisplayName, timestamp).Show(_context);
 	}
 
 	public void SendFriendRequest(RsaKeyParameters publicKey) {
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
-				["key"] = _publicKey.ToBase64String(),
+				["key"] = PublicKey.ToBase64String(),
 				["displayName"] = _model.DisplayName
 			},
 			["receiver"] = new JsonObject {
@@ -408,7 +409,7 @@ public class MainWindowController {
 
 	public bool TryDecryptMessage(Message message, out DecryptedMessage? decryptedMessage) {
 		DecryptedMessage uncheckedMessage = Cryptography.Decrypt(message, _privateKey, false);
-		if (Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, _publicKey, message.Sender, false)) {
+		if (Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, PublicKey, message.Sender, false)) {
 			decryptedMessage = uncheckedMessage;
 			return true;
 		}

@@ -14,15 +14,20 @@ using SecureChat.Util;
 namespace SecureChat.Panels;
 
 public class FriendsPanelController {
-	public readonly RsaKeyParameters PersonalPublicKey;
+	public RsaKeyParameters PersonalPublicKey {
+		get {
+			if (_personalPublicKey == null)
+				throw new InvalidOperationException("FriendsPanelController PersonalPublicKey was not set before usage");
+
+			return _personalPublicKey;
+		}
+		set => _personalPublicKey = value;
+	}
+
+	private RsaKeyParameters? _personalPublicKey;
 	private readonly RsaKeyParameters _privateKey;
 
 	public FriendsPanelController() {
-		using (StreamReader reader = File.OpenText(Constants.PublicKeyFile)) {
-			PemReader pemReader = new (reader);
-			PersonalPublicKey = (RsaKeyParameters) pemReader.ReadObject();
-		}
-		
 		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
 			PemReader pemReader = new (reader);
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
