@@ -131,7 +131,6 @@ public partial class ChatPanel : DockPanel {
 		AddMessage(decryptedMessage!);
 	}
 
-	// TODO: this should probably be moved to the controller
 	private void OnSizeChanged(object? sender, SizeChangedEventArgs args) {
 		_isResized = true;
 		_messageScrollView!.Offset = _messageScrollView.Offset.WithY(_messageScrollView.ScrollBarMaximum.Y - _distanceScrolledFromBottom);
