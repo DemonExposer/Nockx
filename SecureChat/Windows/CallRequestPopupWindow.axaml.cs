@@ -17,11 +17,12 @@ namespace SecureChat.Windows;
 
 public partial class CallRequestPopupWindow : PopupWindow {
 	private readonly RsaKeyParameters _personalKey, _foreignKey, _privateKey;
+	private readonly string _foreignDisplayName;
 	private readonly long _timestamp;
 
 	private bool _isAccepted;
 	
-	public CallRequestPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey, long timestamp) {
+	public CallRequestPopupWindow(RsaKeyParameters personalKey, RsaKeyParameters foreignKey, string foreignDiplayName, long timestamp) {
 		using (StreamReader reader = File.OpenText(Constants.PrivateKeyFile)) {
 			PemReader pemReader = new (reader);
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
@@ -29,15 +30,16 @@ public partial class CallRequestPopupWindow : PopupWindow {
 		
 		_personalKey = personalKey;
 		_foreignKey = foreignKey;
+		_foreignDisplayName = foreignDiplayName;
 		_timestamp = timestamp;
 		
 		InitializeComponent();
 	}
 
-	public void InitializeComponent() {
+	private void InitializeComponent() {
 		AvaloniaXamlLoader.Load(this);
 		TextBlock nameTextBlock = this.FindControl<TextBlock>("CallerName")!;
-		nameTextBlock.Text = _foreignKey.ToBase64String(); // TODO: change to display name
+		nameTextBlock.Text = _foreignDisplayName;
 
 		Closing += OnClosing;
 	}

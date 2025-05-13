@@ -271,7 +271,8 @@ public class MainWindowController {
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
 
-						string senderKeyBase64 = message["sender"]!.GetValue<string>();
+						string senderKeyBase64 = message["sender"]!["key"]!.GetValue<string>();
+						string displayName = message["sender"]!["displayName"]!.GetValue<string>();
 						long timestamp = message["timestamp"]!.GetValue<long>();
 						string signature = message["signature"]!.GetValue<string>();
 
@@ -282,7 +283,7 @@ public class MainWindowController {
 						if (!Cryptography.Verify(senderKeyBase64 + timestamp, signature, null, RsaKeyParametersExtension.FromBase64String(senderKeyBase64), false))
 							return;
 						
-						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(senderKeyBase64), timestamp);
+						ShowCallPrompt(RsaKeyParametersExtension.FromBase64String(senderKeyBase64), displayName, timestamp);
 					},
 					["callClose"] = message => {
 						if (CallWindow == null)
@@ -376,8 +377,8 @@ public class MainWindowController {
 		_context.ChatPanel.RemoveMessage(messageJson["id"]!.GetValue<long>());
 	}
 
-	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey, long timestamp) {
-		new CallRequestPopupWindow(_publicKey, foreignPublicKey, timestamp).Show(_context);
+	private void ShowCallPrompt(RsaKeyParameters foreignPublicKey, string foreignDisplayName, long timestamp) {
+		new CallRequestPopupWindow(_publicKey, foreignPublicKey, foreignDisplayName, timestamp).Show(_context);
 	}
 
 	public void SendFriendRequest(RsaKeyParameters publicKey) {
