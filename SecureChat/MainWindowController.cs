@@ -269,6 +269,21 @@ public class MainWindowController {
 						}
 					},
 					["delete"] = DeleteMessage,
+					["callAccepted"] = message => { // TODO: test this
+						string senderKeyBase64 = message["sender"]!.GetValue<string>();
+						long timestamp = message["timestamp"]!.GetValue<long>();
+						string signature = message["signature"]!.GetValue<string>();
+						
+						if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestamp > 10000) // Unable to verify authenticity, because of possible replay attack
+							return;
+						
+						// TODO: remove the sender key in the signature, just timestamp is enough
+						if (!Cryptography.Verify(senderKeyBase64 + timestamp, signature, null, RsaKeyParametersExtension.FromBase64String(senderKeyBase64), false))
+							return;
+						
+						if (_context.CallPopupWindow != null && _context.CallPopupWindow.ForeignKey.ToBase64String() == senderKeyBase64)
+							_context.CallPopupWindow?.OnOtherPersonJoined();
+					},
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
 
@@ -280,7 +295,7 @@ public class MainWindowController {
 						if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestamp > 10000) // Unable to verify authenticity, because of possible replay attack
 							return;
 						
-						// TODO: check whether caller is a friend
+						// TODO: check whether caller is a friend and remove the sender key in the signature, just timestamp is enough
 						if (!Cryptography.Verify(senderKeyBase64 + timestamp, signature, null, RsaKeyParametersExtension.FromBase64String(senderKeyBase64), false))
 							return;
 						

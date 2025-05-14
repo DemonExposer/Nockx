@@ -63,6 +63,8 @@ public class CallPopupWindowController {
 		_sender.SetInputDevice(inputSelector.SelectedIndex);
 	}
 
+	public void OnOtherPersonJoined() => Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Connected");
+
 	public void OnMousePointerEnteredSlider(object? sender, PointerEventArgs e) {
 		Point position = e.GetPosition(_context);
 		_volumeSliderTooltip.HorizontalOffset = position.X;
@@ -143,7 +145,8 @@ public class CallPopupWindowController {
 		byte[] receivedAesKey = Cryptography.DecryptAesKey(Convert.FromBase64String(responseObj["encryptedSymmetricKey"]!.GetValue<string>()), _privateKey);
 		if ((_context.Timestamp == null && receivedAesKey.SequenceEqual(aesKey)) || (_context.Timestamp != null && Cryptography.Verify(Convert.ToBase64String(receivedAesKey) + receivedTimestamp, responseObj["signature"]!.GetValue<string>(), null, _context.ForeignKey, false))) {
 			_network.SetKey(receivedAesKey);
-			Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Connected");
+			bool didRequesterStartCall = responseObj["didRequesterStartCall"]!.GetValue<bool>();
+			Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = didRequesterStartCall ? "Connected" : "Calling...");
 		} else {
 			Dispatcher.UIThread.InvokeAsync(() => _context.ConnectionStatusTextBlock.Text = "Unable to verify. Possible man-in-the-middle attack");
 		}

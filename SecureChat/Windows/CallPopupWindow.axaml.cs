@@ -73,6 +73,8 @@ public partial class CallPopupWindow : PopupWindow {
 
 		_controller.OnInputDeviceChanged(sender, e);
 	}
+	
+	public void OnOtherPersonJoined() => _controller.OnOtherPersonJoined();
 
 	private void VolumeSlider_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e) {
 		if (_controller == null!)
