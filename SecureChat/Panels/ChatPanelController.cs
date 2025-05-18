@@ -134,6 +134,7 @@ public class ChatPanelController {
 	public void OnCallButtonClicked(object? sender, EventArgs e) => StartCall();
 
 	private void StartCall() {
-		new CallPopupWindow(PersonalPublicKey, ForeignPublicKey).Show(MainWindow.Instance);
+		MainWindow.Instance.CallPopupWindow = new CallPopupWindow(PersonalPublicKey, ForeignPublicKey);
+		MainWindow.Instance.CallPopupWindow.Show(MainWindow.Instance);
 	}
 }

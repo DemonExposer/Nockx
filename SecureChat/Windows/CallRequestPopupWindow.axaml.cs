@@ -46,7 +46,8 @@ public partial class CallRequestPopupWindow : PopupWindow {
 
 	public void AcceptButton_OnClick(object? sender, RoutedEventArgs e) {
 		_isAccepted = true;
-		new CallPopupWindow(_personalKey, _foreignKey, _timestamp).Show(MainWindow.Instance);
+		MainWindow.Instance.CallPopupWindow = new CallPopupWindow(_personalKey, _foreignKey, _timestamp);
+		MainWindow.Instance.CallPopupWindow.Show(MainWindow.Instance);
 		Close();
 	}
 

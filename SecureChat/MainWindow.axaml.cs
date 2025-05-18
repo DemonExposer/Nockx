@@ -18,6 +18,8 @@ public partial class MainWindow : Window {
 
 	public ChatPanel ChatPanel { get; private set; }
 	public UserInfoPanel UserInfoPanel { get; private set; }
+
+	public CallPopupWindow? CallPopupWindow;
 	
 	private bool _isRendered;
 	private readonly List<Action> _onRenderedActions = [];
