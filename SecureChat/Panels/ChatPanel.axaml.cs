@@ -53,7 +53,7 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 					if (messageBox.SelectionStart > messageBox.SelectionEnd)
 						(messageBox.SelectionEnd, messageBox.SelectionStart) = (messageBox.SelectionStart, messageBox.SelectionEnd);
 					
-					StringBuilder sb = new (messageBox.Text[..messageBox.SelectionStart]);
+					StringBuilder sb = new (messageBox.Text[..messageBox.SelectionStart]); // TODO: this crashes on no selection, fix it
 					for (int i = messageBox.SelectionStart; i < messageBox.SelectionEnd; i++) {
 						if (messageBox.Text[i] <= 'z' && messageBox.Text[i] >= 'a')
 							sb.Append((char) (messageBox.Text[i] + ('A' - 'a')));
