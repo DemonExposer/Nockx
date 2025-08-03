@@ -249,6 +249,11 @@ public class MainWindowController {
 				if (doContinue)
 					continue;
 
+				/*
+				 * TODO: make sure that no feedback is given on whether ciphertext is correct or not. Let it fail silently if incorrect.
+				 * Also make sure that any time plaintext is received, there is a signature which matches the plaintext, NOT JUST THE TIMESTAMP.
+				 * Possibly check this in other sections of the code too
+				 */
 				Dictionary<string, Action<JsonObject>> actions = new () {
 					["add"] = message => {
 						Message parsedMessage = Message.Parse(message);
