@@ -12,11 +12,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Threading;
 using LessAnnoyingHttp;
+using Nockx.Base;
+using Nockx.Base.ClassExtensions;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using SecureChat.Audio;
-using SecureChat.ClassExtensions;
 using SecureChat.CustomControls;
 using SecureChat.Util;
 

@@ -4,8 +4,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Nockx.Base.ClassExtensions;
 using Org.BouncyCastle.Crypto.Parameters;
-using SecureChat.ClassExtensions;
 using SecureChat.ExtendedControls;
 using SecureChat.Util;
 

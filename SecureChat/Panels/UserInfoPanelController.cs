@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 using System.Web;
 using Avalonia.Threading;
 using LessAnnoyingHttp;
+using Nockx.Base;
+using Nockx.Base.ClassExtensions;
 using Org.BouncyCastle.Crypto;
-using SecureChat.ClassExtensions;
 using SecureChat.Windows;
 
 namespace SecureChat.Panels;

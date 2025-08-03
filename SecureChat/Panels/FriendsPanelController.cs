@@ -5,10 +5,11 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
 using LessAnnoyingHttp;
+using Nockx.Base;
+using Nockx.Base.ClassExtensions;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
-using SecureChat.ClassExtensions;
 using SecureChat.Util;
 
 namespace SecureChat.Panels;

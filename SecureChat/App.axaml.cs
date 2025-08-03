@@ -8,6 +8,8 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using LessAnnoyingHttp;
+using Nockx.Base;
+using Nockx.Base.ClassExtensions;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -15,7 +17,6 @@ using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using OsNotifications;
 using SecureChat.Audio;
-using SecureChat.ClassExtensions;
 using SecureChat.Util;
 using SecureChat.Windows;
 

@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using SecureChat.Util;
+using Nockx.Base;
 
 namespace SecureChat.Audio;
 

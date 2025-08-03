@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Threading;
 using SecureChat.ClassExtensions;
-using SecureChat.Model;
-using SecureChat.Util;
 using SecureChat.CustomControls;
 using System.Threading.Tasks;
 using Spinner = SecureChat.CustomControls.Spinner;
 using System.Text;
+using Nockx.Base.ClassExtensions;
+using Nockx.Base.Util;
 
 namespace SecureChat.Panels;
 

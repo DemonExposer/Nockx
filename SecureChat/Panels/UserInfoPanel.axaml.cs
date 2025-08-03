@@ -1,12 +1,12 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Input;
-using SecureChat.ClassExtensions;
 using Avalonia.Interactivity;
 using SecureChat.Windows;
 using System;
 using Spinner = SecureChat.CustomControls.Spinner;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using Nockx.Base.ClassExtensions;
 using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SecureChat.Panels;

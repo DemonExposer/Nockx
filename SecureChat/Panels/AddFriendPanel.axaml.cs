@@ -1,8 +1,8 @@
 ﻿using System;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Nockx.Base.ClassExtensions;
 using Org.BouncyCastle.Crypto.Parameters;
-using SecureChat.ClassExtensions;
 using SecureChat.Windows;
 
 namespace SecureChat.Panels;
