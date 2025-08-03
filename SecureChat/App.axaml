@@ -98,6 +98,17 @@
             <Setter Property="Background" Value="Transparent"/>
         </Style>
 		
+		<Style Selector="Button.attachment">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Button.attachment:pointerover /template/ ContentPresenter">
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Button.attachment:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		
 		<Style Selector="TextBox">
 			<Setter Property="Width" Value="500"/>
 			<Setter Property="HorizontalAlignment" Value="Left"/>

@@ -2,14 +2,16 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:customControls="clr-namespace:SecureChat.CustomControls"
 		mc:Ignorable="d" d:DesignWidth="650" d:DesignHeight="400"
 		x:Class="SecureChat.Panels.ChatPanel">
 	<DockPanel DockPanel.Dock="Top" Background="#202020">
 		<Button DockPanel.Dock="Right" Name="CallButton" Content="Call"/>
 		<TextBlock Name="HeaderForeignUsername" VerticalAlignment="Center" FontSize="15" Margin="10"/>
 	</DockPanel>
-	<TextBox DockPanel.Dock="Bottom" Name="MessageBox" Margin="0" Width="NaN" HorizontalAlignment="Stretch"/>
+	<DockPanel DockPanel.Dock="Bottom">
+		<Button DockPanel.Dock="Right" Classes="attachment" Content="＋" Click="AddAttachment"/>
+		<TextBox Name="MessageBox" Margin="0" Width="NaN" HorizontalAlignment="Stretch"/>
+	</DockPanel>
 	<ScrollViewer Name="MessageScrollView" VerticalScrollBarVisibility="Auto">
 		<StackPanel Name="MessagePanel">
 		

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Avalonia.Threading;
 using SecureChat.ClassExtensions;
@@ -10,6 +11,9 @@ using SecureChat.CustomControls;
 using System.Threading.Tasks;
 using Spinner = SecureChat.CustomControls.Spinner;
 using System.Text;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using Nockx.Base;
 using Nockx.Base.ClassExtensions;
 using Nockx.Base.Util;
 
@@ -122,6 +126,32 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 			_messageScrollView!.ScrollToEnd();
 			_messageScrollView.ScrollToEnd();
 		}
+	}
+
+	private void AddAttachment(object? sender, RoutedEventArgs e) {
+		Dispatcher.UIThread.Invoke(async () => {
+			IReadOnlyList<IStorageFile> list = await MainWindow.Instance.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
+				AllowMultiple = true
+			});
+
+			Stream stream = await list[0].OpenReadAsync();
+			byte[] buffer = new byte[1 << 16]; // 64 kB
+			for (int read, pos = 0; (read = await stream.ReadAsync(buffer.AsMemory(pos, buffer.Length))) != 0; pos += read) {
+				Console.WriteLine(read);
+				try {
+					Console.WriteLine(await stream.ReadAsync(buffer.AsMemory(pos + read, buffer.Length))); // BUG: something goes wrong here
+				} catch (Exception e) {
+					Console.WriteLine(e);
+				}
+
+				byte[] aesKey = Cryptography.GenerateAesKey();
+				Console.WriteLine("original buffer: {0}", Convert.ToBase64String(buffer[..read])[..100]);
+				byte[] encryptedBuffer = Cryptography.EncryptWithAes(buffer, read, aesKey);
+				Console.WriteLine("encrypted buffer: {0}", Convert.ToBase64String(encryptedBuffer)[..100]);
+				(byte[] decryptedBuffer, int decryptedBufferLength) = Cryptography.DecryptWithAes(encryptedBuffer, aesKey);
+				Console.WriteLine("decrypted buffer: {0}", Convert.ToBase64String(decryptedBuffer[..decryptedBufferLength])[..100]);
+			}
+		});
 	}
 
 	public void DecryptAndAddMessage(Message message) {
