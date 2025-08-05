@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
@@ -39,6 +40,35 @@ public class ChatPanelController {
 			PemReader pemReader = new (reader);
 			_privateKey = (RsaKeyParameters) ((AsymmetricCipherKeyPair) pemReader.ReadObject()).Private;
 		}
+	}
+
+	public void AddAttachment(Stream stream, string fileName) {
+		byte[] aesKey = Cryptography.GenerateAesKey(); // TODO: use key from message
+		HttpClient client = new ();
+		client.BaseAddress = new Uri($"https://{Settings.GetInstance().Hostname}:5000/messages/attachment");
+
+		HttpRequestMessage request = new () {
+			Method = HttpMethod.Post,
+			RequestUri = client.BaseAddress,
+		};
+		
+		MultipartFormDataContent form = new ();
+		form.Add(new StreamContent(new EncryptedStream(stream, aesKey, true)), "message.Attachment", fileName);
+		
+		Message message = Cryptography.Encrypt("hoi", PersonalPublicKey, ForeignPublicKey, _privateKey);
+		form.Add(new StringContent(PersonalPublicKey.ToBase64String()), "message.Message.Sender.Key");
+		form.Add(new StringContent(_mainWindowModel.DisplayName), "message.Message.Sender.DisplayName");
+		form.Add(new StringContent(ForeignPublicKey.ToBase64String()), "message.Message.Receiver.Key");
+		form.Add(new StringContent(ForeignDisplayName), "message.Message.Receiver.Key");
+		form.Add(new StringContent(message.Body), "message.Message.Text");
+		form.Add(new StringContent(message.SenderEncryptedKey), "message.Message.SenderEncryptedKey");
+		form.Add(new StringContent(message.ReceiverEncryptedKey), "message.Message.ReceiverEncryptedKey");
+		form.Add(new StringContent(message.Signature), "message.Message.Signature");
+		form.Add(new StringContent(message.Timestamp.ToString()), "message.Message.Timestamp");
+		
+		request.Content = form;
+
+		HttpResponseMessage response = client.Send(request);
 	}
 	
 	public void SetMainWindowModel(MainWindowModel mainWindowModel) {

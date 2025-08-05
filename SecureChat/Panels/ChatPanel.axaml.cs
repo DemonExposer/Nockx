@@ -130,26 +130,16 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 
 	private void AddAttachment(object? sender, RoutedEventArgs e) {
 		Dispatcher.UIThread.Invoke(async () => {
-			IReadOnlyList<IStorageFile> list = await MainWindow.Instance.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
-				AllowMultiple = true
-			});
+			try {
+				IReadOnlyList<IStorageFile> list = await MainWindow.Instance.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
+					AllowMultiple = true
+				});
 
-			Stream stream = await list[0].OpenReadAsync();
-			byte[] buffer = new byte[1 << 16]; // 64 kB
-			for (int read, pos = 0; (read = await stream.ReadAsync(buffer.AsMemory(pos, buffer.Length))) != 0; pos += read) {
-				Console.WriteLine(read);
-				try {
-					Console.WriteLine(await stream.ReadAsync(buffer.AsMemory(pos + read, buffer.Length))); // BUG: something goes wrong here
-				} catch (Exception e) {
-					Console.WriteLine(e);
-				}
-
-				byte[] aesKey = Cryptography.GenerateAesKey();
-				Console.WriteLine("original buffer: {0}", Convert.ToBase64String(buffer[..read])[..100]);
-				byte[] encryptedBuffer = Cryptography.EncryptWithAes(buffer, read, aesKey);
-				Console.WriteLine("encrypted buffer: {0}", Convert.ToBase64String(encryptedBuffer)[..100]);
-				(byte[] decryptedBuffer, int decryptedBufferLength) = Cryptography.DecryptWithAes(encryptedBuffer, aesKey);
-				Console.WriteLine("decrypted buffer: {0}", Convert.ToBase64String(decryptedBuffer[..decryptedBufferLength])[..100]);
+				string fileName = list[0].Name;
+				await using (Stream stream = await list[0].OpenReadAsync())
+					_controller.AddAttachment(stream, fileName);
+			} catch (Exception e) {
+				Console.WriteLine(e);
 			}
 		});
 	}
