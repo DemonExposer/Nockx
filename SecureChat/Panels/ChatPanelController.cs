@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
@@ -43,7 +44,8 @@ public class ChatPanelController {
 	}
 
 	public void AddAttachment(Stream stream, string fileName) {
-		byte[] aesKey = Cryptography.GenerateAesKey(); // TODO: use key from message
+		byte[] aesKey = new byte[Cryptography.AesKeyLength / 8];
+		Message message = Cryptography.Encrypt("hoi", PersonalPublicKey, ForeignPublicKey, _privateKey, aesKeyOut: aesKey);
 		HttpClient client = new ();
 		client.BaseAddress = new Uri($"https://{Settings.GetInstance().Hostname}:5000/messages/attachment");
 
@@ -53,9 +55,8 @@ public class ChatPanelController {
 		};
 		
 		MultipartFormDataContent form = new ();
-		form.Add(new StreamContent(new EncryptedStream(stream, aesKey, true)), "message.Attachment", fileName);
+		form.Add(new StreamContent(new EncryptedStream(stream, aesKey, true)), "message.Attachment", Convert.ToBase64String(Cryptography.EncryptWithAes(Encoding.UTF8.GetBytes(fileName), fileName.Length, aesKey)));
 		
-		Message message = Cryptography.Encrypt("hoi", PersonalPublicKey, ForeignPublicKey, _privateKey);
 		form.Add(new StringContent(PersonalPublicKey.ToBase64String()), "message.Message.Sender.Key");
 		form.Add(new StringContent(_mainWindowModel.DisplayName), "message.Message.Sender.DisplayName");
 		form.Add(new StringContent(ForeignPublicKey.ToBase64String()), "message.Message.Receiver.Key");
