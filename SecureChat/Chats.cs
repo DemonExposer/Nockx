@@ -8,6 +8,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SecureChat;
 
+// TODO: This class can probably be removed. All chat data should be retrieved from the server, not from a file.
 public class Chats {
 	private string _file;
 	private readonly Dictionary<RsaKeyParameters, string> _keyNameBindings = [];
@@ -68,7 +69,7 @@ public class Chats {
 	}
 
 	public static void Show(MainWindow window) {
-		foreach (RsaKeyParameters key in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be shown"))._keyNameBindings.Keys)
-			window.AddUser(key, _instance._keyNameBindings[key], false);
+		// foreach (RsaKeyParameters key in (_instance ?? throw new InvalidOperationException("Chats must loaded before they can be shown"))._keyNameBindings.Keys)
+		// 	window.AddUser(key, _instance._keyNameBindings[key], false);
 	}
 }

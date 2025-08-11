@@ -89,20 +89,21 @@ public class MainWindowController {
 		JsonArray chats = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? jsonNode in chats) {
 			JsonObject chatObject = jsonNode!.AsObject();
+			long chatId = chatObject["id"]!.GetValue<long>();
 			if (chatObject["user1"]!["key"]!.GetValue<string>() != PublicKey.ToBase64String()) {
 				RsaKeyParameters key = RsaKeyParametersExtension.FromBase64String(chatObject["user1"]!["key"]!.GetValue<string>());
 				string name = chatObject["user1"]!["displayName"]!.GetValue<string>();
 				
-				_context.AddUser(key, name, false);
-				_model.SetChatReadStatus(key.ToBase64String(), chatObject["isRead"]!.GetValue<bool>());
-				_model.UpdateName(key.ToBase64String(), name);
+				_context.AddUser(chatId, key, name, false);
+				_model.SetChatReadStatus(chatId, chatObject["isRead"]!.GetValue<bool>());
+				_model.UpdateName(chatId, name);
 			} else {
 				string key = chatObject["user2"]!["key"]!.GetValue<string>();
 				string name = chatObject["user2"]!["displayName"]!.GetValue<string>();
 
-				_context.AddUser(RsaKeyParametersExtension.FromBase64String(key), name, false);
-				_model.SetChatReadStatus(key, chatObject["isRead"]!.GetValue<bool>());
-				_model.UpdateName(key, name);
+				_context.AddUser(chatId, RsaKeyParametersExtension.FromBase64String(key), name, false);
+				_model.SetChatReadStatus(chatId, chatObject["isRead"]!.GetValue<bool>());
+				_model.UpdateName(chatId, name);
 			}
 		}
 	}
@@ -138,22 +139,22 @@ public class MainWindowController {
 				Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/messages/all?{getVariables}", [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
 				JsonArray messagesJson = JsonNode.Parse(response.Body)!.AsArray();
 				RsaKeyParameters? foreignKey = _context.GetCurrentChatIdentity();
-				List<string> senders = messagesJson.DistinctBy(elem => elem!["sender"]!["key"]!.ToString()).Where(elem => elem!["sender"]!["key"]!.GetValue<string>() != keyBase64 && (foreignKey == null || elem["sender"]!["key"]!.GetValue<string>() != foreignKey.ToBase64String())).Select(elem => elem!["sender"]!["key"]!.GetValue<string>()).ToList();
+				List<long> chatIds = messagesJson.DistinctBy(elem => elem!["chatId"]!.GetValue<long>()).Select(elem => elem!["chatId"]!.GetValue<long>()).ToList();
 				
 				// Flag chats as unread
 				Dispatcher.UIThread.InvokeAsync(() => {
-					foreach (string sender in senders)
-						_model.SetChatReadStatus(sender, false);
+					foreach (long chatId in chatIds)
+						_model.SetChatReadStatus(chatId, false);
 				});
 				
-				if (senders.Count > 0)
+				if (chatIds.Count > 0)
 					Sounds.Notification.Play();
 				
 				// Update current chat
 				if (foreignKey != null) {
 					DecryptedMessage[] messages = _context.ChatPanel.RetrieveUnretrievedMessages();
 					if (messages.Length > 0) {
-						if (senders.Count == 0)
+						if (chatIds.Count == 0)
 							Sounds.Notification.Play();
 						
 						if (!_isWindowActivated) {
@@ -283,12 +284,12 @@ public class MainWindowController {
 						if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestamp > 10000) // Unable to verify authenticity, because of possible replay attack
 							return;
 						
-						// TODO: remove the sender key in the signature, just timestamp is enough
+						// TODO: sign the unencrypted key in the signature instead
 						if (!Cryptography.Verify(senderKeyBase64 + timestamp, signature, null, RsaKeyParametersExtension.FromBase64String(senderKeyBase64), false))
 							return;
 						
 						if (_context.CallPopupWindow != null && _context.CallPopupWindow.ForeignKey.ToBase64String() == senderKeyBase64)
-							_context.CallPopupWindow?.OnOtherPersonJoined();
+							_context.CallPopupWindow.OnOtherPersonJoined();
 					},
 					["callStart"] = message => {
 						Sounds.Ringtone.Repeat();
@@ -301,7 +302,7 @@ public class MainWindowController {
 						if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timestamp > 10000) // Unable to verify authenticity, because of possible replay attack
 							return;
 						
-						// TODO: check whether caller is a friend and remove the sender key in the signature, just timestamp is enough
+						// TODO: check whether caller is a friend and sign the unencrypted key in the signature instead
 						if (!Cryptography.Verify(senderKeyBase64 + timestamp, signature, null, RsaKeyParametersExtension.FromBase64String(senderKeyBase64), false))
 							return;
 						
@@ -374,13 +375,13 @@ public class MainWindowController {
 	}
 
 	private bool AddMessage(Message message) {
-		_context.AddUser(message.Sender, message.SenderDisplayName, false);
-		_model.UpdateName(message.Sender.ToBase64String(), message.SenderDisplayName);
+		_context.AddUser(message.ChatId, message.Sender, message.SenderDisplayName, false);
+		_model.UpdateName(message.ChatId, message.SenderDisplayName);
 
 		RsaKeyParameters? currentChatForeignPublicKey = _context.GetCurrentChatIdentity();
 		if (currentChatForeignPublicKey == null || !currentChatForeignPublicKey.Equals(message.Sender)) {
 			if (!message.IsRead)
-				_model.SetChatReadStatus(message.Sender.ToBase64String(), false);
+				_model.SetChatReadStatus(message.ChatId, false);
 			
 			return false;
 		}

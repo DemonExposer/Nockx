@@ -34,5 +34,5 @@ public partial class AddFriendPanel : StackPanel, IContentPanel {
 		};
 	}
 
-	public void Show(RsaKeyParameters publicKey, MainWindow context) { }
+	public void Show(MainWindow context) { }
 }

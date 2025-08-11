@@ -33,7 +33,7 @@ public partial class Spinner : Border {
 
 	public void Spin() {
 		if (_frames.Count == 0)
-			throw new IndexOutOfRangeException(); // Handle this more properly by checking if the animations/spinner folder exists (and if there are files present) and notifying the user if not
+			throw new IndexOutOfRangeException(); // TODO: Handle this more properly by checking if the animations/spinner folder exists (and if there are files present) and notifying the user if not
 
 		if (_isSpinning)
 			return;

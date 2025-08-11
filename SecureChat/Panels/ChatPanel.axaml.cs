@@ -13,9 +13,9 @@ using Spinner = SecureChat.CustomControls.Spinner;
 using System.Text;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Nockx.Base;
 using Nockx.Base.ClassExtensions;
 using Nockx.Base.Util;
+using SecureChat.Model;
 
 namespace SecureChat.Panels;
 
@@ -29,6 +29,7 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 	private ScrollViewer? _messageScrollView;
 	private TextBlock? _headerUsernameTextBlock;
 	private Button? _callButton;
+	public Chat? Chat;
 
 	private double _distanceScrolledFromBottom;
 
@@ -113,7 +114,7 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 			PublicKey = message.Sender
 		};
 
-		if (message.Sender == _controller.ForeignPublicKey.ToBase64String() && _controller.ForeignDisplayName != message.DisplayName) {
+		if (message.Sender == _controller.Chat.KeyString && _controller.ForeignDisplayName != message.DisplayName) {
 			_controller.ForeignDisplayName = message.DisplayName;
 			_headerUsernameTextBlock!.Text = _controller.ForeignDisplayName.Crop(30);
 		}
@@ -156,24 +157,27 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 		_messageScrollView!.Offset = _messageScrollView.Offset.WithY(_messageScrollView.ScrollBarMaximum.Y - _distanceScrolledFromBottom);
 	}
 	
-	public void Show(RsaKeyParameters publicKey, MainWindow context) {
+	public void Show(MainWindow context) {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("Show may not be called before _mainWindowModel is set using SetMainWindowModel");
+
+		if (Chat == null)
+			throw new InvalidOperationException("Show may not be called before the property Chat is set");
 		
 		// _messagePanel should never be null, because a user cannot open this panel before the UI is done.
 		// However, in theory, when the program is loaded from a saved state, it is theoretically possible to trigger this. So this is just for debug.
 		if (_messagePanel == null) {
 			Console.WriteLine("Show was called before initialization. Retrying with delay");
-			Dispatcher.UIThread.InvokeAsync(() => Show(publicKey, context)); // Just call itself after UI has been initialized
+			Dispatcher.UIThread.InvokeAsync(() => Show(context)); // Just call itself after UI has been initialized
 			return;
 		}
 		
-		_controller.ForeignPublicKey = publicKey;
+		_controller.Chat = _mainWindowModel.GetChat(Chat.Id)!;
 		_headerUsernameTextBlock.Text = _controller.ForeignDisplayName.Crop(30);
 
 		// If chat is unread, make it read
-		if (!_mainWindowModel.GetChatReadStatus(publicKey.ToBase64String())) {
-			_mainWindowModel.SetChatReadStatus(publicKey.ToBase64String(), true);
+		if (!_mainWindowModel.GetChatReadStatus(Chat.Id)) {
+			_mainWindowModel.SetChatReadStatus(Chat.Id, true);
 			_controller.SetChatRead();
 		}
 		
@@ -183,7 +187,7 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 		};
 		_messagePanel.Children.Add(spinner);
 
-		// Retrieve and decypt messages in the background
+		// Retrieve and decrypt messages in the background
 		Task.Run(() => {
 			spinner.Spin();
 			DecryptedMessage[] messages = _controller.GetPastMessages();
@@ -230,5 +234,5 @@ public partial class ChatPanel : DockPanel, IContentPanel {
 		context.SizeChanged -= OnSizeChanged;
 	}
 
-	public RsaKeyParameters GetForeignPublicKey() => _controller.ForeignPublicKey;
+	public RsaKeyParameters GetForeignPublicKey() => _controller.Chat.Key;
 }

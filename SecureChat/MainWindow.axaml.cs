@@ -21,6 +21,11 @@ public partial class MainWindow : Window {
 
 	public CallPopupWindow? CallPopupWindow;
 	
+	public RsaKeyParameters PublicKey {
+		get => _controller.PublicKey;
+		set => throw new NotSupportedException($"Tried to set {nameof(PublicKey)}, a readonly property");
+	}
+
 	private bool _isRendered;
 	private readonly List<Action> _onRenderedActions = [];
 
@@ -69,7 +74,7 @@ public partial class MainWindow : Window {
 		friendsButton.Click += (_, _) => {
 			SetPressedButton(friendsButton);
 			SetUiPanel(friendsPanel);
-			friendsPanel.Show(_controller.PublicKey, this);
+			friendsPanel.Show(this);
 		};
 
 		Button userInfoButton = this.FindControl<Button>("UserInfoButton")!;
@@ -109,8 +114,8 @@ public partial class MainWindow : Window {
 			friendsPanel.AddFriend(friendRequest, this);
 	}
 	
-	public void AddUser(RsaKeyParameters publicKey, string name, bool doAutoFocus) {
-		if (Model.ContainsChat(publicKey.ToBase64String()))
+	public void AddUser(long chatId, RsaKeyParameters publicKey, string name, bool doAutoFocus) {
+		if (Model.ContainsChat(chatId))
 			return;
 
 		Chats.Add(publicKey, name);
@@ -118,23 +123,23 @@ public partial class MainWindow : Window {
 		Button chatButton = new ();
 		chatButton.Classes.Add("chat_selector");
 
-		Model.AddChat(new Chat(chatButton, name, publicKey.ToBase64String()));
+		Chat chat = new (chatButton, chatId, name, publicKey, publicKey.ToBase64String());
+		Model.AddChat(chat);
 		
 		if (doAutoFocus)
-			FocusPanel(publicKey, ChatPanel, chatButton);
+			FocusPanel(ChatPanel, chatButton);
 		
 		chatButton.Click += (_, _) => {
-			SetPressedButton(chatButton);
-			SetUiPanel(ChatPanel);
-			ChatPanel.Show(publicKey, this);
+			ChatPanel.Chat = chat;
+			FocusPanel(ChatPanel, chatButton);
 		};
 		
 		this.FindControl<StackPanel>("ChatListPanel")!.Children.Add(chatButton);
 	}
 
-	public void FocusPanel(RsaKeyParameters publicKey, IContentPanel panel, Button button) {
+	public void FocusPanel(IContentPanel panel, Button button) {
 		SetUiPanel(panel);
-		panel.Show(publicKey, this);
+		panel.Show(this);
 		SetPressedButton(button);
 	}
 	

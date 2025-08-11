@@ -13,13 +13,14 @@ using Nockx.Base.Util;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
+using SecureChat.Model;
 using SecureChat.Util;
 using SecureChat.Windows;
 
 namespace SecureChat.Panels;
 
 public class ChatPanelController {
-	public RsaKeyParameters ForeignPublicKey;
+	public Chat Chat;
 	public string ForeignDisplayName = "";
 
 	public readonly RsaKeyParameters PersonalPublicKey;
@@ -45,7 +46,7 @@ public class ChatPanelController {
 
 	public void AddAttachment(Stream stream, string fileName) {
 		byte[] aesKey = new byte[Cryptography.AesKeyLength / 8];
-		Message message = Cryptography.Encrypt("hoi", PersonalPublicKey, ForeignPublicKey, _privateKey, aesKeyOut: aesKey);
+		Message message = Cryptography.Encrypt("hoi", PersonalPublicKey, Chat.Key, _privateKey, aesKeyOut: aesKey);
 		HttpClient client = new ();
 		client.BaseAddress = new Uri($"https://{Settings.GetInstance().Hostname}:5000/messages/attachment");
 
@@ -59,7 +60,7 @@ public class ChatPanelController {
 		
 		form.Add(new StringContent(PersonalPublicKey.ToBase64String()), "message.Message.Sender.Key");
 		form.Add(new StringContent(_mainWindowModel.DisplayName), "message.Message.Sender.DisplayName");
-		form.Add(new StringContent(ForeignPublicKey.ToBase64String()), "message.Message.Receiver.Key");
+		form.Add(new StringContent(Chat.KeyString), "message.Message.Receiver.Key");
 		form.Add(new StringContent(ForeignDisplayName), "message.Message.Receiver.Key");
 		form.Add(new StringContent(message.Body), "message.Message.Text");
 		form.Add(new StringContent(message.SenderEncryptedKey), "message.Message.SenderEncryptedKey");
@@ -81,7 +82,8 @@ public class ChatPanelController {
 
 	public bool Decrypt(Message message, bool isOwnMessage, out DecryptedMessage? decryptedMessage) {
 		DecryptedMessage uncheckedMessage = Cryptography.Decrypt(message, _privateKey, isOwnMessage);
-		if (!Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, PersonalPublicKey, ForeignPublicKey, isOwnMessage)) {
+		// The usage of Chat.Key (and not something given by the server) here ensures that the messages originate from the user with the key shown in the UI
+		if (!Cryptography.Verify(uncheckedMessage.Body + uncheckedMessage.Timestamp, message.Signature, PersonalPublicKey, Chat.Key, isOwnMessage)) {
 			decryptedMessage = null;
 			return false;
 		}
@@ -94,7 +96,7 @@ public class ChatPanelController {
 		List<DecryptedMessage> res = [];
 		
 		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(ForeignPublicKey.ToBase64String())}&timestamp={timestamp}";
+		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&chatId={Chat.Id}&timestamp={timestamp}";
 		if (lastMessageId != -1)
 			getVariables += $"&lastMessageId={lastMessageId}";
 		
@@ -114,15 +116,11 @@ public class ChatPanelController {
 	public long SendMessage(string message) {
 		if (_mainWindowModel == null)
 			throw new InvalidOperationException("SendMessage may not be called before _mainWindowModel is set using SetMainWindowModel");
-		Message encryptedMessage = Cryptography.Encrypt(message, PersonalPublicKey, ForeignPublicKey, _privateKey);
+		Message encryptedMessage = Cryptography.Encrypt(message, PersonalPublicKey, Chat.Key, _privateKey);
 		JsonObject body = new () {
 			["sender"] = new JsonObject {
 				["key"] = PersonalPublicKey.ToBase64String(),
 				["displayName"] = _mainWindowModel.DisplayName
-			},
-			["receiver"] = new JsonObject {
-				["key"] = ForeignPublicKey.ToBase64String(),
-				["displayName"] = ForeignDisplayName
 			},
 			["text"] = encryptedMessage.Body,
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
@@ -153,7 +151,7 @@ public class ChatPanelController {
 				["displayName"] = ""
 			},
 			["sender"] = new JsonObject {
-				["key"] = ForeignPublicKey.ToBase64String(),
+				["key"] = Chat.KeyString,
 				["displayName"] = ""
 			},
 			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
@@ -166,7 +164,7 @@ public class ChatPanelController {
 	public void OnCallButtonClicked(object? sender, EventArgs e) => StartCall();
 
 	private void StartCall() {
-		MainWindow.Instance.CallPopupWindow = new CallPopupWindow(PersonalPublicKey, ForeignPublicKey);
+		MainWindow.Instance.CallPopupWindow = new CallPopupWindow(PersonalPublicKey, Chat.Key);
 		MainWindow.Instance.CallPopupWindow.Show(MainWindow.Instance);
 	}
 }

@@ -14,13 +14,17 @@ public class MainWindowModel {
 		chat.UpdateName(chat.Name);
 	}
 
-	public bool ContainsChat(string key) => _chats.Any(chat => chat.Key == key);
-	
-	public void UpdateName(string key, string name) => _chats.First(chat => chat.Key == key).UpdateName(name);
+	public bool ContainsChat(long id) => _chats.Any(chat => chat.Id == id);
 
-	public Chat? GetChat(string key) => _chats.Find(chat => chat.Key == key);
+	public bool ContainsPersonalChat(string key) => _chats.Any(chat => chat.KeyString == key);
 	
-	public void SetChatReadStatus(string key, bool isRead) => GetChat(key)!.ChatButton.Tag = isRead ? "" : "\u25cf";
+	public void UpdateName(long id, string name) => _chats.First(chat => chat.Id == id).UpdateName(name);
+
+	public Chat? GetChat(long id) => _chats.Find(chat => chat.Id == id);
 	
-	public bool GetChatReadStatus(string key) => (string) GetChat(key)!.ChatButton.Tag! == "";
+	public Chat? GetPersonalChat(string key) => _chats.Find(chat => chat.KeyString == key);
+	
+	public void SetChatReadStatus(long id, bool isRead) => GetChat(id)!.ChatButton.Tag = isRead ? "" : "\u25cf";
+	
+	public bool GetChatReadStatus(long id) => (string) GetChat(id)!.ChatButton.Tag! == "";
 }

@@ -7,7 +7,6 @@ using Spinner = SecureChat.CustomControls.Spinner;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Nockx.Base.ClassExtensions;
-using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SecureChat.Panels;
 
@@ -35,7 +34,7 @@ public partial class UserInfoPanel : StackPanel, IContentPanel {
 		};
 
 		setDisplayNameButton.Click += (_, _) => {
-			if (DisplayNameTextBox?.Text == null)
+			if (DisplayNameTextBox.Text == null)
 				return;
 
 			Task.Run(() => {
@@ -47,7 +46,7 @@ public partial class UserInfoPanel : StackPanel, IContentPanel {
 
 		connectAppButton.Click += ConnectAppButton_OnClick;
 
-		keyBox!.Text = _controller.PublicKey.ToBase64String();
+		keyBox.Text = _controller.PublicKey.ToBase64String();
 
 		Spinner = this.FindControl<Spinner>("LoadingSpinner")!;
 	}
@@ -77,5 +76,5 @@ public partial class UserInfoPanel : StackPanel, IContentPanel {
 		).Show(_connectAppWindow);
 	}
 
-	public void Show(RsaKeyParameters publicKey, MainWindow context) { }
+	public void Show(MainWindow context) { }
 }

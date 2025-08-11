@@ -76,4 +76,22 @@ public class FriendsPanelController {
 			Console.WriteLine(response.Body);
 		}
 	}
+
+	public long RegisterChat(string foreignKey) {
+		JsonObject chatObj = new () {
+			["user1"] = new JsonObject { ["key"] = PersonalPublicKey.ToBase64String() },
+			["user2"] = new JsonObject { ["key"] = foreignKey },
+			["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+		};
+
+		string chatBody = JsonSerializer.Serialize(chatObj);
+		Response response = Http.Post($"https://{Settings.GetInstance().Hostname}:5000/chats", chatBody, [new Header { Name = "Signature", Value = Cryptography.Sign(chatBody, _privateKey) }]);
+		if (!response.IsSuccessful) {
+			Console.WriteLine(response.StatusCode);
+			Console.WriteLine(response.Body);
+			return -1;
+		}
+		
+		return long.Parse(response.Body);
+	}
 }
