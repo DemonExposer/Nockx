@@ -122,6 +122,7 @@ public class ChatPanelController {
 				["key"] = PersonalPublicKey.ToBase64String(),
 				["displayName"] = _mainWindowModel.DisplayName
 			},
+			["chatId"] = Chat.Id,
 			["text"] = encryptedMessage.Body,
 			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
 			["receiverEncryptedKey"] = encryptedMessage.ReceiverEncryptedKey,
