@@ -99,14 +99,21 @@ public class ChatPanelController {
 		string getVariables = $"requestingUser={HttpUtility.UrlEncode(PersonalPublicKey.ToBase64String())}&chatId={Chat.Id}&timestamp={timestamp}";
 		if (lastMessageId != -1)
 			getVariables += $"&lastMessageId={lastMessageId}";
+
+		Response response = Http.Get($"https://{Settings.GetInstance().Hostname}:5000/messages?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
+		if (!response.IsSuccessful) {
+			Console.WriteLine(response.StatusCode);
+			Console.WriteLine(response.Body);
+			throw new HttpRequestException();
+		}
 		
-		JsonArray messages = JsonNode.Parse(Http.Get($"https://{Settings.GetInstance().Hostname}:5000/messages?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]).Body)!.AsArray();
+		JsonArray messages = JsonNode.Parse(response.Body)!.AsArray();
 		foreach (JsonNode? messageNode in messages) {
 			Message message = Message.Parse(messageNode!.AsObject());
 			bool isOwnMessage = Equals(message.Sender, PersonalPublicKey);
 			if (!Decrypt(message, isOwnMessage, out DecryptedMessage? decryptedMessage))
 				continue; // Just don't add the message if it is not legitimate
-			
+
 			res.Add(decryptedMessage!);
 		}
 
