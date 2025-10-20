@@ -56,12 +56,13 @@ public class ChatPanelController {
 		};
 		
 		MultipartFormDataContent form = new ();
-		form.Add(new StreamContent(new EncryptedStream(stream, aesKey, true)), "message.Attachment", Convert.ToBase64String(Cryptography.EncryptWithAes(Encoding.UTF8.GetBytes(fileName), fileName.Length, aesKey)));
+		form.Add(new StreamContent(new EncryptedStream(stream, aesKey, true)), "message.Attachment", Convert.ToHexString(Cryptography.EncryptWithAes(Encoding.UTF8.GetBytes(fileName), fileName.Length, aesKey)));
 		
 		form.Add(new StringContent(PersonalPublicKey.ToBase64String()), "message.Message.Sender.Key");
 		form.Add(new StringContent(_mainWindowModel.DisplayName), "message.Message.Sender.DisplayName");
 		form.Add(new StringContent(Chat.KeyString), "message.Message.Receiver.Key");
 		form.Add(new StringContent(ForeignDisplayName), "message.Message.Receiver.Key");
+		form.Add(new StringContent(Chat.Id.ToString()), "message.Message.ChatId");
 		form.Add(new StringContent(message.Body), "message.Message.Text");
 		form.Add(new StringContent(message.SenderEncryptedKey), "message.Message.SenderEncryptedKey");
 		form.Add(new StringContent(message.ReceiverEncryptedKey), "message.Message.ReceiverEncryptedKey");
