@@ -125,10 +125,12 @@ public partial class MainWindow : Window {
 
 		Chat chat = new (chatButton, chatId, name, publicKey, publicKey.ToBase64String());
 		Model.AddChat(chat);
-		
-		if (doAutoFocus)
+
+		if (doAutoFocus) {
+			ChatPanel.Chat = chat;
 			FocusPanel(ChatPanel, chatButton);
-		
+		}
+
 		chatButton.Click += (_, _) => {
 			ChatPanel.Chat = chat;
 			FocusPanel(ChatPanel, chatButton);
