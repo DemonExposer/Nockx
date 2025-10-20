@@ -357,6 +357,9 @@ public class MainWindowController {
 							}
 						}
 					},
+					["acceptFriendRequest"] = friendRequest => {
+						// TODO: handle this
+					},
 					["removeFriendRequest"] = friendRequest => { // TODO: possibly add verification here, so that person B can't remove person A's friend request. The problem is that the server can spoof this anyway at all times even with verifications
 						_context.RemoveFriendRequest(friendRequest["sender"]!.GetValue<string>());
 					}
